@@ -6,38 +6,38 @@ Next.js + TypeScript + Drizzle modular monolith. Product docs: `../docs`. Stage 
 
 ```bash
 pnpm install
-cp .env.example .env.local   # set DATABASE_URL (pooled) + DATABASE_URL_UNPOOLED
-pnpm check                   # typecheck + lint + test + build
+cp .env.example .env.local
+# Local Postgres example:
+# DATABASE_URL=postgresql://postgres@127.0.0.1:5432/church_cms
+# DATABASE_URL_UNPOOLED=postgresql://postgres@127.0.0.1:5432/church_cms
+pnpm db:migrate:local   # local Postgres via psql
+pnpm db:seed:dev
+pnpm check
 pnpm dev
 ```
+
+Neon: use `pnpm db:migrate` with the **unpooled** URL (drizzle-kit Neon driver).
 
 ## Commands
 
 | Script | Purpose |
 |---|---|
 | `pnpm check` | typecheck + lint + test + build |
-| `pnpm test` | Node test runner (unit) |
-| `pnpm db:generate` | Create migration from core schema |
-| `pnpm db:migrate` | Apply migrations (use unpooled URL) |
+| `pnpm db:migrate:local` | Apply SQL migrations with psql |
+| `pnpm db:seed:dev` | Seed CrossLife-dev fake church/admin |
+| `pnpm db:smoke` | DB smoke: person → membership → household |
 
-## Stage 1–2 (in migrations)
+## Stage 1–2 status
 
-Core schema barrel: `src/platform/db/schema/index.ts`
+- Core migrations applied on local `church_cms` DB (21 tables + RLS)
+- Dev seed + `db:smoke` verified against Postgres
+- APIs: `/api/v1/health`, people, households, memberships
+- Dev auth headers (until ADR-0002): `x-dev-user-id`, `x-dev-church-id`, `x-dev-permissions`
 
-| Area | Status |
-|---|---|
-| Platform (errors, Ctx, HTTP, audit, RLS helpers) | Done |
-| Migrations `0000` + `0001` RLS | Generated; apply when DB available |
-| People / households / membership APIs | Done (`/api/v1/...`) |
-| Dev session headers (pre ADR-0002) | `x-dev-user-id`, `x-dev-church-id`, `x-dev-permissions` |
+Seed IDs (fake):
+- church `11111111-1111-1111-1111-111111111111`
+- user `cccccccc-0001-0001-0001-000000000001`
 
-## Stage 3–4 (frozen)
+## Stage 3–4
 
-Draft Drizzle files may exist under `src/modules/{organisation,ministries,events,finance,messaging}` but are **not** exported for migration and have **no APIs** until the prior stage gate passes.
-
-## API (thin handlers → services)
-
-- `GET /api/v1/health` (public)
-- `GET|POST /api/v1/people`, `GET|PATCH /api/v1/people/{id}`
-- `POST /api/v1/households`, `GET /api/v1/households/{id}`, `POST .../members`
-- `GET /api/v1/memberships/me`, `PATCH /api/v1/memberships/{id}`
+Frozen — see `docs/STAGE_GATES.md`.

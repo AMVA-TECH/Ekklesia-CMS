@@ -1,16 +1,34 @@
 import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
 
 import * as schema from './schema';
 import { getEnv } from '@/platform/config';
 
+function isLocalPostgres(connectionString: string): boolean {
+  try {
+    const host = new URL(connectionString).hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  } catch {
+    return connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+  }
+}
+
 /**
- * App DB client (HTTP driver).
- * Interactive tenant transactions move to WebSocket/pool mode when RLS is wired in runtime.
+ * DB client: `pg` for local Postgres; Neon HTTP for hosted Neon/Vercel.
+ * Install `pg` (+ `@types/pg`) for local development.
  */
 export function createDb(connectionString: string) {
+  if (isLocalPostgres(connectionString)) {
+    // Lazy require so Neon-only environments do not need the pg package at build time.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Pool } = require('pg') as typeof import('pg');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { drizzle } = require('drizzle-orm/node-postgres') as typeof import('drizzle-orm/node-postgres');
+    const pool = new Pool({ connectionString });
+    return drizzle(pool, { schema });
+  }
   const sql = neon(connectionString);
-  return drizzle(sql, { schema });
+  return drizzleNeon(sql, { schema });
 }
 
 export type Db = ReturnType<typeof createDb>;
