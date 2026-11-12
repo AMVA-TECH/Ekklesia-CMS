@@ -1,7 +1,4 @@
-/**
- * DRAFT — Stage 4. Not exported from platform/db/schema until Stage 3 gate.
- * See docs/STAGE_GATES.md.
- */
+/** Stage 4 — templates, announcements, jobs, preferences, consent. */
 import { boolean, pgTable, text, timestamp, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { churches } from '@/modules/churches/db-schema';
@@ -40,7 +37,7 @@ export const announcements = pgTable('announcements', {
     .references(() => churches.id),
   title: text('title').notNull(),
   body: text('body').notNull(),
-  // draft | pending_approval | published | archived
+  // draft | pending_approval | published | rejected | archived
   status: text('status').notNull().default('draft'),
   publishedAt: timestamp('published_at', { withTimezone: true }),
   ...auditColumns,
@@ -51,7 +48,7 @@ export const announcementAudiences = pgTable('announcement_audiences', {
   announcementId: uuid('announcement_id')
     .notNull()
     .references(() => announcements.id),
-  // church | organisational_unit | role | custom
+  // all_members | organisational_unit
   audienceType: text('audience_type').notNull(),
   organisationalUnitId: uuid('organisational_unit_id').references(
     () => organisationalUnits.id,
@@ -66,7 +63,13 @@ export const messageJobs = pgTable('message_jobs', {
   channel: text('channel').notNull(),
   templateId: uuid('template_id').references(() => messageTemplates.id),
   announcementId: uuid('announcement_id').references(() => announcements.id),
+  /** Custom leadership blast text (Sunday reminders, etc.). */
+  title: text('title'),
+  body: text('body'),
   audienceType: text('audience_type'),
+  organisationalUnitId: uuid('organisational_unit_id').references(
+    () => organisationalUnits.id,
+  ),
   // queued | sending | completed | failed | cancelled
   status: text('status').notNull().default('queued'),
   scheduledFor: timestamp('scheduled_for', { withTimezone: true }),

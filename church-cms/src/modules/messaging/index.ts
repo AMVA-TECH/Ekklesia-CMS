@@ -7,3 +7,43 @@ export {
   communicationPreferences,
   consentRecords,
 } from './db-schema';
+export {
+  MESSAGE_CHANNELS,
+  BLAST_CHANNELS,
+  MESSAGE_AUDIENCE_TYPES,
+  ANNOUNCEMENT_STATUSES,
+  ANNOUNCEMENT_AUDIENCE_TYPES,
+  MESSAGE_JOB_STATUSES,
+  MESSAGE_JOB_RECIPIENT_CAP,
+} from './constants';
+export {
+  createTemplateBodySchema,
+  createAnnouncementBodySchema,
+  rejectAnnouncementBodySchema,
+  updatePreferencesBodySchema,
+  createMessageJobBodySchema,
+  type CreateTemplateBody,
+  type CreateAnnouncementBody,
+  type RejectAnnouncementBody,
+  type UpdatePreferencesBody,
+  type CreateMessageJobBody,
+} from './schemas';
+export {
+  listMessageTemplates,
+  createMessageTemplate,
+  listAnnouncements,
+  createAnnouncement,
+  submitAnnouncement,
+  publishAnnouncement,
+  rejectAnnouncement,
+  applyAnnouncementApprovalDecision,
+  getMyPreferences,
+  updateMyPreferences,
+  createMessageJob,
+  dispatchMessageJob,
+  getMessageJob,
+  listMessageJobs,
+  listMessageJobDeliveries,
+  applyProviderDeliveryUpdate,
+  applyBriqWebhookEvent,
+} from './service';
