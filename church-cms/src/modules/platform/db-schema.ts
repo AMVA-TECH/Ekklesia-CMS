@@ -35,7 +35,10 @@ export const importJobs = pgTable(
       .references(() => churches.id),
     mediaAssetId: uuid('media_asset_id').references(() => mediaAssets.id),
     jobType: text('job_type').notNull(),
-    status: text('status').notNull().default('queued'),
+    // uploaded | validated | previewed | committed | failed
+    status: text('status').notNull().default('uploaded'),
+    /** Parsed upload rows retained until commit (local/dev; object storage later). */
+    sourceSnapshot: jsonb('source_snapshot').$type<unknown[]>().notNull().default([]),
     startedAt: timestamp('started_at', { withTimezone: true }),
     finishedAt: timestamp('finished_at', { withTimezone: true }),
     ...auditColumns,
