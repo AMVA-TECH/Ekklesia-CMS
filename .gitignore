@@ -1,0 +1,13 @@
+# OS / editor
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+
+# Local package store (must not enter git)
+.pnpm-store/
+
+# Env / secrets (belt-and-braces at repo root)
+.env
+.env.*
+!.env.example
