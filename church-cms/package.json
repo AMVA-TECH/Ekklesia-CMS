@@ -10,29 +10,61 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --import ./scripts/register-ts-alias.mjs --test 'src/**/__tests__/**/*.test.ts'",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "openapi:generate": "node scripts/generate-openapi.mjs",
+    "db:smoke:openapi": "node scripts/smoke-openapi-docs.mjs",
+
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:local": "node scripts/db-migrate-local.mjs",
     "db:seed:dev": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f scripts/seed-dev.sql",
+    "db:seed:auth": "node scripts/seed-auth.mjs",
+    "db:smoke:auth-login": "node scripts/smoke-auth-login.mjs",
+    "db:smoke:auth-login-api": "node --experimental-strip-types --import ./scripts/register-ts-alias.mjs scripts/smoke-auth-login-api.mjs",
     "db:smoke": "node scripts/smoke-stage2.mjs",
+    "db:smoke:stage3": "node scripts/smoke-stage3.mjs",
+    "db:smoke:stage4": "node scripts/smoke-stage4.mjs",
+    "db:smoke:imports": "node scripts/smoke-imports.mjs",
+    "db:smoke:appointments": "node scripts/smoke-appointments.mjs",
+    "db:smoke:blasts": "node scripts/smoke-blasts.mjs",
+    "db:smoke:governance": "node scripts/smoke-governance.mjs",
+    "db:smoke:membership-applications": "node scripts/smoke-membership-applications.mjs",
+    "db:smoke:event-posters": "node scripts/smoke-event-posters.mjs",
+    "db:smoke:event-registrations": "node scripts/smoke-event-registrations.mjs",
+    "db:smoke:audit-events": "node scripts/smoke-audit-events.mjs",
+    "db:smoke:roles": "node scripts/smoke-roles.mjs",
+    "db:smoke:exports": "node scripts/smoke-exports.mjs",
+    "db:smoke:auth-me": "node scripts/smoke-auth-me.mjs",
+    "db:smoke:churches": "node scripts/smoke-churches.mjs",
+    "db:smoke:attendance-progress": "node scripts/smoke-attendance-progress.mjs",
+    "db:smoke:people-households": "node scripts/smoke-people-households.mjs",
+    "db:smoke:memberships": "node scripts/smoke-memberships.mjs",
+    "db:smoke:journal-reverse": "node scripts/smoke-journal-reverse.mjs",
+    "db:smoke:participation-me": "node scripts/smoke-participation-me.mjs",
+    "db:smoke:role-fixtures": "node scripts/smoke-role-fixtures.mjs",
+    "db:smoke:platform-ops": "node scripts/smoke-platform-ops.mjs",
+    "db:rehearse": "node scripts/migrate-rehearsal.mjs",
+    "pilot:ops-check": "node scripts/pilot-ops-check.mjs",
     "db:studio": "drizzle-kit studio"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.19",
     "@neondatabase/serverless": "^1.2.0",
+    "better-auth": "1.7.19",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.5",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "uuid": "^14.0.3",
-    "zod": "^4.6.7",
-    "pg": "^8.16.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^18.0.9",
@@ -40,8 +72,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "@types/pg": "^8.15.5"
+    "typescript": "^5"
   },
   "packageManager": "pnpm@10.18.1"
 }
