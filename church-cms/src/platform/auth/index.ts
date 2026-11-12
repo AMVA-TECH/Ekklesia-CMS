@@ -30,3 +30,7 @@ export {
 export { getAuth, resetAuthForTests } from './better-auth';
 export { userHasAdminDashboardAccess } from './admin-access';
 export { user, session, account, verification, twoFactor } from './db-schema';
+export {
+  provisionCredentialAccount,
+  type ProvisionCredentialInput,
+} from './provision-credentials';
