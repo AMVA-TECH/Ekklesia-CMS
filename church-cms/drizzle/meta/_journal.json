@@ -134,6 +134,13 @@
       "when": 1794330000000,
       "tag": "0018_platform_ops",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794340000000,
+      "tag": "0019_church_join_requests",
+      "breakpoints": true
     }
   ]
 }

@@ -17,7 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const EXPECTED_MIGRATIONS = 19;
+const EXPECTED_MIGRATIONS = 20;
 const failures = [];
 const notes = [];
 

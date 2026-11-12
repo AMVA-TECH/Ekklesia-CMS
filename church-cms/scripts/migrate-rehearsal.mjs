@@ -20,7 +20,7 @@ import { join } from 'node:path';
 
 const REHEARSAL = 'church_cms_rehearsal';
 const RESTORE = 'church_cms_rehearsal_restore';
-const EXPECTED_MIGRATIONS = 19;
+const EXPECTED_MIGRATIONS = 20;
 
 const databaseUrl =
   process.env.DATABASE_URL_UNPOOLED ||

@@ -11,7 +11,7 @@ import { sql } from 'drizzle-orm';
 
 import { churches } from '@/modules/churches/db-schema';
 import { households } from '@/modules/households/db-schema';
-import { people } from '@/modules/people/db-schema';
+import { people, userAccounts } from '@/modules/people/db-schema';
 import { auditColumns } from '@/platform/db/columns';
 
 /** Church membership for a person. */
@@ -82,3 +82,44 @@ export const membershipStatusHistory = pgTable('membership_status_history', {
   effectiveAt: timestamp('effective_at', { withTimezone: true }).notNull().defaultNow(),
   reason: text('reason'),
 });
+
+/**
+ * Public self-registration request for a church (DEC-032).
+ * No login until status becomes approved and credentials are provisioned.
+ */
+export const churchJoinRequests = pgTable(
+  'church_join_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    churchId: uuid('church_id')
+      .notNull()
+      .references(() => churches.id),
+    displayName: text('display_name').notNull(),
+    email: text('email'),
+    phoneE164: text('phone_e164'),
+    preferredLocale: text('preferred_locale').notNull().default('sw'),
+    status: text('status').notNull().default('pending'),
+    decidedByUserId: uuid('decided_by_user_id'),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    decisionReason: text('decision_reason'),
+    personId: uuid('person_id').references(() => people.id),
+    userAccountId: uuid('user_account_id').references(() => userAccounts.id),
+    ...auditColumns,
+  },
+  (table) => [
+    index('church_join_requests_church_status_idx').on(
+      table.churchId,
+      table.status,
+    ),
+    uniqueIndex('church_join_requests_pending_email_uidx')
+      .on(table.churchId, table.email)
+      .where(
+        sql`${table.status} = 'pending' AND ${table.email} is not null AND ${table.deletedAt} is null`,
+      ),
+    uniqueIndex('church_join_requests_pending_phone_uidx')
+      .on(table.churchId, table.phoneE164)
+      .where(
+        sql`${table.status} = 'pending' AND ${table.phoneE164} is not null AND ${table.deletedAt} is null`,
+      ),
+  ],
+);

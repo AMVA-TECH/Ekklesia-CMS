@@ -19,6 +19,7 @@ export {
   membershipApplications,
   membershipDecisions,
   membershipStatusHistory,
+  churchJoinRequests,
 } from '@/modules/membership/db-schema';
 export {
   permissions,
