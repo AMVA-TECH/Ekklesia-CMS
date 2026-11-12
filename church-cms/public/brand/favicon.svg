@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- PLACEHOLDER favicon (simplified mark, flat gold for small sizes). See README.md. -->
+  <rect width="64" height="64" rx="14" fill="#171717"/>
+  <g fill="#DCC47B">
+    <rect x="18" y="16" width="8" height="32" rx="1.5"/>
+    <rect x="18" y="16" width="28" height="8" rx="1.5"/>
+    <rect x="18" y="28" width="21" height="8" rx="1.5"/>
+    <rect x="18" y="40" width="28" height="8" rx="1.5"/>
+  </g>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ekklesia">
+  <!-- PLACEHOLDER MARK. Geometric "E" monogram only; not the final logo. See README.md. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0.45">
+      <stop offset="0" stop-color="#F3E6B7"/>
+      <stop offset="0.35" stop-color="#DCC47B"/>
+      <stop offset="0.7" stop-color="#B99545"/>
+      <stop offset="1" stop-color="#E9D69B"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#171717"/>
+  <g fill="url(#g)">
+    <rect x="19" y="17" width="7" height="30" rx="1.5"/>
+    <rect x="19" y="17" width="26" height="6.5" rx="1.5"/>
+    <rect x="19" y="29" width="20" height="6.5" rx="1.5"/>
+    <rect x="19" y="40.5" width="26" height="6.5" rx="1.5"/>
+  </g>
+</svg>
