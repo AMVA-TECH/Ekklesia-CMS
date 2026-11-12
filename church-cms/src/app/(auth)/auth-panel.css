@@ -1,0 +1,48 @@
+/*
+ * Auth shell — FundFlow split rhythm, Ekklesia colour ratios.
+ * Target per brand-usage.md: ivory/white ~65–72%, charcoal ~15–20%,
+ * gold ~5–8%, supporting ~8–12%.
+ */
+
+@keyframes ek-auth-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ek-auth-form-enter {
+  animation: ek-auth-enter var(--duration-slow) var(--ease-standard) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ek-auth-form-enter {
+    animation: none;
+  }
+}
+
+/* Slim brand rail (~18–22% of viewport) — charcoal stays in budget */
+.ek-auth-brand-panel {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--sidebar-background) 90%, var(--brand-gold)) 0%,
+      var(--sidebar-background) 55%,
+      color-mix(in srgb, var(--sidebar-background) 88%, black) 100%
+    );
+}
+
+/* Soft gold wash behind the form — counts toward gold 5–8%, keeps ivory dominant */
+.ek-auth-form-canvas {
+  background:
+    radial-gradient(
+      120% 80% at 100% 0%,
+      color-mix(in srgb, var(--brand-gold-tint) 70%, transparent) 0%,
+      transparent 55%
+    ),
+    var(--background);
+}
