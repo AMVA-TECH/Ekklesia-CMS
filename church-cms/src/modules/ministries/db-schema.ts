@@ -1,4 +1,4 @@
-/** DRAFT — Stage 3. Not in migrations until Stage 2 gate. See docs/STAGE_GATES.md. */
+/** Stage 3 — ministry / life-group participation. */
 import { date, pgTable, text, timestamp, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -34,7 +34,7 @@ export const participationRequests = pgTable(
   ],
 );
 
-/** Active/ended participation in a ministry or life group. Draft — Stage 3. */
+/** Active/ended participation in a ministry or life group. */
 export const participations = pgTable(
   'participations',
   {
