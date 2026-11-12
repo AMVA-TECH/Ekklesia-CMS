@@ -1,0 +1,316 @@
+{
+  "components": {
+    "schemas": {
+      "LoginBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "admin@example.test" },
+          "phoneE164": { "type": "string", "example": "+255700000001" },
+          "pin": { "type": "string", "pattern": "^\\d{4,8}$", "example": "123456" }
+        },
+        "description": "Provide exactly one of email or phoneE164"
+      },
+      "MfaVerifyBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^\\d{6}$", "example": "123456" },
+          "trustDevice": { "type": "boolean" }
+        }
+      },
+      "ActiveChurchBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["churchId"],
+        "properties": {
+          "churchId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "11111111-1111-1111-1111-111111111111"
+          }
+        }
+      },
+      "CreatePersonBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["displayName"],
+        "properties": {
+          "displayName": { "type": "string", "example": "Neema Mushi" },
+          "fullName": { "type": "string" },
+          "dateOfBirth": { "type": "string", "format": "date" },
+          "preferredLocale": { "type": "string", "enum": ["sw", "en"] },
+          "directoryOptIn": { "type": "boolean" },
+          "phoneE164": { "type": "string", "example": "+255712345678" },
+          "email": { "type": "string", "format": "email" }
+        }
+      },
+      "CreateHouseholdBody": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string", "example": "Mushi household" },
+          "addressLine1": { "type": "string" },
+          "city": { "type": "string" },
+          "emergencyContactName": { "type": "string" },
+          "emergencyContactPhoneE164": { "type": "string" }
+        }
+      },
+      "CreateMembershipBody": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["personId"],
+        "properties": {
+          "personId": { "type": "string", "format": "uuid" },
+          "membershipType": {
+            "type": "string",
+            "enum": ["individual", "household", "family"],
+            "example": "individual"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["visitor", "active", "inactive"],
+            "example": "visitor"
+          },
+          "effectiveFrom": { "type": "string", "format": "date" }
+        }
+      },
+      "CreateEventBody": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["title", "serviceDate"],
+        "properties": {
+          "title": { "type": "string", "example": "Sunday Service" },
+          "description": { "type": "string" },
+          "serviceDate": { "type": "string", "format": "date", "example": "2026-11-16" },
+          "eventTypeId": { "type": "string", "format": "uuid" },
+          "startsAt": { "type": "string", "format": "date-time" },
+          "endsAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AttendanceCheckInBody": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "personId": { "type": "string", "format": "uuid" },
+          "presence": { "type": "string", "enum": ["present", "absent", "late"] },
+          "source": { "type": "string", "enum": ["qr", "roll_call", "manual"] }
+        }
+      },
+      "CreateMessageJobBody": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "channel": { "type": "string", "enum": ["sms", "whatsapp"], "example": "sms" },
+          "title": { "type": "string", "example": "Sunday reminder" },
+          "body": {
+            "type": "string",
+            "example": "Karibu ibada kesho saa 10 asubuhi."
+          },
+          "audienceType": { "type": "string" },
+          "organisationalUnitId": { "type": "string", "format": "uuid" },
+          "templateId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "EnterTenantBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reason"],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 8,
+            "example": "Investigating failed message job for pilot UAT"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "PIN login (email or phone)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginBody" },
+              "examples": {
+                "adminEmail": {
+                  "summary": "Admin email + PIN",
+                  "value": { "email": "admin@example.test", "pin": "123456" }
+                },
+                "memberPhone": {
+                  "summary": "Member phone + PIN",
+                  "value": { "phoneE164": "+255700000002", "pin": "123456" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/send-otp": {
+      "post": {
+        "summary": "Send admin MFA OTP (SMS preferred)",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "additionalProperties": false }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/verify": {
+      "post": {
+        "summary": "Verify admin MFA OTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MfaVerifyBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/active-church": {
+      "post": {
+        "summary": "Switch active church on session",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ActiveChurchBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "summary": "Current actor, church, roles, permissions"
+      }
+    },
+    "/api/v1/people": {
+      "post": {
+        "summary": "Create person",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePersonBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/households": {
+      "post": {
+        "summary": "Create household",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateHouseholdBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/memberships": {
+      "post": {
+        "summary": "Create membership",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMembershipBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "post": {
+        "summary": "Create event",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateEventBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/attendance-sessions/{id}/check-in": {
+      "post": {
+        "summary": "Record attendance check-in on a session",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AttendanceCheckInBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/message-jobs": {
+      "post": {
+        "summary": "Queue SMS/WhatsApp message job",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMessageJobBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/message-jobs/{id}/dispatch": {
+      "post": {
+        "summary": "Dispatch queued message job via NOTIFY_PROVIDER"
+      }
+    },
+    "/api/v1/platform/overview": {
+      "get": {
+        "summary": "Platform health, findings, growth deltas"
+      }
+    },
+    "/api/v1/platform/churches": {
+      "get": {
+        "summary": "List all churches (platform operator)"
+      }
+    },
+    "/api/v1/platform/audit-events": {
+      "get": {
+        "summary": "Search immutable platform audit trail"
+      }
+    },
+    "/api/v1/platform/tenants/{id}/enter": {
+      "post": {
+        "summary": "Audited support entry into a church",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EnterTenantBody" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "summary": "Public health check",
+        "security": []
+      }
+    }
+  }
+}
