@@ -68,3 +68,36 @@ export const growthQuerySchema = z
   .strict();
 
 export type GrowthQuery = z.infer<typeof growthQuerySchema>;
+
+const e164Phone = z
+  .string()
+  .trim()
+  .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be E.164 (e.g. +2557…)');
+
+export const createChurchBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(120),
+    slug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase kebab-case')
+      .min(2)
+      .max(60)
+      .optional(),
+    timezone: z.string().trim().min(3).max(64).default('Africa/Dar_es_Salaam'),
+    defaultLocale: z.enum(['en', 'sw']).default('sw'),
+    admin: z
+      .object({
+        displayName: z.string().trim().min(2).max(120),
+        email: z.string().trim().email().max(254),
+        phoneE164: e164Phone.optional(),
+        pin: z
+          .string()
+          .regex(/^\d{4,8}$/, 'PIN must be 4–8 digits'),
+      })
+      .strict(),
+  })
+  .strict();
+
+export type CreateChurchBody = z.infer<typeof createChurchBodySchema>;
