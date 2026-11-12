@@ -1,0 +1,294 @@
+.platform-console {
+  --p-bg: #0f1419;
+  --p-surface: #171d25;
+  --p-border: #2a3441;
+  --p-text: #e8eef5;
+  --p-muted: #8b9bb0;
+  --p-accent: #3d9a7a;
+  --p-accent-2: #d4a017;
+  --p-danger: #e05a5a;
+  --p-warn: #e0a04a;
+  --p-info: #5a8fd4;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #1a2a33 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #1c2430 0%, transparent 50%),
+    var(--p-bg);
+  color: var(--p-text);
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+.platform-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--p-border);
+  background: color-mix(in srgb, var(--p-bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.platform-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.platform-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.4rem;
+  background: linear-gradient(145deg, var(--p-accent), #2a6b56);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+}
+
+.platform-brand-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.platform-brand-sub {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--p-muted);
+}
+
+.platform-brand-host {
+  color: var(--p-accent);
+}
+
+.platform-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.platform-nav-link {
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.35rem;
+  color: var(--p-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.platform-nav-link:hover {
+  color: var(--p-text);
+  background: color-mix(in srgb, var(--p-surface) 80%, transparent);
+}
+
+.platform-nav-link.active {
+  color: var(--p-text);
+  background: var(--p-surface);
+  box-shadow: inset 0 -2px 0 var(--p-accent);
+}
+
+.platform-main {
+  padding: 1.25rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.platform-h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  letter-spacing: -0.03em;
+  font-weight: 650;
+}
+
+.platform-lead {
+  margin: 0 0 1.5rem;
+  color: var(--p-muted);
+  font-size: 0.95rem;
+  max-width: 42rem;
+}
+
+.platform-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 1.25rem;
+}
+
+.platform-stat {
+  padding: 1rem;
+  border: 1px solid var(--p-border);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--p-surface) 85%, transparent);
+}
+
+.platform-stat-label {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-muted);
+}
+
+.platform-stat-value {
+  margin: 0.35rem 0 0;
+  font-size: 1.55rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.platform-panel {
+  border: 1px solid var(--p-border);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--p-surface) 90%, transparent);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.platform-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--p-border);
+}
+
+.platform-panel-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.platform-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.platform-table th,
+.platform-table td {
+  text-align: left;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--p-border);
+  vertical-align: top;
+}
+
+.platform-table th {
+  color: var(--p-muted);
+  font-weight: 500;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.platform-table tr:last-child td {
+  border-bottom: none;
+}
+
+.platform-btn {
+  appearance: none;
+  border: 1px solid var(--p-border);
+  background: var(--p-surface);
+  color: var(--p-text);
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.platform-btn:hover {
+  border-color: var(--p-accent);
+}
+
+.platform-btn-primary {
+  background: linear-gradient(145deg, var(--p-accent), #2f7a5f);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.platform-btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.platform-input,
+.platform-select,
+.platform-textarea {
+  width: 100%;
+  background: var(--p-bg);
+  border: 1px solid var(--p-border);
+  color: var(--p-text);
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+}
+
+.platform-textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.platform-error {
+  color: var(--p-danger);
+  font-size: 0.85rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.platform-muted {
+  color: var(--p-muted);
+  font-size: 0.85rem;
+}
+
+.platform-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.platform-badge.critical,
+.platform-badge.high {
+  background: color-mix(in srgb, var(--p-danger) 25%, transparent);
+  color: #ffb4b4;
+}
+
+.platform-badge.medium {
+  background: color-mix(in srgb, var(--p-warn) 25%, transparent);
+  color: #ffd59a;
+}
+
+.platform-badge.low,
+.platform-badge.info {
+  background: color-mix(in srgb, var(--p-info) 25%, transparent);
+  color: #b7d4ff;
+}
+
+.platform-form-row {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+@media (min-width: 720px) {
+  .platform-form-row.two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.platform-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
