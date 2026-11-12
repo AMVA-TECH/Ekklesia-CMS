@@ -16,6 +16,10 @@ export const MEMBERSHIP_APPLICATION_STATUSES = [
 export type MembershipApplicationStatus =
   (typeof MEMBERSHIP_APPLICATION_STATUSES)[number];
 
+export const MEMBERSHIP_DECISION_OUTCOMES = ['approved', 'rejected'] as const;
+export type MembershipDecisionOutcome =
+  (typeof MEMBERSHIP_DECISION_OUTCOMES)[number];
+
 /** Allowed status transitions (domain logic). */
 export const MEMBERSHIP_STATUS_TRANSITIONS: Record<
   MembershipStatus,
