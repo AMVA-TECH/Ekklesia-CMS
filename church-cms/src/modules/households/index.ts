@@ -6,10 +6,23 @@ export {
 } from './constants';
 export {
   createHouseholdBodySchema,
+  updateHouseholdBodySchema,
+  listHouseholdsQuerySchema,
   addHouseholdMemberBodySchema,
+  addHouseholdChildBodySchema,
   householdResponseSchema,
   type CreateHouseholdBody,
+  type UpdateHouseholdBody,
+  type ListHouseholdsQuery,
   type AddHouseholdMemberBody,
+  type AddHouseholdChildBody,
   type HouseholdResponse,
 } from './schemas';
-export { getHousehold, createHousehold, addHouseholdMember } from './service';
+export {
+  listHouseholds,
+  getHousehold,
+  createHousehold,
+  updateHousehold,
+  addHouseholdMember,
+  addHouseholdChild,
+} from './service';

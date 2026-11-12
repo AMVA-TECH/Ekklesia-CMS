@@ -6,7 +6,13 @@ import { getPersonInChurch } from '@/modules/people/repository';
 import { toHouseholdResponse } from './mappers';
 import { assertCanReadHouseholds, assertCanWriteHouseholds } from './policies';
 import * as repo from './repository';
-import type { AddHouseholdMemberBody, CreateHouseholdBody } from './schemas';
+import type {
+  AddHouseholdChildBody,
+  AddHouseholdMemberBody,
+  CreateHouseholdBody,
+  ListHouseholdsQuery,
+  UpdateHouseholdBody,
+} from './schemas';
 
 async function loadHouseholdResponse(ctx: Ctx, householdId: string) {
   const db = getDb();
@@ -17,8 +23,56 @@ async function loadHouseholdResponse(ctx: Ctx, householdId: string) {
   return toHouseholdResponse(household, members, children);
 }
 
+export async function listHouseholds(ctx: Ctx, query: ListHouseholdsQuery) {
+  assertCanReadHouseholds(ctx);
+  const db = getDb();
+  const rows = await repo.listHouseholdsForChurch(db, ctx, {
+    q: query.q,
+    limit: query.limit,
+    cursor: query.cursor,
+  });
+  const hasMore = rows.length > query.limit;
+  const page = hasMore ? rows.slice(0, query.limit) : rows;
+  const data = await Promise.all(
+    page.map(async (row) => {
+      const members = await repo.listMembers(db, row.id);
+      const children = await repo.listChildren(db, row.id);
+      return toHouseholdResponse(row, members, children);
+    }),
+  );
+  return {
+    data,
+    meta: {
+      limit: query.limit,
+      nextCursor: hasMore ? page[page.length - 1]?.id ?? null : null,
+      hasMore,
+    },
+  };
+}
+
 export async function getHousehold(ctx: Ctx, householdId: string) {
   assertCanReadHouseholds(ctx);
+  return loadHouseholdResponse(ctx, householdId);
+}
+
+export async function updateHousehold(
+  ctx: Ctx,
+  householdId: string,
+  body: UpdateHouseholdBody,
+) {
+  assertCanWriteHouseholds(ctx);
+  const db = getDb();
+  const existing = await repo.getHouseholdById(db, ctx, householdId);
+  if (!existing) throw notFound();
+
+  await repo.updateHouseholdRow(db, ctx, householdId, body);
+  await writeAudit(db, ctx, {
+    action: 'households.household.updated',
+    entityType: 'household',
+    entityId: householdId,
+    metadata: { fields: Object.keys(body) },
+  });
+
   return loadHouseholdResponse(ctx, householdId);
 }
 
@@ -73,6 +127,27 @@ export async function addHouseholdMember(
     entityType: 'household',
     entityId: householdId,
     metadata: { personId: body.personId },
+  });
+
+  return loadHouseholdResponse(ctx, householdId);
+}
+
+export async function addHouseholdChild(
+  ctx: Ctx,
+  householdId: string,
+  body: AddHouseholdChildBody,
+) {
+  assertCanWriteHouseholds(ctx);
+  const db = getDb();
+  const household = await repo.getHouseholdById(db, ctx, householdId);
+  if (!household) throw notFound();
+
+  await repo.insertHouseholdChild(db, ctx, householdId, body);
+  await writeAudit(db, ctx, {
+    action: 'households.child.added',
+    entityType: 'household',
+    entityId: householdId,
+    metadata: { name: body.name, age: body.age },
   });
 
   return loadHouseholdResponse(ctx, householdId);
