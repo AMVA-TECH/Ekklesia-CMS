@@ -75,6 +75,11 @@ export const PERMISSIONS = [
   'announcements:write',
   'announcements:publish',
   'preferences:self',
+  // Platform operator (global — ADR-0003)
+  'platform:read',
+  'platform:admin',
+  'platform:impersonate_tenant',
+  'platform:security_read',
 ] as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[number];
