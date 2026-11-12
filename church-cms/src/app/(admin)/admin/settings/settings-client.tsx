@@ -100,6 +100,30 @@ export function SettingsClient(): React.ReactElement {
   const [assignFormError, setAssignFormError] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
+  const inviteFormId = useId();
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteRoleCode, setInviteRoleCode] = useState('pastoral_leadership');
+  const [inviting, setInviting] = useState(false);
+  const [inviteFieldErrors, setInviteFieldErrors] = useState<
+    Record<string, string>
+  >({});
+  const [inviteFormError, setInviteFormError] = useState<string | null>(null);
+  const [issuedInvite, setIssuedInvite] = useState<{
+    email: string;
+    phoneE164: string | null;
+    roleName: string;
+    initialPin: string;
+  } | null>(null);
+
+  const INVITE_ROLE_OPTIONS = [
+    { code: 'pastoral_leadership', label: 'Pastoral Leadership' },
+    { code: 'senior_pastor', label: 'Senior Pastor' },
+    { code: 'church_administrator', label: 'Church Administrator' },
+    { code: 'finance_officer', label: 'Finance Officer' },
+  ] as const;
+
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -196,6 +220,53 @@ export function SettingsClient(): React.ReactElement {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleInvite = async (event: FormEvent): Promise<void> => {
+    event.preventDefault();
+    if (inviting) return;
+    setInviting(true);
+    setInviteFieldErrors({});
+    setInviteFormError(null);
+    try {
+      const created = await apiFetch<{
+        email: string;
+        phoneE164: string | null;
+        roleName: string;
+        initialPin: string;
+      }>('/api/v1/leadership-invites', {
+        method: 'POST',
+        json: {
+          displayName: inviteName.trim(),
+          email: inviteEmail.trim(),
+          phoneE164: invitePhone.trim() || undefined,
+          roleCode: inviteRoleCode,
+        },
+      });
+      setIssuedInvite({
+        email: created.email,
+        phoneE164: created.phoneE164,
+        roleName: created.roleName,
+        initialPin: created.initialPin,
+      });
+      setInviteName('');
+      setInviteEmail('');
+      setInvitePhone('');
+      push({ tone: 'success', message: 'Leadership account created.' });
+      void loadAccess();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const parsed = extractValidationErrors(err);
+        if (parsed.fieldErrors) setInviteFieldErrors(parsed.fieldErrors);
+        setInviteFormError(parsed.formError ?? err.message);
+      } else {
+        setInviteFormError(
+          err instanceof Error ? err.message : 'Could not invite leadership.',
+        );
+      }
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -383,6 +454,97 @@ export function SettingsClient(): React.ReactElement {
       ) : (
         <Panel title="Roles / Access">
           <div className="flex flex-col gap-5 p-4 sm:p-5">
+            {issuedInvite ? (
+              <div className="rounded-lg border border-border bg-surface p-4">
+                <p className="font-medium">Leadership credentials issued (once)</p>
+                <p>
+                  {issuedInvite.email}
+                  {issuedInvite.phoneE164
+                    ? ` · ${issuedInvite.phoneE164}`
+                    : ''}{' '}
+                  · {issuedInvite.roleName}
+                </p>
+                <p>
+                  PIN: <code>{issuedInvite.initialPin}</code>
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  MFA OTP is required on sign-in. Share securely; PIN is not
+                  stored in audit logs.
+                </p>
+              </div>
+            ) : null}
+
+            <form
+              id={inviteFormId}
+              onSubmit={(e) => {
+                void handleInvite(e);
+              }}
+              className="flex max-w-xl flex-col gap-4"
+            >
+              <p className="text-sm text-muted-foreground">
+                Invite leadership with a new login (email + PIN). Members still
+                join via public registration.
+              </p>
+              {inviteFormError ? (
+                <div
+                  role="alert"
+                  className="rounded-md border border-[color:var(--danger-soft)] bg-[color:var(--danger-soft)] px-3 py-2 text-sm text-[color:var(--danger-ink)]"
+                >
+                  {inviteFormError}
+                </div>
+              ) : null}
+              <Field
+                label="Display name"
+                required
+                error={inviteFieldErrors.displayName}
+              >
+                <Input
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  maxLength={120}
+                />
+              </Field>
+              <Field label="Email" required error={inviteFieldErrors.email}>
+                <Input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  autoComplete="off"
+                />
+              </Field>
+              <Field
+                label="Phone (E.164)"
+                hint="Optional"
+                error={inviteFieldErrors.phoneE164}
+              >
+                <Input
+                  value={invitePhone}
+                  onChange={(e) => setInvitePhone(e.target.value)}
+                  placeholder="+2557…"
+                  autoComplete="off"
+                />
+              </Field>
+              <Field label="Role" required error={inviteFieldErrors.roleCode}>
+                <Select
+                  value={inviteRoleCode}
+                  onChange={(e) => setInviteRoleCode(e.target.value)}
+                >
+                  {INVITE_ROLE_OPTIONS.map((opt) => (
+                    <option key={opt.code} value={opt.code}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <div>
+                <Button type="submit" size="sm" loading={inviting}>
+                  {inviting ? 'Inviting…' : 'Invite leadership'}
+                </Button>
+              </div>
+            </form>
+
+            <hr className="border-border" />
+
             <form
               id={assignFormId}
               onSubmit={(e) => {
