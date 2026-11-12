@@ -34,31 +34,88 @@ export const updatePersonBodySchema = z
       .optional(),
     preferredLocale: z.enum(LOCALES).optional(),
     directoryOptIn: z.boolean().optional(),
+    photoMediaId: z.guid().nullable().optional(),
   })
   .strict();
 
 export type UpdatePersonBody = z.infer<typeof updatePersonBodySchema>;
 
+/** DEC-018 portal self-edit — restricted fields only. */
+export const updateMyProfileBodySchema = z
+  .object({
+    phoneE164: e164Phone.nullable().optional(),
+    email: z.string().email().nullable().optional(),
+    preferredLocale: z.enum(LOCALES).optional(),
+    directoryOptIn: z.boolean().optional(),
+    photoMediaId: z.guid().nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (v) =>
+      v.phoneE164 !== undefined ||
+      v.email !== undefined ||
+      v.preferredLocale !== undefined ||
+      v.directoryOptIn !== undefined ||
+      v.photoMediaId !== undefined,
+    { message: 'At least one field is required' },
+  );
+export type UpdateMyProfileBody = z.infer<typeof updateMyProfileBodySchema>;
+
+export const listDirectoryQuerySchema = z
+  .object({
+    q: z.string().trim().max(100).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    cursor: z.guid().optional(),
+  })
+  .strict();
+export type ListDirectoryQuery = z.infer<typeof listDirectoryQuerySchema>;
+
 export const listPeopleQuerySchema = z
   .object({
     q: z.string().trim().max(100).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(25),
-    cursor: z.string().uuid().optional(),
+    cursor: z.guid().optional(),
   })
   .strict();
 
 export type ListPeopleQuery = z.infer<typeof listPeopleQuerySchema>;
 
+export const createPersonContactBodySchema = z
+  .object({
+    channel: z.enum(CONTACT_CHANNELS),
+    value: z.string().trim().min(1).max(320),
+    isPrimary: z.boolean().optional(),
+  })
+  .strict()
+  .superRefine((val, ctx) => {
+    if (val.channel === 'phone' && !/^\+[1-9]\d{6,14}$/.test(val.value)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Phone must be E.164 (+255…)',
+        path: ['value'],
+      });
+    }
+    if (val.channel === 'email' && !z.string().email().safeParse(val.value).success) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Invalid email',
+        path: ['value'],
+      });
+    }
+  });
+export type CreatePersonContactBody = z.infer<typeof createPersonContactBodySchema>;
+
 export const personResponseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   displayName: z.string(),
   fullName: z.string().nullable(),
   dateOfBirth: z.string().nullable(),
   preferredLocale: z.string(),
   directoryOptIn: z.boolean(),
+  photoMediaId: z.guid().nullable().optional(),
   contacts: z.array(
     z.object({
-      id: z.string().uuid(),
+      id: z.guid(),
       channel: z.enum(CONTACT_CHANNELS),
       value: z.string(),
       isPrimary: z.boolean(),
@@ -68,3 +125,17 @@ export const personResponseSchema = z.object({
 });
 
 export type PersonResponse = z.infer<typeof personResponseSchema>;
+
+export const directoryEntryResponseSchema = z.object({
+  personId: z.guid(),
+  displayName: z.string(),
+  photoMediaId: z.guid().nullable(),
+  ministries: z.array(
+    z.object({
+      organisationalUnitId: z.guid(),
+      name: z.string(),
+      roleInUnit: z.string().nullable(),
+    }),
+  ),
+});
+export type DirectoryEntryResponse = z.infer<typeof directoryEntryResponseSchema>;

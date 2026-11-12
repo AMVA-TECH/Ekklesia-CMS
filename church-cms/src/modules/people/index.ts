@@ -16,11 +16,28 @@ export {
 export {
   createPersonBodySchema,
   updatePersonBodySchema,
+  updateMyProfileBodySchema,
+  createPersonContactBodySchema,
   listPeopleQuerySchema,
+  listDirectoryQuerySchema,
   personResponseSchema,
+  directoryEntryResponseSchema,
   type CreatePersonBody,
   type UpdatePersonBody,
+  type UpdateMyProfileBody,
+  type CreatePersonContactBody,
   type ListPeopleQuery,
+  type ListDirectoryQuery,
   type PersonResponse,
+  type DirectoryEntryResponse,
 } from './schemas';
-export { listPeople, getPerson, createPerson, updatePerson } from './service';
+export {
+  listPeople,
+  getPerson,
+  createPerson,
+  updatePerson,
+  getMyProfile,
+  updateMyProfile,
+  addPersonContact,
+  listDirectory,
+} from './service';

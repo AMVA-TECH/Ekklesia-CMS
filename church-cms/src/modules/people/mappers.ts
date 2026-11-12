@@ -7,6 +7,7 @@ export interface PersonRow {
   dateOfBirth: string | null;
   preferredLocale: string;
   directoryOptIn: boolean;
+  photoMediaId?: string | null;
   createdAt: Date;
 }
 
@@ -28,6 +29,7 @@ export function toPersonResponse(
     dateOfBirth: person.dateOfBirth,
     preferredLocale: person.preferredLocale,
     directoryOptIn: person.directoryOptIn,
+    photoMediaId: person.photoMediaId ?? null,
     contacts: contacts.map((c) => ({
       id: c.id,
       channel: c.channel as 'phone' | 'email',
