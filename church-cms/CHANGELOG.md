@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/AMVA-TECH/Ekklesia-CMS/compare/v0.2.0...v0.3.0) (2026-11-12)
+
+
+### Features
+
+* **access-control:** add leadership invite API ([16b4f5e](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/16b4f5ed9cc43052a1a22cbecbff66525eb460e3))
+* **api:** expose public and admin join-request endpoints ([b2d719f](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/b2d719f3118c48dce0a38321a98beb584cb254a0))
+* **auth:** add Better Auth PIN credential provisioning helper ([01c1c98](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/01c1c9868e71ac3780723a827b8c2607551a08d8))
+* **membership:** add church_join_requests table and migration ([4f8b866](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/4f8b866de75cfa38b09d4c98fa163656271873fb))
+* **membership:** add public search and join-request flows ([a8e5eb3](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/a8e5eb334a6c8bae2bfc126b748801900d40c89c))
+* **platform-ops:** add create-church schema slug and role bootstrap ([128d416](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/128d4160fd117855fe69545e72bf7a56795e4e57))
+* **platform-ops:** bootstrap senior pastor and pastoral roles ([ee3b06b](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/ee3b06ba08e48aca37252989d51fb39444feac7d))
+* **platform-ops:** create church tenant with first admin ([cc62f8f](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/cc62f8ff6be94321e8fc82b3038399f723ea1a53))
+* **platform:** add create-church form on churches console ([639fcfb](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/639fcfbd035944ca5966c47757556a635004b9c6))
+* **ui:** add invite leadership form on settings ([ad87434](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/ad874344bd6f74925ef6d6ebdb2cce36d6c61c4a))
+* **ui:** add register page and admin join-request queue ([e18564c](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/e18564c1ad0aced068a4053aa3ecc718c84784d9))
+
 ## [0.2.0](https://github.com/AMVA-TECH/Ekklesia-CMS/compare/v0.1.0...v0.2.0) (2026-11-12)
 
 
