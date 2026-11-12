@@ -1,0 +1,10 @@
+---
+description: Implementation and code quality rules
+alwaysApply: false
+---
+
+Inspect existing code, tests, dependencies and conventions before editing. Make focused changes. Avoid unrelated refactors and unnecessary abstractions.
+
+For non-trivial work, state a plan and acceptance criteria before implementation. Validate inputs at trust boundaries. Enforce authorisation server-side. Use migrations for schema changes. Consider transactions, concurrency and idempotency for state changes.
+
+Run relevant tests, lint and build checks where available. Report exact commands and results; never claim checks passed if they were not run. Update docs and task status when applicable.

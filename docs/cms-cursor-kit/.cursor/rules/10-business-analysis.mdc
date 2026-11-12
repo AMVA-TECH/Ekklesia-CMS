@@ -1,0 +1,18 @@
+---
+description: Business analysis and requirements quality rules
+alwaysApply: false
+---
+
+For a feature request, identify:
+- Business problem and expected outcome.
+- Actors, trigger and process owner.
+- AS-IS and TO-BE workflow.
+- Business rules, decisions, approvals and exceptions.
+- Data captured, source of truth and lifecycle.
+- Permissions, privacy, audit and retention.
+- Acceptance criteria and dependencies.
+- MVP fit and out-of-scope items.
+
+Use stable requirement IDs. Keep unresolved matters in `docs/discovery/open-questions.md`. Use `.cursor/skills/business-analysis/SKILL.md` and `.cursor/skills/requirements-engineering/SKILL.md` when relevant.
+
+Do not ask a long list of questions at once. Ask the smallest number of questions needed to unblock accurate analysis.

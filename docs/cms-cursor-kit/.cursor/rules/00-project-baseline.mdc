@@ -1,0 +1,16 @@
+---
+description: Church Management System (CMS) baseline scope, business context and non-negotiable project rules
+alwaysApply: true
+---
+
+Follow the root `AGENTS.md`, `PROJECT_CONTEXT.md` and `DECISIONS.md`.
+
+CrossLife is the first pilot. The current MVP is for one existing church; CrossLife currently has no branches. Do not implement branch-management workflows, branch dashboards, branch reporting or branch oversight. Future branches are a deferred consideration only.
+
+Do not invent CrossLife hierarchy. Use the official website's published leadership structure as the initial baseline and validate anything not stated there.
+
+Distinguish confirmed facts, proposals, assumptions and unresolved questions. Never convert a proposal into an approved requirement without explicit validation.
+
+Person != user account. Membership != ministry participation. Position != assignment. Church title != system permission. Reporting line != approval authority.
+
+Do not code a feature before understanding its business outcome, scope, acceptance criteria and security implications. Inspect the repository before assuming its stack or conventions.

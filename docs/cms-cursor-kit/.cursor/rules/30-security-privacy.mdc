@@ -1,0 +1,10 @@
+---
+description: Security, privacy and sensitive church data rules
+alwaysApply: false
+---
+
+Treat religious affiliation, pastoral information, children's information, health information, contact details and financial records as sensitive according to context.
+
+Apply least privilege and deny-by-default. Enforce access in the backend/API, not only the UI. Validate record ownership and scope server-side. Do not expose sensitive values in logs, test fixtures, screenshots or error messages. Use synthetic test data. Never commit secrets or production personal data.
+
+Audit high-impact changes, access-control changes, approvals and financial actions. Flag legal/privacy questions for qualified review; do not claim compliance merely because controls exist.
