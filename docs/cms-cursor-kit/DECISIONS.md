@@ -35,6 +35,18 @@ Use statuses: Confirmed, Proposed, To validate, Deferred, Rejected.
 | DEC-029 | Offerings and pledges in MVP (manual + payment method). | Confirmed | Unpaid list + follow-ups. |
 | DEC-030 | SMS + WhatsApp messaging incl. visitor thank-you SMS. | Confirmed | Consent-aware; closes channel choice for launch. |
 | DEC-031 | Excel member import in MVP. | Confirmed | Admin validate → preview → commit. |
+| DEC-032 | Platform provisions each church + first admin; members self-register by searching a church and await admin approval before login. | Confirmed | Operator-led tenant creation; no public “create church”; no login until join request approved. Supersedes staff-only person creation as the *only* member intake path. |
+
+### DEC-032 — Platform church setup and member self-registration
+- **Status:** Confirmed
+- **Date:** 2026-11-12
+- **Decision owner:** Product owner (AMVA)
+- **Context/problem:** Need a clear path for AMVA to onboard churches and for members to join a specific church without open self-serve SaaS signup.
+- **Options considered:** (A) Staff-only create person + invite account; (B) Platform creates church + admin, members self-register → admin approve; (C) Fully public self-serve create-church.
+- **Decision:** **B.** Platform operators create the church tenant and first admin credentials. Church admins customize profile and invite leadership. Members register by searching/selecting that church; admins approve/reject; login only after approval.
+- **Rationale:** Matches platform-owner operations and church-controlled membership while keeping tenancy server-owned.
+- **Consequences/trade-offs:** Requires public safe church search; Better Auth signup stays disabled for direct account creation; join-request → provision account on approve. Phase B ships create-church + first admin; Phase D ships public register + approve.
+- **Related requirements/tasks:** BP-ORG-001; platform `POST /churches`; public join-requests (follow-up).
 
 ## Decision record template
 
