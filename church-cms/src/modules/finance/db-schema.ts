@@ -1,8 +1,7 @@
-/**
- * DRAFT — Stage 4. Not exported from platform/db/schema until Stage 3 gate.
- * See docs/STAGE_GATES.md.
- */
+/** Stage 4 — funds, accounts, journals, offerings, pledges, budgets, projects. */
+import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   date,
   integer,
   pgTable,
@@ -31,7 +30,7 @@ export const accounts = pgTable(
     name: text('name').notNull(),
     // asset | liability | equity | income | expense
     accountType: text('account_type').notNull(),
-    parentId: uuid('parent_id'),
+    parentId: uuid('parent_id').references((): AnyPgColumn => accounts.id),
     status: text('status').notNull().default('active'),
     ...auditColumns,
   },
@@ -91,7 +90,7 @@ export const journals = pgTable(
     journalDate: date('journal_date').notNull(),
     memo: text('memo'),
     paymentMethod: text('payment_method'),
-    reversesEntryId: uuid('reverses_entry_id'),
+    reversesEntryId: uuid('reverses_entry_id').references((): AnyPgColumn => journals.id),
     // draft | posted | reversed
     status: text('status').notNull().default('draft'),
     postedAt: timestamp('posted_at', { withTimezone: true }),
@@ -128,6 +127,10 @@ export const offerings = pgTable('offerings', {
     .references(() => churches.id),
   serviceDate: date('service_date').notNull(),
   fundId: uuid('fund_id').references(() => funds.id),
+  /** Credit / income GL account when posting. */
+  incomeAccountId: uuid('income_account_id').references(() => accounts.id),
+  /** Debit / cash-bank deposit account when posting. */
+  depositAccountId: uuid('deposit_account_id').references(() => accounts.id),
   amountMinor: integer('amount_minor').notNull(),
   currency: text('currency').notNull().default('TZS'),
   note: text('note'),
@@ -183,6 +186,9 @@ export const expenses = pgTable('expenses', {
     () => organisationalUnits.id,
   ),
   accountId: uuid('account_id').references(() => accounts.id),
+  /** Credit / cash-bank side used when auto-posting on approve. */
+  paymentAccountId: uuid('payment_account_id').references(() => accounts.id),
+  fundId: uuid('fund_id').references(() => funds.id),
   amountMinor: integer('amount_minor').notNull(),
   currency: text('currency').notNull().default('TZS'),
   expenseDate: date('expense_date').notNull(),
@@ -208,6 +214,12 @@ export const budgets = pgTable(
       () => organisationalUnits.id,
     ),
     name: text('name').notNull(),
+    /** monthly | quarterly | yearly */
+    periodKind: text('period_kind').notNull().default('yearly'),
+    /** e.g. 2026-03, 2026-Q1, 2026 */
+    periodKey: text('period_key').notNull().default(''),
+    startsOn: date('starts_on'),
+    endsOn: date('ends_on'),
     status: text('status').notNull().default('draft'),
     ...auditColumns,
   },
@@ -277,6 +289,35 @@ export const projectAssignments = pgTable(
       table.projectId,
       table.personId,
     ),
+  ],
+);
+
+/** Member volunteer interest (pending until leader accepts/declines). */
+export const projectInterestRequests = pgTable(
+  'project_interest_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id),
+    personId: uuid('person_id')
+      .notNull()
+      .references(() => people.id),
+    note: text('note'),
+    // pending | accepted | declined | withdrawn
+    status: text('status').notNull().default('pending'),
+    decidedByUserId: uuid('decided_by_user_id'),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    decisionNote: text('decision_note'),
+    resultingAssignmentId: uuid('resulting_assignment_id').references(
+      () => projectAssignments.id,
+    ),
+    ...auditColumns,
+  },
+  (table) => [
+    uniqueIndex('project_interest_requests_open_uidx')
+      .on(table.projectId, table.personId)
+      .where(sql`${table.status} = 'pending' AND ${table.deletedAt} is null`),
   ],
 );
 

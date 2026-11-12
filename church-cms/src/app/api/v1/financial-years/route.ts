@@ -1,0 +1,13 @@
+import { withApiHandler, parseJsonBody, jsonCreated, REQUEST_ID_HEADER } from '@/platform/http';
+import { createFinancialYearBodySchema, createFinancialYear, listFinancialYears } from '@/modules/finance';
+
+export const GET = withApiHandler(async (ctx) => {
+  const result = await listFinancialYears(ctx);
+  return Response.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } });
+});
+
+export const POST = withApiHandler(async (ctx, request) => {
+  const body = await parseJsonBody(request, createFinancialYearBodySchema);
+  const year = await createFinancialYear(ctx, body);
+  return jsonCreated(year, ctx.requestId, `/api/v1/financial-years/${year.id}`);
+});
