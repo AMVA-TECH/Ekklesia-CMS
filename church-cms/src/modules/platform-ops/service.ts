@@ -1,6 +1,7 @@
 import type { PlatformCtx } from '@/platform/auth';
-import { getAuth } from '@/platform/auth';
+import { getAuth, provisionCredentialAccount } from '@/platform/auth';
 import { getDb } from '@/platform/db/client';
+import { newId } from '@/platform/db/ids';
 import { writePlatformAudit } from '@/platform/audit';
 import { sanitizeAuditMetadata } from '@/platform/audit/sanitize';
 import {
@@ -20,8 +21,10 @@ import {
 import * as repo from './repository';
 import { runSecurityDetectors } from './detectors';
 import { DEFAULT_PLATFORM_PERMISSIONS } from './constants';
+import { slugifyChurchName } from './slug';
 import type {
   AddOperatorBody,
+  CreateChurchBody,
   EnterTenantBody,
   GrowthQuery,
   ListFindingsQuery,
@@ -118,6 +121,109 @@ export async function listPlatformChurches(ctx: PlatformCtx) {
       defaultLocale: r.defaultLocale,
       createdAt: r.createdAt.toISOString(),
     })),
+  };
+}
+
+/**
+ * Platform-only: create a church tenant and first church administrator.
+ * Returns the issued PIN once — never write it to audit/logs (DEC-032).
+ */
+export async function createPlatformChurch(
+  ctx: PlatformCtx,
+  body: CreateChurchBody,
+) {
+  assertPlatformAdmin(ctx);
+  const db = getDb();
+  const actorUserId = ctx.actor.userAccountId;
+
+  const slug = body.slug?.trim() || slugifyChurchName(body.name);
+  if (await repo.findChurchBySlug(db, slug)) {
+    throw conflict('A church with this slug already exists.');
+  }
+
+  const email = body.admin.email.trim().toLowerCase();
+  if (await repo.findUserAccountByEmail(db, email)) {
+    throw conflict('An account with this admin email already exists.');
+  }
+  if (
+    body.admin.phoneE164 &&
+    (await repo.findUserAccountByPhone(db, body.admin.phoneE164))
+  ) {
+    throw conflict('An account with this admin phone already exists.');
+  }
+
+  const churchId = newId();
+  const personId = newId();
+  const userAccountId = newId();
+
+  await repo.insertChurch(db, {
+    id: churchId,
+    name: body.name.trim(),
+    slug,
+    timezone: body.timezone,
+    defaultLocale: body.defaultLocale,
+    actorUserId,
+  });
+
+  const { administratorRoleId } = await repo.bootstrapChurchRoles(
+    db,
+    churchId,
+    actorUserId,
+  );
+
+  await repo.insertChurchAdminBundle(db, {
+    churchId,
+    actorUserId,
+    administratorRoleId,
+    personId,
+    userAccountId,
+    displayName: body.admin.displayName.trim(),
+    email,
+    phoneE164: body.admin.phoneE164 ?? null,
+  });
+
+  await provisionCredentialAccount(db, {
+    userAccountId,
+    displayName: body.admin.displayName.trim(),
+    email,
+    phoneE164: body.admin.phoneE164 ?? null,
+    pin: body.admin.pin,
+    twoFactorEnabled: true,
+  });
+
+  await repo.insertDefaultEventTypes(db, churchId, userAccountId);
+
+  await writePlatformAudit(db, ctx, {
+    action: 'platform.church.created',
+    entityType: 'church',
+    entityId: churchId,
+    churchId,
+    metadata: sanitizeAuditMetadata({
+      slug,
+      adminUserAccountId: userAccountId,
+      adminEmail: email,
+      // pin intentionally omitted
+    }),
+  });
+
+  return {
+    church: {
+      id: churchId,
+      name: body.name.trim(),
+      slug,
+      timezone: body.timezone,
+      defaultLocale: body.defaultLocale,
+    },
+    admin: {
+      userAccountId,
+      personId,
+      displayName: body.admin.displayName.trim(),
+      email,
+      phoneE164: body.admin.phoneE164 ?? null,
+      /** Shown once to the platform operator — not stored in audit. */
+      initialPin: body.admin.pin,
+      mfaRequired: true,
+    },
   };
 }
 

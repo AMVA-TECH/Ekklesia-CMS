@@ -11,16 +11,23 @@ import {
 
 import type { Db } from '@/platform/db/client';
 import { newId } from '@/platform/db/ids';
-import { churches } from '@/modules/churches/db-schema';
-import { people, userAccounts } from '@/modules/people/db-schema';
+import { churches, churchSettings } from '@/modules/churches/db-schema';
+import {
+  organisationUsers,
+  people,
+  userAccounts,
+} from '@/modules/people/db-schema';
 import { memberships } from '@/modules/membership/db-schema';
-import { attendanceRecords } from '@/modules/events/db-schema';
+import { attendanceRecords, eventTypes } from '@/modules/events/db-schema';
 import { messageDeliveries, messageJobs } from '@/modules/messaging/db-schema';
 import { auditEvents } from '@/modules/platform/db-schema';
 import {
+  permissions,
+  rolePermissions,
   roles,
   userRoleAssignments,
 } from '@/modules/access-control/db-schema';
+import { DEFAULT_CHURCH_ROLES } from './role-bootstrap';
 import {
   platformAuditEvents,
   platformMetricSnapshots,
@@ -506,4 +513,198 @@ export async function countExportsSince(db: Db, since: Date): Promise<number> {
       ),
     );
   return Number(rows[0]?.n ?? 0);
+}
+
+export async function findChurchBySlug(db: Db, slug: string) {
+  const rows = await db
+    .select({ id: churches.id })
+    .from(churches)
+    .where(and(eq(churches.slug, slug), isNull(churches.deletedAt)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function findUserAccountByEmail(db: Db, email: string) {
+  const rows = await db
+    .select({ id: userAccounts.id })
+    .from(userAccounts)
+    .where(and(eq(userAccounts.email, email), isNull(userAccounts.deletedAt)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function findUserAccountByPhone(db: Db, phoneE164: string) {
+  const rows = await db
+    .select({ id: userAccounts.id })
+    .from(userAccounts)
+    .where(
+      and(eq(userAccounts.phoneE164, phoneE164), isNull(userAccounts.deletedAt)),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function insertChurch(
+  db: Db,
+  input: {
+    id: string;
+    name: string;
+    slug: string;
+    timezone: string;
+    defaultLocale: string;
+    actorUserId: string;
+  },
+) {
+  await db.insert(churches).values({
+    id: input.id,
+    name: input.name,
+    slug: input.slug,
+    timezone: input.timezone,
+    defaultLocale: input.defaultLocale,
+    createdBy: input.actorUserId,
+    updatedBy: input.actorUserId,
+  });
+  await db.insert(churchSettings).values({
+    id: newId(),
+    churchId: input.id,
+    settings: {},
+    createdBy: input.actorUserId,
+    updatedBy: input.actorUserId,
+  });
+}
+
+export async function bootstrapChurchRoles(
+  db: Db,
+  churchId: string,
+  actorUserId: string,
+): Promise<{ administratorRoleId: string; memberRoleId: string }> {
+  const permissionRows = await db
+    .select({ id: permissions.id, code: permissions.code })
+    .from(permissions);
+
+  const byCode = new Map(permissionRows.map((p) => [p.code, p.id]));
+  let administratorRoleId = '';
+  let memberRoleId = '';
+
+  for (const roleDef of DEFAULT_CHURCH_ROLES) {
+    const roleId = newId();
+    await db.insert(roles).values({
+      id: roleId,
+      churchId,
+      code: roleDef.code,
+      name: roleDef.name,
+      createdBy: actorUserId,
+      updatedBy: actorUserId,
+    });
+
+    const permissionIds = roleDef.permissions
+      .map((code) => byCode.get(code))
+      .filter((id): id is string => Boolean(id));
+
+    if (permissionIds.length > 0) {
+      await db.insert(rolePermissions).values(
+        permissionIds.map((permissionId) => ({
+          roleId,
+          permissionId,
+        })),
+      );
+    }
+
+    if (roleDef.code === 'church_administrator') administratorRoleId = roleId;
+    if (roleDef.code === 'member') memberRoleId = roleId;
+  }
+
+  if (!administratorRoleId || !memberRoleId) {
+    throw new Error('Failed to bootstrap required church roles');
+  }
+
+  return { administratorRoleId, memberRoleId };
+}
+
+export async function insertChurchAdminBundle(
+  db: Db,
+  input: {
+    churchId: string;
+    actorUserId: string;
+    administratorRoleId: string;
+    personId: string;
+    userAccountId: string;
+    displayName: string;
+    email: string;
+    phoneE164?: string | null;
+  },
+) {
+  await db.insert(people).values({
+    id: input.personId,
+    displayName: input.displayName,
+    fullName: input.displayName,
+    preferredLocale: 'en',
+    directoryOptIn: false,
+    createdBy: input.actorUserId,
+    updatedBy: input.actorUserId,
+  });
+
+  await db.insert(userAccounts).values({
+    id: input.userAccountId,
+    email: input.email,
+    phoneE164: input.phoneE164 ?? null,
+    status: 'active',
+    createdBy: input.actorUserId,
+    updatedBy: input.actorUserId,
+  });
+
+  await db.insert(organisationUsers).values({
+    id: newId(),
+    churchId: input.churchId,
+    userAccountId: input.userAccountId,
+    personId: input.personId,
+    status: 'active',
+    createdBy: input.actorUserId,
+    updatedBy: input.actorUserId,
+  });
+
+  await db.insert(memberships).values({
+    id: newId(),
+    churchId: input.churchId,
+    personId: input.personId,
+    membershipType: 'individual',
+    status: 'active',
+    effectiveFrom: new Date().toISOString().slice(0, 10),
+    createdBy: input.actorUserId,
+    updatedBy: input.actorUserId,
+  });
+
+  await db.insert(userRoleAssignments).values({
+    id: newId(),
+    churchId: input.churchId,
+    userAccountId: input.userAccountId,
+    roleId: input.administratorRoleId,
+    scopeType: 'church',
+    createdBy: input.actorUserId,
+    updatedBy: input.actorUserId,
+  });
+}
+
+export async function insertDefaultEventTypes(
+  db: Db,
+  churchId: string,
+  actorUserId: string,
+) {
+  const defaults = [
+    { code: 'sunday_service', name: 'Sunday Service' },
+    { code: 'midweek_service', name: 'Midweek Service' },
+    { code: 'special_event', name: 'Special Event' },
+    { code: 'ministry_meeting', name: 'Ministry Meeting' },
+  ] as const;
+
+  await db.insert(eventTypes).values(
+    defaults.map((row) => ({
+      id: newId(),
+      churchId,
+      code: row.code,
+      name: row.name,
+      createdBy: actorUserId,
+      updatedBy: actorUserId,
+    })),
+  );
 }

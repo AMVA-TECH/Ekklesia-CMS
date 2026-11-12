@@ -1,6 +1,7 @@
 export {
   getOverview,
   listPlatformChurches,
+  createPlatformChurch,
   getPlatformChurch,
   listPlatformAuditEvents,
   listSecurityFindings,
@@ -21,6 +22,7 @@ export {
   enterTenantBodySchema,
   addOperatorBodySchema,
   growthQuerySchema,
+  createChurchBodySchema,
 } from './schemas';
 export {
   platformOperators,
