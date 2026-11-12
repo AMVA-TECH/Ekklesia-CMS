@@ -36,6 +36,7 @@ Read this whole file before ANY task. Then read the documents that match the tas
 | Structuring code for future extraction         | `docs/07-backend-extraction.md`        |
 | CI/CD, migrations, deploys, logs, monitoring   | `docs/08-delivery-and-observability.md`|
 | Why a major decision was made                  | `docs/09-adr-0001-initial-architecture.md` |
+| SemVer, tags, changelogs, GitHub Releases      | `docs/10-release-versioning.md` (+ skill `.cursor/skills/release-please`) |
 
 ## 4. The Ten Non-Negotiable Rules
 
