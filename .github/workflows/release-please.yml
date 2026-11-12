@@ -1,0 +1,26 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: release-please
+        uses: googleapis/release-please-action@v4
+        with:
+          # Uses GITHUB_TOKEN by default. To run CI on Release PRs, set repo
+          # secret RELEASE_PLEASE_TOKEN (PAT) and add:
+          #   token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          # See docs/10-release-versioning.md §8.
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: master
