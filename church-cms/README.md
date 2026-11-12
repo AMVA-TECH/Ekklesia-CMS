@@ -1,6 +1,8 @@
 # Church CMS (app)
 
-Next.js + TypeScript + Drizzle modular monolith. Product docs: `../docs`. Stage gates: [docs/STAGE_GATES.md](docs/STAGE_GATES.md).
+Runnable **Ekklesia** application (Next.js + TypeScript + Drizzle modular monolith).
+
+Product overview: [../README.md](../README.md). Architecture and agent rules: [`../docs/`](../docs/). Stage gates: [docs/STAGE_GATES.md](docs/STAGE_GATES.md).
 
 **API docs (local):** [http://127.0.0.1:3000/api/docs](http://127.0.0.1:3000/api/docs) — Swagger Try it out. Regenerate: `pnpm openapi:generate`. See [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
 
