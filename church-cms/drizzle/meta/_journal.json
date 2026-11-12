@@ -15,6 +15,125 @@
       "when": 1794231100000,
       "tag": "0001_rls_tenant_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794240000000,
+      "tag": "0002_stage3_ops",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794240001000,
+      "tag": "0003_rls_stage3",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794250000000,
+      "tag": "0004_stage4_finance_messaging",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794250001000,
+      "tag": "0005_rls_stage4",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794260000000,
+      "tag": "0006_imports",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794270000000,
+      "tag": "0007_rls_stage5_person_scoped",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794280000000,
+      "tag": "0008_message_job_custom_blast",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794290000000,
+      "tag": "0009_governance_reports_budgets",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794291000000,
+      "tag": "0010_expense_payment_attendance_polish",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794292000000,
+      "tag": "0011_offering_journal_post",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794293000000,
+      "tag": "0012_attendance_corrections",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794294000000,
+      "tag": "0013_project_interest_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794300000000,
+      "tag": "0014_event_posters",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794310000000,
+      "tag": "0015_better_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794311000000,
+      "tag": "0016_better_auth_id_defaults",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794320000000,
+      "tag": "0017_auth_phone_mfa",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794330000000,
+      "tag": "0018_platform_ops",
+      "breakpoints": true
     }
   ]
 }
