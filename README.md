@@ -130,6 +130,7 @@ Stage **5** (pilot readiness for CrossLife) is in progress — see [`church-cms/
 | API conventions | [`docs/03-api-architecture.md`](docs/03-api-architecture.md) |
 | Security & tenancy | [`docs/04-security.md`](docs/04-security.md) |
 | Auth decision | [`docs/09-adr-0002-authentication.md`](docs/09-adr-0002-authentication.md) |
+| Releases / SemVer / tags | [`docs/10-release-versioning.md`](docs/10-release-versioning.md) |
 | Brand (Ekklesia) | [`docs/ekklesia/`](docs/ekklesia/) |
 | Business analysis pack | [`docs/CMS_Business_Analysis/`](docs/CMS_Business_Analysis/) |
 
