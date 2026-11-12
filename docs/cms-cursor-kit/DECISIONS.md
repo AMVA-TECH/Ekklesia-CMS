@@ -46,7 +46,7 @@ Use statuses: Confirmed, Proposed, To validate, Deferred, Rejected.
 - **Decision:** **B.** Platform operators create the church tenant and first admin credentials. Church admins customize profile and invite leadership. Members register by searching/selecting that church; admins approve/reject; login only after approval.
 - **Rationale:** Matches platform-owner operations and church-controlled membership while keeping tenancy server-owned.
 - **Consequences/trade-offs:** Requires public safe church search; Better Auth signup stays disabled for direct account creation; join-request → provision account on approve. Phase B ships create-church + first admin; Phase D ships public register + approve.
-- **Related requirements/tasks:** BP-ORG-001; platform `POST /churches`; public join-requests (follow-up).
+- **Related requirements/tasks:** BP-ORG-001; platform `POST /churches`; public join-requests (Phase D implemented).
 
 ## Decision record template
 
