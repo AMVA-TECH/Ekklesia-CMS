@@ -1,4 +1,4 @@
-/** DRAFT — Stage 3. Not in migrations until Stage 2 gate. See docs/STAGE_GATES.md. */
+/** Stage 3 — events, registrations, and attendance. */
 import {
   date,
   integer,
@@ -14,6 +14,7 @@ import { churches } from '@/modules/churches/db-schema';
 import { organisationalUnits } from '@/modules/organisation/db-schema';
 import { households } from '@/modules/households/db-schema';
 import { people } from '@/modules/people/db-schema';
+import { mediaAssets } from '@/modules/platform/db-schema';
 import { auditColumns } from '@/platform/db/columns';
 
 export const eventTypes = pgTable(
@@ -43,10 +44,12 @@ export const events = pgTable('events', {
     () => organisationalUnits.id,
   ),
   title: text('title').notNull(),
+  description: text('description'),
   serviceDate: date('service_date').notNull(),
   startsAt: timestamp('starts_at', { withTimezone: true }),
   endsAt: timestamp('ends_at', { withTimezone: true }),
   status: text('status').notNull().default('scheduled'),
+  posterMediaId: uuid('poster_media_id').references(() => mediaAssets.id),
   ...auditColumns,
 });
 
@@ -133,15 +136,20 @@ export const attendanceSummaries = pgTable(
   },
 );
 
-export const sessionQrTokens = pgTable('session_qr_tokens', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  sessionId: uuid('session_id')
-    .notNull()
-    .references(() => attendanceSessions.id),
-  tokenHash: text('token_hash').notNull(),
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  ...auditColumns,
-});
+export const sessionQrTokens = pgTable(
+  'session_qr_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    sessionId: uuid('session_id')
+      .notNull()
+      .references(() => attendanceSessions.id),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [uniqueIndex('session_qr_tokens_token_hash_uidx').on(table.tokenHash)],
+);
 
 export const attendanceDayAggregates = pgTable(
   'attendance_day_aggregates',
@@ -174,8 +182,13 @@ export const attendanceCorrectionRequests = pgTable(
     sessionId: uuid('session_id')
       .notNull()
       .references(() => attendanceSessions.id),
+    /** present | absent | late — claimed correction */
+    requestedPresence: text('requested_presence').notNull().default('present'),
     status: text('status').notNull().default('pending'),
     note: text('note'),
+    resolutionNote: text('resolution_note'),
+    resolvedByUserId: uuid('resolved_by_user_id'),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
     ...auditColumns,
   },
 );
