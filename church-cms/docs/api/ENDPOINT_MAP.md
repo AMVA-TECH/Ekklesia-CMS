@@ -139,6 +139,7 @@ Regenerate: `pnpm openapi:generate`
 | `GET` | `/api/v1/platform/access/summary` | Platform | platform |
 | `GET` | `/api/v1/platform/audit-events` | Platform | platform |
 | `GET` | `/api/v1/platform/churches` | Platform | platform |
+| `POST` | `/api/v1/platform/churches` | Platform admin | create church + first admin (DEC-032); PIN returned once |
 | `GET` | `/api/v1/platform/churches/{id}` | Platform | platform |
 | `GET` | `/api/v1/platform/growth` | Platform | platform |
 | `GET` | `/api/v1/platform/health` | Platform | platform |
