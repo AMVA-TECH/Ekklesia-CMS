@@ -3,7 +3,20 @@ export {
   membershipApplications,
   membershipDecisions,
   membershipStatusHistory,
+  churchJoinRequests,
 } from './db-schema';
+export {
+  searchPublicChurches,
+  createPublicJoinRequest,
+  listJoinRequests,
+  decideJoinRequest,
+} from './join-requests';
+export {
+  publicChurchSearchQuerySchema,
+  createJoinRequestBodySchema,
+  listJoinRequestsQuerySchema,
+  decideJoinRequestBodySchema,
+} from './join-request-schemas';
 export {
   MEMBERSHIP_STATUSES,
   MEMBERSHIP_TYPES,
