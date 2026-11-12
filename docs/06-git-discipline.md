@@ -158,7 +158,7 @@ If you discover you have made a big, mixed change before committing: `git reset`
 
 ## 9. Using the history for monitoring
 
-- `git log --oneline` should read like a changelog. Automated changelog/release notes come from Conventional Commits (e.g. release-please or Changesets).
+- `git log --oneline` should read like a changelog. Automated changelog, SemVer bumps, tags, and GitHub Releases come from Conventional Commits via **release-please** (see `10-release-versioning.md`). Do not hand-tag ordinary releases.
 - Healthy signals: many small commits; low average size; few reverts; `fix` commits trailing `feat` commits closely rather than piling up.
 - Warning signs: commits > 300 lines; messages like "misc"; commits mixing types; a day of work in one commit.
 - Use `git bisect` to find regressions and `git revert <sha>` for safe rollbacks — both rely on every commit being green and atomic.

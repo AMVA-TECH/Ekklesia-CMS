@@ -14,7 +14,7 @@ Rules: separate secrets per environment; no production data in preview/local wit
 
 ## 2. Continuous integration (GitHub Actions)
 
-Runs on every pull request and on `main`:
+Runs on every pull request and on `master`:
 
 1. Install with lockfile (`pnpm install --frozen-lockfile`)
 2. `pnpm typecheck`
@@ -26,12 +26,13 @@ Runs on every pull request and on `main`:
 8. E2E smoke tests (Playwright) against the preview URL for critical flows
 9. Commitlint over the PR's commits (conventional format)
 
-Branch protection: required checks + at least one human review + no direct pushes to `main`.
+Branch protection: required checks + at least one human review + no direct pushes to `master` (prefer PRs; Release PRs from release-please are the exception that cuts versions).
 
 ## 3. Continuous delivery
 
-- Merge to `main` → Vercel builds and deploys to production automatically (after checks pass).
+- Merge to `master` (default branch) → Vercel builds and deploys to production automatically (after checks pass).
 - Every PR gets a preview deployment with its own database branch.
+- **Product versions (SemVer):** [release-please](https://github.com/googleapis/release-please) opens a Release PR from Conventional Commits; merging that PR tags `vX.Y.Z`, updates `church-cms/package.json` + `CHANGELOG.md`, and publishes a GitHub Release. Rules: `10-release-versioning.md`. Deploy ≠ version tag.
 - **Rollback:** use Vercel's instant rollback to the previous deployment. Database changes are **rolled forward** (fix-forward), which is why migrations must be backward compatible (section 4).
 - Feature flags (simple config or DB-backed) for risky or unfinished features so code can ship dark.
 - Deploy at low-usage times for risky changes; avoid deploys right before major church events (Sunday services, conferences).
@@ -51,11 +52,15 @@ Branch protection: required checks + at least one human review + no direct pushe
 
 ## 5. Release checklist
 
+Use before merging a **release-please Release PR** (and for any human-approved hot ship):
+
 - [ ] CI green; preview verified on a **phone-sized viewport** and a slow-network profile
+- [ ] Release PR notes match what actually shipped (Conventional Commits / override if needed)
+- [ ] `church-cms/package.json` version and proposed tag `vX.Y.Z` agree
 - [ ] Migrations reviewed and backward compatible
 - [ ] New env vars added to Vercel (all environments)
-- [ ] OpenAPI updated; breaking changes avoided or versioned
-- [ ] Monitoring/alerts cover the new feature
+- [ ] OpenAPI updated; breaking changes avoided or versioned (`/api/v1` vs app SemVer — see `10`)
+- [ ] Monitoring/alerts cover the new feature; error tracker can tag by release
 - [ ] Rollback plan known
 - [ ] Churches informed of visible changes (short notes in Swahili and English when relevant)
 
