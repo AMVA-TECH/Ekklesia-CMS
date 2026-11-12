@@ -16,9 +16,11 @@ export {
   listRolesQuerySchema,
   listRoleAssignmentsQuerySchema,
   createRoleAssignmentBodySchema,
+  inviteLeadershipBodySchema,
   type ListRolesQuery,
   type ListRoleAssignmentsQuery,
   type CreateRoleAssignmentBody,
+  type InviteLeadershipBody,
 } from './schemas';
 export {
   listRoles,
@@ -26,4 +28,5 @@ export {
   createRoleAssignment,
   revokeRoleAssignment,
 } from './service';
+export { inviteLeadership } from './leadership-invites';
 export { listActiveAssignmentsForUser } from './repository';
