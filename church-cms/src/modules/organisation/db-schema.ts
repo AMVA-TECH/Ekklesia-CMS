@@ -1,4 +1,4 @@
-/** DRAFT — Stage 3. Not in migrations until Stage 2 gate. See docs/STAGE_GATES.md. */
+/** Stage 3 — organisation units, programmes, positions, appointments, delegations. */
 import {
   type AnyPgColumn,
   date,
