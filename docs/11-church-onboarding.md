@@ -19,7 +19,7 @@ Public “create my church” and instant login on register are **out of scope**
 | Phase | Scope | Status |
 | --- | --- | --- |
 | B | `POST /api/v1/platform/churches` + platform UI (create church + first admin) | Implemented |
-| C | Admin invite leadership | Planned |
+| C | Admin invite leadership | Implemented |
 | D | Public church search + join request + admin approve → provision member | Implemented |
 
 ## Security notes
