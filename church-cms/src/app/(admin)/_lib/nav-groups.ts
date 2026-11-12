@@ -56,6 +56,12 @@ export function buildAdminGroups(session: Session | null): NavGroup[] {
           href: '/admin/memberships',
           icon: 'user-plus',
         },
+        {
+          label: 'Join requests',
+          hint: 'Approve new members',
+          href: '/admin/join-requests',
+          icon: 'inbox',
+        },
       ],
     });
 

@@ -245,10 +245,10 @@ export function SignInClient(): React.ReactElement {
       <p className="mt-8 text-center text-sm text-muted-foreground">
         New to this church?{' '}
         <Link
-          href="/sign-in?help=1"
+          href="/register"
           className="link-ink font-medium underline-offset-2 hover:underline focus-ring rounded-sm"
         >
-          Ask about joining
+          Request to join
         </Link>
       </p>
     </div>
