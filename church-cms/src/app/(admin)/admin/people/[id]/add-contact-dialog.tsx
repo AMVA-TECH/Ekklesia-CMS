@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError, normalizePhoneE164 } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -37,15 +37,20 @@ export function AddContactDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setChannel('phone');
-    setValue('');
-    setIsPrimary(true);
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open]);
+  // Reset the form each time the dialog opens — adjusted during render
+  // (React's prop-change pattern) instead of in an effect.
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setChannel('phone');
+      setValue('');
+      setIsPrimary(true);
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }
 
   const handleClose = (): void => {
     if (submitting) return;

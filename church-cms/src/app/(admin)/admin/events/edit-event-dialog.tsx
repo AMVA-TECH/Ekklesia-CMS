@@ -58,21 +58,26 @@ export function EditEventDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setTitle(event.title);
-    setDescription(event.description ?? '');
-    setServiceDate(event.serviceDate);
-    setEventTypeId(event.eventTypeId ?? '');
-    setStatus(EVENT_STATUSES.find((s) => s === event.status) ?? 'scheduled');
-    setStartsAtLocal(toDatetimeLocalValue(event.startsAt));
-    setEndsAtLocal(toDatetimeLocalValue(event.endsAt));
-    setPosterFile(null);
-    setClearPoster(false);
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open, event]);
+  // Reset the form when the dialog opens or its subject changes — adjusted
+  // during render (React's prop-change pattern) instead of in an effect.
+  const [resetFor, setResetFor] = useState({ open: false, event });
+  if (resetFor.open !== open || resetFor.event !== event) {
+    setResetFor({ open, event });
+    if (open) {
+      setTitle(event.title);
+      setDescription(event.description ?? '');
+      setServiceDate(event.serviceDate);
+      setEventTypeId(event.eventTypeId ?? '');
+      setStatus(EVENT_STATUSES.find((s) => s === event.status) ?? 'scheduled');
+      setStartsAtLocal(toDatetimeLocalValue(event.startsAt));
+      setEndsAtLocal(toDatetimeLocalValue(event.endsAt));
+      setPosterFile(null);
+      setClearPoster(false);
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     if (!posterFile) {
