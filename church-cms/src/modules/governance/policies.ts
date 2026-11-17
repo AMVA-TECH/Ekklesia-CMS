@@ -10,6 +10,16 @@ export function assertCanApproveDisbursement(ctx: Ctx): void {
   if (!can(ctx, 'disbursements:approve')) throw forbidden();
 }
 
+export function assertCanReadExpenses(ctx: Ctx): void {
+  if (
+    !can(ctx, 'disbursements:request') &&
+    !can(ctx, 'disbursements:approve') &&
+    !can(ctx, 'finance_reports:read')
+  ) {
+    throw forbidden();
+  }
+}
+
 export function assertCanReadApprovals(ctx: Ctx): void {
   if (
     !can(ctx, 'disbursements:approve') &&

@@ -17,6 +17,7 @@ export {
 export {
   createExpenseBodySchema,
   listApprovalsQuerySchema,
+  listExpensesQuerySchema,
   decideApprovalBodySchema,
   createDelegationBodySchema,
   listDelegationsQuerySchema,
@@ -44,6 +45,7 @@ export {
   submitExpense,
   postExpense,
   listApprovalRequests,
+  listExpenses,
   decideApproval,
   listReportCatalogue,
   getLeadershipReport,

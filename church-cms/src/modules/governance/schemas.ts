@@ -4,6 +4,7 @@ import {
   APPROVAL_STATUSES,
   BUDGET_PERIOD_KINDS,
   DELEGATION_STATUSES,
+  EXPENSE_STATUSES,
   IMPLEMENTED_REPORT_IDS,
   MINUTES_STATUSES,
 } from './constants';
@@ -21,6 +22,14 @@ export const createExpenseBodySchema = z
   })
   .strict();
 export type CreateExpenseBody = z.infer<typeof createExpenseBodySchema>;
+
+export const listExpensesQuerySchema = z
+  .object({
+    status: z.enum(EXPENSE_STATUSES).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+  })
+  .strict();
+export type ListExpensesQuery = z.infer<typeof listExpensesQuerySchema>;
 
 export const listApprovalsQuerySchema = z
   .object({
