@@ -80,6 +80,7 @@ const DRAWER_GROUPS: readonly NavGroup[] = [
       { label: 'Events', href: '/events', icon: 'calendar', hint: 'Browse and register' },
       { label: 'Community', href: '/community', icon: 'users', hint: 'Ministries & groups' },
       { label: 'Giving', href: '/giving', icon: 'hand', hint: 'Pledges & offerings' },
+      { label: 'Projects', href: '/projects', icon: 'briefcase', hint: 'Volunteer for church projects' },
     ],
   },
   {
