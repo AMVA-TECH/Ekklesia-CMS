@@ -121,7 +121,7 @@ export function BudgetsClient(): React.ReactElement {
                           <button
                             type="button"
                             aria-expanded={open}
-                            className="font-medium text-foreground hover:underline focus-ring"
+                            className="-my-2 inline-flex min-h-10 items-center text-left font-medium text-foreground hover:underline focus-ring"
                             onClick={() => setExpanded(open ? null : b.id)}
                           >
                             {b.name}

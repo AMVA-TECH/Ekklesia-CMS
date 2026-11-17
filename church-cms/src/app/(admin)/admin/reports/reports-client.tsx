@@ -138,7 +138,7 @@ export function ReportsClient({
                             type="button"
                             aria-current={selected === r.id ? 'true' : undefined}
                             className={
-                              'w-full rounded-md px-2 py-1.5 text-left text-sm focus-ring ' +
+                              'w-full rounded-md px-2 py-2.5 text-left text-sm focus-ring ' +
                               (selected === r.id
                                 ? 'bg-brand-gold-tint font-medium text-foreground'
                                 : 'hover:bg-surface-muted')
@@ -175,7 +175,7 @@ export function ReportsClient({
                   <li key={s.id}>
                     <button
                       type="button"
-                      className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-surface-muted focus-ring"
+                      className="w-full rounded-md px-2 py-2.5 text-left text-sm hover:bg-surface-muted focus-ring"
                       onClick={() => {
                         setSelected(s.reportId);
                         setFilters({

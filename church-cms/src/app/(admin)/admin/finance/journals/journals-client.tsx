@@ -131,7 +131,7 @@ export function JournalsClient(): React.ReactElement {
                         <TD>
                           <button
                             type="button"
-                            className="font-mono text-xs font-medium text-foreground hover:underline focus-ring"
+                            className="-my-2 inline-flex min-h-10 items-center font-mono text-xs font-medium text-foreground hover:underline focus-ring"
                             aria-expanded={open}
                             onClick={() => setExpanded(open ? null : j.id)}
                           >

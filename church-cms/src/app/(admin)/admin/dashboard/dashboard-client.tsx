@@ -290,7 +290,7 @@ export function DashboardClient(): React.ReactElement {
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Attendance — calm placeholder until series API exists */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <Panel
             title="Recent attendance"
             subtitle="Total present per service day, last 8 weeks."
@@ -302,7 +302,7 @@ export function DashboardClient(): React.ReactElement {
         </div>
 
         {/* Upcoming events with thumbs */}
-        <div className="lg:col-span-3">
+        <div className="min-w-0 lg:col-span-3">
           <Panel
             title="Upcoming events"
             subtitle="Next gatherings on the calendar"
