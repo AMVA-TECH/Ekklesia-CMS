@@ -1,5 +1,19 @@
 export { churches, churchSettings } from './db-schema';
-export { CHURCH_LOCALES, COMMON_TIMEZONES, type ChurchLocale } from './constants';
+export {
+  CHURCH_LOCALES,
+  CHURCH_LOGO_MEDIA_SETTING,
+  COMMON_TIMEZONES,
+  churchLogoContentUrl,
+  readLogoMediaId,
+  type ChurchLocale,
+} from './constants';
+export {
+  CHURCH_MODULE_IDS,
+  DEFAULT_CHURCH_SETTINGS,
+  resolveChurchSettings,
+  type ChurchModuleId,
+  type ResolvedChurchSettings,
+} from './settings-schema';
 export {
   updateChurchBodySchema,
   updateChurchSettingsBodySchema,

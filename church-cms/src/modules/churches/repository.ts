@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, ne, sql } from 'drizzle-orm';
 
 import type { Ctx } from '@/platform/auth';
 import type { Db } from '@/platform/db/client';
@@ -13,6 +13,25 @@ export async function getChurchById(db: Db, churchId: string) {
     .where(and(eq(churches.id, churchId), isNull(churches.deletedAt)))
     .limit(1);
   return row ?? null;
+}
+
+export async function isSlugTaken(
+  db: Db,
+  slug: string,
+  exceptChurchId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: churches.id })
+    .from(churches)
+    .where(
+      and(
+        eq(churches.slug, slug),
+        ne(churches.id, exceptChurchId),
+        isNull(churches.deletedAt),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
 }
 
 export async function updateChurch(

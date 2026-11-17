@@ -2,9 +2,22 @@ import { z } from 'zod';
 
 import { CHURCH_LOCALES } from './constants';
 
+const slugSchema = z
+  .string()
+  .trim()
+  .min(2)
+  .max(80)
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    'Slug must be lowercase letters, numbers, and hyphens',
+  );
+
 export const updateChurchBodySchema = z
   .object({
     name: z.string().trim().min(1).max(200).optional(),
+    shortName: z.string().trim().min(1).max(40).nullable().optional(),
+    displayName: z.string().trim().min(1).max(120).nullable().optional(),
+    slug: slugSchema.optional(),
     timezone: z.string().trim().min(1).max(80).optional(),
     defaultLocale: z.enum(CHURCH_LOCALES).optional(),
   })
