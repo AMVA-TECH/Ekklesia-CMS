@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
@@ -37,6 +38,8 @@ const KIND_TABS: Array<{ value: string; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'ministry', label: 'Ministries' },
   { value: 'department', label: 'Departments' },
+  { value: 'team', label: 'Teams' },
+  { value: 'branch', label: 'Branches' },
   { value: 'life_group', label: 'Life groups' },
 ];
 
@@ -285,9 +288,13 @@ export function MinistriesClient(): React.ReactElement {
                             >
                               <Icon name="hand" size={16} />
                             </span>
-                            <span className="font-medium text-foreground">
+                            <Link
+                              href={`/admin/organisation/${u.id}`}
+                              className="font-medium text-foreground underline-offset-2 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {u.name}
-                            </span>
+                            </Link>
                           </span>
                         </TD>
                         <TD>

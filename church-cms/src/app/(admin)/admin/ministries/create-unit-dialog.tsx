@@ -9,6 +9,7 @@ import {
   Field,
   Input,
   Select,
+  Textarea,
 } from '@/app/_ekklesia/ui';
 import type { OrganisationalUnit } from '../../_lib/api-types';
 
@@ -19,9 +20,14 @@ interface CreateUnitDialogProps {
   parents: readonly OrganisationalUnit[];
 }
 
-const KINDS: Array<{ value: 'ministry' | 'department' | 'life_group'; label: string }> = [
+const KINDS: Array<{
+  value: 'ministry' | 'department' | 'life_group' | 'branch' | 'team';
+  label: string;
+}> = [
   { value: 'ministry', label: 'Ministry' },
   { value: 'department', label: 'Department' },
+  { value: 'team', label: 'Team' },
+  { value: 'branch', label: 'Branch' },
   { value: 'life_group', label: 'Life group' },
 ];
 
@@ -32,8 +38,9 @@ export function CreateUnitDialog({
   parents,
 }: CreateUnitDialogProps): React.ReactElement {
   const formId = useId();
-  const [kind, setKind] = useState<'ministry' | 'department' | 'life_group'>('ministry');
+  const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('ministry');
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [parentId, setParentId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -42,6 +49,7 @@ export function CreateUnitDialog({
   const reset = (): void => {
     setKind('ministry');
     setName('');
+    setDescription('');
     setParentId('');
     setFieldErrors({});
     setFormError(null);
@@ -64,6 +72,7 @@ export function CreateUnitDialog({
       kind,
       name: name.trim(),
     };
+    if (description.trim()) payload.description = description.trim();
     if (parentId) payload.parentId = parentId;
     try {
       const created = await apiFetch<OrganisationalUnit>(
@@ -105,7 +114,7 @@ export function CreateUnitDialog({
       open={open}
       onClose={handleClose}
       title="New unit"
-      description="Create a ministry, department, or life group."
+      description="Create a ministry, department, team, branch, or life group."
       size="sm"
       footer={
         <DialogFooter>
@@ -138,7 +147,7 @@ export function CreateUnitDialog({
           <Select
             value={kind}
             onChange={(e) =>
-              setKind(e.target.value as 'ministry' | 'department' | 'life_group')
+              setKind(e.target.value as (typeof KINDS)[number]['value'])
             }
           >
             {KINDS.map((k) => (
@@ -160,6 +169,15 @@ export function CreateUnitDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={200}
+          />
+        </Field>
+
+        <Field label="Description" error={fieldErrors.description}>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            maxLength={4000}
           />
         </Field>
 
