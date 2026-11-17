@@ -51,10 +51,18 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Reset load state when the event or viewer changes (during render, not
+  // in the fetch effect, to avoid a cascading render).
+  const loadKey = `${eventId}|${user?.id ?? ''}`;
+  const [prevLoadKey, setPrevLoadKey] = useState(loadKey);
+  if (loadKey !== prevLoadKey) {
+    setPrevLoadKey(loadKey);
     setLoading(true);
     setLoadError(null);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const [eventResult, registrationsResult] = await Promise.allSettled([

@@ -54,7 +54,6 @@ export function HomeClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     (async () => {
       const [eventsRes, announcementsRes, participationsRes, pledgesRes] =
         await Promise.allSettled([

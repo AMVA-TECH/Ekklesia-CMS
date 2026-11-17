@@ -160,8 +160,6 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setLoadError(null);
 
     void (async () => {
       try {
@@ -267,7 +265,14 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
                 <>
                   <h1 className="text-xl font-semibold text-foreground">We hit a bump</h1>
                   <p className="max-w-sm text-sm">{loadError}</p>
-                  <Button onClick={() => setAttempt((n) => n + 1)} iconLeft="refresh">
+                  <Button
+                    onClick={() => {
+                      setLoading(true);
+                      setLoadError(null);
+                      setAttempt((n) => n + 1);
+                    }}
+                    iconLeft="refresh"
+                  >
                     Try again
                   </Button>
                   <Link

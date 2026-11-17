@@ -37,7 +37,6 @@ export function CommunityClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     (async () => {
       const [pResult, dResult] = await Promise.allSettled([
         apiFetch<MemberParticipationRequest[]>(

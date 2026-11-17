@@ -37,8 +37,6 @@ export function MemberEventsClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
     const url =
       filter === 'upcoming'
         ? `/api/v1/events?from=${today}&limit=50`
@@ -88,7 +86,16 @@ export function MemberEventsClient(): React.ReactElement {
         lede="Services, gatherings, and special moments from your church."
       />
 
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+      <Tabs
+        value={filter}
+        onValueChange={(v) => {
+          // Reset in the handler, not the fetch effect, to avoid a
+          // cascading render.
+          setFilter(v as Filter);
+          setLoading(true);
+          setError(null);
+        }}
+      >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabList aria-label="Event range">
             <Tab value="upcoming">Upcoming</Tab>

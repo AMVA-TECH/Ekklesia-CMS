@@ -27,9 +27,6 @@ export function AttendanceClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setForbidden(false);
     apiFetch<MyAttendance>('/api/v1/attendance/me')
       .then((payload) => {
         if (cancelled) return;
