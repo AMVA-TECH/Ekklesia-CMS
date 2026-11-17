@@ -13,26 +13,26 @@ Legend: **Pass** / **Fail** / **Blocked** / **Deferred (known gap)**
 | 3 | People create/read/update | `/people`, `POST /people/{id}/contacts` | | |
 | 4 | Households + members | `GET/POST /households`, `GET/PATCH /households/{id}`, members, children | | |
 | 5 | Membership statuses visitor/active/inactive + me | `GET/POST /memberships`, `GET /memberships/{id}`, `POST /memberships/{id}/status`, `/memberships/me` | | |
-| 6 | Membership approval by pastoral + admin leaders | `/membership-applications` (+ `/decision`), `/memberships/[id]` status + `/status-history` | | |
+| 6 | Membership approval by pastoral + admin leaders | `/membership-applications` (+ `/decision`), `/memberships/[id]` status + `/status-history` | | UI `/admin/memberships/applications` |
 | 7 | Ministry join (multi) + leader decision + pastoral visibility | `/participation-requests`, `/participation-requests/me`, decision, participations | | |
 | 8 | Events calendar + registration | `/events`, event-types (incl. Sunday Service), posters, `/events/{id}/registrations` (+ `/me` cancel); admin UI `/events` | | |
-| 9 | Attendance: QR, headcount, roll call, aggregates, absence, family views, nudges | Sessions + headcount/roll-call + day aggregates + QR UI (`Attendance QR` on event, manage-session panel → `/check-in?token=`) + absence + corrections; `GET /attendance/me` (calendar/band/suggestedNudge), `GET /attendance/family`, `GET /attendance/stats/leadership`; family/nudge UI TBD | | |
-| 10 | Projects with period/goal (+ optional money link) | `/projects`, assignments, contributions, `/projects/{id}/interest`, interest decision | | |
-| 11 | Accounting: funds, CoA/accounts, years, journals post, dual-control intent | `/funds`, `/financial-years` (+ `/close`), `/journals` (+ `/post`, `/reverse`) | | |
+| 9 | Attendance: QR, headcount, roll call, aggregates, absence, family views, nudges | Sessions + headcount/roll-call + day aggregates + QR UI (`Attendance QR` on event, manage-session panel → `/check-in?token=`) + absence + corrections; `GET /attendance/me` (calendar/band/suggestedNudge), `GET /attendance/family`, `GET /attendance/stats/leadership`; family view UI shipped; nudge UI TBD | | UI `/admin/attendance/absences`; member `/attendance/family` (family view + away notices) |
+| 10 | Projects with period/goal (+ optional money link) | `/projects`, assignments, contributions, `/projects/{id}/interest`, interest decision | | UI `/admin/projects` (+ detail); member `/projects` |
+| 11 | Accounting: funds, CoA/accounts, years, journals post, dual-control intent | `/funds`, `/financial-years` (+ `/close`), `/journals` (+ `/post`, `/reverse`) | | UI `/admin/finance/accounts`, `/admin/finance/journals` (GET `/journals` list) |
 | 12 | Offerings + pledges + follow-ups + applications (manual; gateway deferred) | `/offerings` (+ post), `/pledges`, follow-ups, `/pledges/{id}/applications`, `/pledges/unpaid` | | |
 | 13 | Member cannot access finance | RBAC deny on finance perms | | |
-| 14 | Expenses dual-control + auto journal + leadership reports (incl. R-SP-03, R-FIN-01, unit packs) + budgets + appointment requests + minutes + saved reports + SP delegation | `/expenses` (+ `/post`), `/approval-requests`, `/reports/*`, `/budgets`, `/appointment-requests`, `/meeting-minutes`, `/saved-reports`, `/delegations` | | Free-form designer still deferred |
-| 14b | Announcements DEC-032: audiences, church-wide submit → approval, unit publish / publish_direct | `/announcements`, submit, publish, `/announcements/{id}/reject`, `/approval-requests` | | |
+| 14 | Expenses dual-control + auto journal + leadership reports (incl. R-SP-03, R-FIN-01, unit packs) + budgets + appointment requests + minutes + saved reports + SP delegation | `/expenses` (+ `/post`), `/approval-requests`, `/reports/*`, `/budgets`, `/appointment-requests`, `/meeting-minutes`, `/saved-reports`, `/delegations` | | Free-form designer still deferred; UI `/admin/finance/expenses` (GET `/expenses` list), `/admin/approvals`, `/admin/finance/budgets`, `/admin/reports`, `/admin/leadership/requests`, `/admin/governance/minutes`, `/admin/governance/delegations` |
+| 14b | Announcements DEC-032: audiences, church-wide submit → approval, unit publish / publish_direct | `/announcements`, submit, publish, `/announcements/{id}/reject`, `/approval-requests` | | UI `/admin/approvals` for church-wide approval |
 | 15 | Message templates + announcements + communication preferences | `/message-templates`, announcements, `/communication-preferences/me` | | |
 | 16 | SMS/WhatsApp leadership blasts via **Briq** + delivery webhooks | `/message-jobs`, `/dispatch`, `/webhooks/briq`; stub OK without keys | | Set `NOTIFY_PROVIDER=briq` + Briq env for live |
-| 17 | Excel member import (validate → preview → commit) | `/imports/members`, validate, preview, commit | | |
+| 17 | Excel member import (validate → preview → commit) | `/imports/members`, validate, preview, commit | | UI `/admin/people/import` (CSV saved from Excel) |
 | 18 | Portal self-edit (phone/email/photo/language/directory opt-in) | `GET/PATCH /people/me` | | Portal UI polish TBD |
 | 19 | Opt-in directory (name + photo + ministry only) | `GET /directory` | | |
 | 20 | UI English + Swahili | Not started | Deferred | |
 | 21 | Cross-church isolation (other tenant → 404) | RLS + service tests; re-run on pilot DB | | |
 | 22 | RBAC matrix matches product docs for exercised endpoints | Seed roles (`church_administrator`, `member`, `finance_officer`) + permission checks; `GET /roles`, role-assignments | | See API_PATH_ALIASES.md for actor IDs |
-| 23 | Audit of high-impact actions visible/queryable | `GET /audit-events` (`audit:read`); metadata sanitized | | |
-| 23b | CSV exports (people / attendance / finance) as permitted | `POST /exports` (`exports:run` + domain read) | | Date range required for attendance/finance |
+| 23 | Audit of high-impact actions visible/queryable | `GET /audit-events` (`audit:read`); metadata sanitized | | UI `/admin/audit` |
+| 23b | CSV exports (people / attendance / finance) as permitted | `POST /exports` (`exports:run` + domain read) | | Date range required for attendance/finance; UI `/admin/exports` |
 | 24 | Real login (no `x-dev-*`) | Member: email or phone + PIN; Admin: PIN then OTP; seed via `pnpm db:seed:auth` | Ready | TOTP apps deferred |
 
 ## Sign-off

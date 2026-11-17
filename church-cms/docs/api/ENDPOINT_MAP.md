@@ -70,6 +70,7 @@ Regenerate: `pnpm openapi:generate`
 | `GET` | `/api/v1/events/{id}/registrations` | Events & attendance | session |
 | `POST` | `/api/v1/events/{id}/registrations` | Events & attendance | session |
 | `DELETE` | `/api/v1/events/{id}/registrations/me` | Events & attendance | session |
+| `GET` | `/api/v1/expenses` | Finance | session |
 | `POST` | `/api/v1/expenses` | Finance | session |
 | `POST` | `/api/v1/expenses/{id}/post` | Finance | session |
 | `POST` | `/api/v1/expenses/{id}/submit` | Finance | session |
@@ -91,6 +92,7 @@ Regenerate: `pnpm openapi:generate`
 | `GET` | `/api/v1/imports/{id}/preview` | Access & ops | session |
 | `POST` | `/api/v1/imports/{id}/validate` | Access & ops | session |
 | `POST` | `/api/v1/imports/members` | Access & ops | session |
+| `GET` | `/api/v1/journals` | Finance | session |
 | `POST` | `/api/v1/journals` | Finance | session |
 | `GET` | `/api/v1/journals/{id}` | Finance | session |
 | `POST` | `/api/v1/journals/{id}/post` | Finance | session |
