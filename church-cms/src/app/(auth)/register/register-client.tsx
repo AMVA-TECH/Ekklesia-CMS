@@ -62,10 +62,8 @@ export function RegisterClient(): React.ReactElement {
   useEffect(() => {
     if (church) return;
     const q = churchQuery.trim();
-    if (q.length < 2) {
-      setHits([]);
-      return;
-    }
+    // Short queries clear hits in the input's onChange handler.
+    if (q.length < 2) return;
     const handle = window.setTimeout(() => {
       void (async () => {
         setSearching(true);
@@ -287,6 +285,7 @@ export function RegisterClient(): React.ReactElement {
                 value={churchQuery}
                 onChange={(e) => {
                   setChurchQuery(e.target.value);
+                  if (e.target.value.trim().length < 2) setHits([]);
                   setFieldErrors((f) => ({ ...f, church: undefined }));
                 }}
                 placeholder="Search church name"

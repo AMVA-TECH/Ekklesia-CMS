@@ -70,10 +70,8 @@ export function AddMemberDialog({
   useEffect(() => {
     if (!open) return;
     const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return;
-    }
+    // Short queries clear results in the input's onChange handler.
+    if (q.length < 2) return;
     const handle = window.setTimeout(() => {
       void (async () => {
         setSearching(true);
@@ -184,6 +182,7 @@ export function AddMemberDialog({
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
+              if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
             placeholder="Name…"
