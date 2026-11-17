@@ -44,6 +44,8 @@ export function EventDetailClient({
   const [activeSession, setActiveSession] = useState<AttendanceSession | null>(
     null,
   );
+  const [qrBusy, setQrBusy] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
 
   const loadSessions = useCallback(async (): Promise<void> => {
     setSessionsError(null);
@@ -92,6 +94,58 @@ export function EventDetailClient({
   useEffect(() => {
     void load();
   }, [load]);
+
+  const openManage = (session: AttendanceSession): void => {
+    setActiveSession(session);
+    setManageOpen(true);
+  };
+
+  /**
+   * Ensure an open QR-capable session exists, then open manage (QR auto-issues).
+   */
+  const ensureAttendanceQr = async (): Promise<void> => {
+    if (qrBusy) return;
+    setQrBusy(true);
+    setQrError(null);
+    try {
+      const openQr = sessions.find(
+        (s) =>
+          s.status === 'open' &&
+          (s.mode === 'qr_mixed' || s.mode === 'roll_call'),
+      );
+      if (openQr) {
+        openManage(openQr);
+        return;
+      }
+      const openAny = sessions.find((s) => s.status === 'open');
+      if (openAny) {
+        setQrError(
+          'An open headcount session already exists. Finalize it first, or continue that session.',
+        );
+        openManage(openAny);
+        return;
+      }
+      const session = await apiFetch<AttendanceSession>(
+        `/api/v1/events/${eventId}/attendance-sessions`,
+        {
+          method: 'POST',
+          json: { mode: 'qr_mixed' },
+        },
+      );
+      setSessions((prev) => [session, ...prev.filter((s) => s.id !== session.id)]);
+      openManage(session);
+    } catch (err) {
+      setQrError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Could not open attendance QR.',
+      );
+    } finally {
+      setQrBusy(false);
+    }
+  };
 
   if (loading && !event) {
     return (
@@ -164,6 +218,16 @@ export function EventDetailClient({
         actions={
           <>
             <Button
+              variant="primary"
+              iconLeft="calendar-check"
+              loading={qrBusy}
+              onClick={() => {
+                void ensureAttendanceQr();
+              }}
+            >
+              {qrBusy ? 'Opening…' : 'Attendance QR'}
+            </Button>
+            <Button
               variant="secondary"
               iconLeft="edit"
               onClick={() => setEditOpen(true)}
@@ -225,7 +289,7 @@ export function EventDetailClient({
 
           <Panel
             title="Attendance"
-            subtitle="Open a session, record who came, then finalize."
+            subtitle="Generate a QR for guests to scan, record people, then finalize."
           >
             {sessionsError ? (
               <div
@@ -233,6 +297,14 @@ export function EventDetailClient({
                 className="mb-3 rounded-md border border-[color:var(--danger-soft)] bg-[color:var(--danger-soft)] px-3 py-2 text-sm text-[color:var(--danger-ink)]"
               >
                 {sessionsError}
+              </div>
+            ) : null}
+            {qrError ? (
+              <div
+                role="alert"
+                className="mb-3 rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]"
+              >
+                {qrError}
               </div>
             ) : null}
             {sessions.length === 0 ? (
@@ -278,6 +350,16 @@ export function EventDetailClient({
               <Button
                 size="sm"
                 iconLeft="calendar-check"
+                loading={qrBusy}
+                onClick={() => {
+                  void ensureAttendanceQr();
+                }}
+              >
+                {qrBusy ? 'Opening…' : 'Attendance QR'}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
                 onClick={() => setOpenSessionOpen(true)}
               >
                 Open session

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
@@ -25,6 +26,7 @@ import { PosterImage } from './poster-image';
  * Ekklesia primitives (no inline global styles, no raw hex).
  */
 export function EventsClient(): React.ReactElement {
+  const router = useRouter();
   const [types, setTypes] = useState<EventType[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,10 +136,8 @@ export function EventsClient(): React.ReactElement {
         onClose={() => setCreateOpen(false)}
         onCreated={(created) => {
           setCreateOpen(false);
-          void load();
-          // Scroll to new event? For now simply refresh; the card appears
-          // at the top (serviceDate desc).
-          void created;
+          // Open the new event so staff can generate an attendance QR right away.
+          router.push(`/admin/events/${created.id}`);
         }}
       />
     </div>
