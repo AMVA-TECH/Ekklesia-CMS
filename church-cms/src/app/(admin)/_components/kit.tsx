@@ -173,8 +173,11 @@ export function FormDialog({
         </DialogFooter>
       }
     >
+      {/* noValidate: show our inline, specific messages instead of the
+          browser's tooltip (fields still carry `required` for a11y). */}
       <form
         id={formId}
+        noValidate
         onSubmit={(e) => {
           void handleSubmit(e);
         }}
