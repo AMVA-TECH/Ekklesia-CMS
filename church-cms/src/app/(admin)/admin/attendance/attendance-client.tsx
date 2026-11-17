@@ -222,7 +222,7 @@ export function AttendanceClient(): React.ReactElement {
 
       <Panel
         title="Recent services"
-        subtitle="Open a session to record attendance, then finalize when the gathering is done."
+        subtitle="Open a session to show an attendance QR, record people, then finalize when done."
         linkHref="/admin/events"
       >
         {loading && events.length === 0 ? (
@@ -286,23 +286,35 @@ export function AttendanceClient(): React.ReactElement {
                         {rowTotals.total}
                       </TD>
                       <TD>
-                        {openSession ? (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => openManage(openSession, ev.title)}
-                          >
-                            Continue
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startOpenSession(ev.id)}
-                          >
-                            Open session
-                          </Button>
-                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {openSession &&
+                          (openSession.mode === 'qr_mixed' ||
+                            openSession.mode === 'roll_call') ? (
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              onClick={() => openManage(openSession, ev.title)}
+                            >
+                              Show QR
+                            </Button>
+                          ) : openSession ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => openManage(openSession, ev.title)}
+                            >
+                              Continue
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => startOpenSession(ev.id)}
+                            >
+                              Open + QR
+                            </Button>
+                          )}
+                        </div>
                       </TD>
                     </TR>
                   );

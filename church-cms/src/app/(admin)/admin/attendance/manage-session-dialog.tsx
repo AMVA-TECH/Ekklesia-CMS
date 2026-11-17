@@ -16,6 +16,7 @@ import { asList } from '../../_lib/list';
 import { formatDateTime, titleCase } from '../../_lib/format';
 import { extractValidationErrors } from '../people/form-errors';
 import type { AttendanceRecord, AttendanceSession } from './attendance-types';
+import { AttendanceQrPanel } from './attendance-qr-panel';
 
 interface ManageSessionDialogProps {
   open: boolean;
@@ -63,6 +64,8 @@ export function ManageSessionDialog({
   const isOpen = current?.status === 'open';
   const isHeadcount = current?.mode === 'headcount';
   const allowsRecords =
+    current?.mode === 'roll_call' || current?.mode === 'qr_mixed';
+  const allowsQr =
     current?.mode === 'roll_call' || current?.mode === 'qr_mixed';
   const allowsSummary =
     current?.mode === 'headcount' || current?.mode === 'qr_mixed';
@@ -396,6 +399,14 @@ export function ManageSessionDialog({
               </span>
             ) : null}
           </div>
+
+          {allowsQr ? (
+            <AttendanceQrPanel
+              sessionId={current.id}
+              canIssue={isOpen}
+              eventTitle={eventTitle}
+            />
+          ) : null}
 
           {allowsRecords ? (
             <section className="flex flex-col gap-3" aria-labelledby="record-people">

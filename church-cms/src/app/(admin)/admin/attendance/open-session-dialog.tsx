@@ -39,7 +39,7 @@ export function OpenSessionDialog({
 }: OpenSessionDialogProps): React.ReactElement {
   const formId = useId();
   const [eventId, setEventId] = useState('');
-  const [mode, setMode] = useState<AttendanceModeOption>('roll_call');
+  const [mode, setMode] = useState<AttendanceModeOption>('qr_mixed');
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export function OpenSessionDialog({
         ? presetEventId
         : (events[0]?.id ?? '');
     setEventId(preferred);
-    setMode('roll_call');
+    setMode('qr_mixed');
     setFieldErrors({});
     setFormError(null);
     setSubmitting(false);
@@ -111,7 +111,7 @@ export function OpenSessionDialog({
       open={open}
       onClose={handleClose}
       title="Open attendance session"
-      description="Start recording who came to this gathering. You can add people or a headcount, then finalize when done."
+      description="Start recording who came to this gathering. QR + roll call shows a check-in code you can project or print."
       size="md"
       footer={
         <DialogFooter>

@@ -29,19 +29,19 @@ export interface AttendanceRecord {
 
 export const ATTENDANCE_MODE_OPTIONS = [
   {
+    value: 'qr_mixed',
+    label: 'QR + roll call',
+    hint: 'Show a scannable QR for guests; ushers can still mark people by name.',
+  },
+  {
     value: 'roll_call',
     label: 'Roll call',
-    hint: 'Mark people present by name.',
+    hint: 'Mark people present by name (QR can still be issued).',
   },
   {
     value: 'headcount',
     label: 'Headcount',
-    hint: 'Record men, women, children, and visitors totals.',
-  },
-  {
-    value: 'qr_mixed',
-    label: 'QR + roll call',
-    hint: 'Person records now; QR tokens can be issued later.',
+    hint: 'Record men, women, children, and visitors totals (no QR).',
   },
 ] as const;
 
