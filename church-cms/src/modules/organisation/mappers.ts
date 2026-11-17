@@ -19,10 +19,13 @@ type AppointmentRow = typeof appointments.$inferSelect;
 export function toUnitResponse(row: UnitRow): UnitResponse {
   return {
     id: row.id,
+    code: row.code,
     kind: row.kind,
     name: row.name,
+    description: row.description ?? null,
     parentId: row.parentId,
     status: row.status,
+    metadata: (row.metadata ?? {}) as Record<string, unknown>,
   };
 }
 
@@ -40,6 +43,11 @@ export function toPositionResponse(row: PositionRow): PositionResponse {
     id: row.id,
     code: row.code,
     title: row.title,
+    description: row.description ?? null,
+    organisationalUnitId: row.organisationalUnitId,
+    reportsToPositionId: row.reportsToPositionId,
+    status: row.status,
+    occupancyPolicy: row.occupancyPolicy,
   };
 }
 
@@ -49,6 +57,9 @@ export function toAppointmentResponse(row: AppointmentRow): AppointmentResponse 
     positionId: row.positionId,
     personId: row.personId,
     organisationalUnitId: row.organisationalUnitId,
+    appointmentKind: row.appointmentKind,
+    notes: row.notes ?? null,
+    appointedByUserId: row.appointedByUserId,
     effectiveFrom: row.effectiveFrom,
     effectiveTo: row.effectiveTo,
     status: row.status,

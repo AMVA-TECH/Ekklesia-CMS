@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
 import {
+  APPOINTMENT_KINDS,
   APPOINTMENT_STATUSES,
+  OCCUPANCY_POLICIES,
+  POSITION_STATUSES,
   PROGRAMME_STATUSES,
   UNIT_KINDS,
   UNIT_STATUSES,
@@ -11,18 +14,35 @@ export const createUnitBodySchema = z
   .object({
     kind: z.enum(UNIT_KINDS),
     name: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(4000).optional(),
     parentId: z.guid().optional(),
     status: z.enum(UNIT_STATUSES).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
 
 export type CreateUnitBody = z.infer<typeof createUnitBodySchema>;
 
+export const updateUnitBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(200).optional(),
+    description: z.string().trim().max(4000).nullable().optional(),
+    parentId: z.guid().nullable().optional(),
+    status: z.enum(UNIT_STATUSES).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export type UpdateUnitBody = z.infer<typeof updateUnitBodySchema>;
+
 export const listUnitsQuerySchema = z
   .object({
     kind: z.enum(UNIT_KINDS).optional(),
     status: z.enum(UNIT_STATUSES).optional(),
-    limit: z.coerce.number().int().min(1).max(100).default(50),
+    limit: z.coerce.number().int().min(1).max(200).default(100),
   })
   .strict();
 
@@ -49,10 +69,13 @@ export type CreateProgrammeUnderUnitBody = z.infer<
 
 export const unitResponseSchema = z.object({
   id: z.guid(),
+  code: z.string(),
   kind: z.string(),
   name: z.string(),
+  description: z.string().nullable(),
   parentId: z.guid().nullable(),
   status: z.string(),
+  metadata: z.record(z.string(), z.unknown()),
 });
 
 export type UnitResponse = z.infer<typeof unitResponseSchema>;
@@ -68,21 +91,37 @@ export type ProgrammeResponse = z.infer<typeof programmeResponseSchema>;
 
 export const createPositionBodySchema = z
   .object({
-    code: z
-      .string()
-      .trim()
-      .min(1)
-      .max(64)
-      .regex(/^[a-z][a-z0-9_]*$/, 'code must be snake_case'),
     title: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(4000).optional(),
+    organisationalUnitId: z.guid().optional(),
+    reportsToPositionId: z.guid().optional(),
+    status: z.enum(POSITION_STATUSES).optional(),
+    occupancyPolicy: z.enum(OCCUPANCY_POLICIES).optional(),
   })
   .strict();
 
 export type CreatePositionBody = z.infer<typeof createPositionBodySchema>;
 
+export const updatePositionBodySchema = z
+  .object({
+    title: z.string().trim().min(1).max(200).optional(),
+    description: z.string().trim().max(4000).nullable().optional(),
+    organisationalUnitId: z.guid().nullable().optional(),
+    reportsToPositionId: z.guid().nullable().optional(),
+    status: z.enum(POSITION_STATUSES).optional(),
+    occupancyPolicy: z.enum(OCCUPANCY_POLICIES).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export type UpdatePositionBody = z.infer<typeof updatePositionBodySchema>;
+
 export const listPositionsQuerySchema = z
   .object({
-    limit: z.coerce.number().int().min(1).max(100).default(50),
+    status: z.enum(POSITION_STATUSES).optional(),
+    limit: z.coerce.number().int().min(1).max(200).default(100),
   })
   .strict();
 
@@ -92,6 +131,11 @@ export const positionResponseSchema = z.object({
   id: z.guid(),
   code: z.string(),
   title: z.string(),
+  description: z.string().nullable(),
+  organisationalUnitId: z.guid().nullable(),
+  reportsToPositionId: z.guid().nullable(),
+  status: z.string(),
+  occupancyPolicy: z.string(),
 });
 
 export type PositionResponse = z.infer<typeof positionResponseSchema>;
@@ -101,6 +145,8 @@ export const createAppointmentBodySchema = z
     positionId: z.guid(),
     personId: z.guid(),
     organisationalUnitId: z.guid().optional(),
+    appointmentKind: z.enum(APPOINTMENT_KINDS).optional(),
+    notes: z.string().trim().max(2000).optional(),
     effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     effectiveTo: z
       .string()
@@ -139,6 +185,9 @@ export const appointmentResponseSchema = z.object({
   positionId: z.guid(),
   personId: z.guid(),
   organisationalUnitId: z.guid().nullable(),
+  appointmentKind: z.string(),
+  notes: z.string().nullable(),
+  appointedByUserId: z.guid().nullable(),
   effectiveFrom: z.string(),
   effectiveTo: z.string().nullable(),
   status: z.string(),
