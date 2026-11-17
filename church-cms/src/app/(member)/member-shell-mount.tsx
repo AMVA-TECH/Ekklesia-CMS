@@ -65,6 +65,16 @@ const BOTTOM_ITEMS: readonly BottomNavItem[] = [
   { label: 'Profile', href: '/profile', icon: 'user' },
 ];
 
+// Desktop top bar (lg+): Profile and Notifications live in the avatar menu.
+const DESKTOP_ITEMS: readonly BottomNavItem[] = [
+  { label: 'Home', href: '/home', icon: 'home' },
+  { label: 'Events', href: '/events', icon: 'calendar' },
+  { label: 'Community', href: '/community', icon: 'users' },
+  { label: 'Giving', href: '/giving', icon: 'hand' },
+  { label: 'Projects', href: '/projects', icon: 'briefcase' },
+  { label: 'Attendance', href: '/attendance', icon: 'calendar-check' },
+];
+
 const DRAWER_GROUPS: readonly NavGroup[] = [
   {
     label: 'Me',
@@ -310,6 +320,7 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
           <MemberShell
             drawerGroups={DRAWER_GROUPS}
             bottomItems={BOTTOM_ITEMS}
+            desktopItems={DESKTOP_ITEMS}
             topbarEnd={topbarEnd}
             churchName={churchName}
             footerProps={{
