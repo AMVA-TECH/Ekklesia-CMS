@@ -35,7 +35,9 @@ export async function allocateChurchCode(
         nextValue: sql`${churchCodeSequences.nextValue} + 1`,
       },
     })
-    .returning({ nextValue: churchCodeSequences.nextValue });
+    // Full-row returning: partial selection does not type-check on the
+    // pg | neon-http `Db` union.
+    .returning();
 
   // After insert: nextValue=2 means we used 1.
   // After conflict update: returning is the new value, so code is new-1.
