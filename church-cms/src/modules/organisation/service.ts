@@ -3,6 +3,7 @@ import { getDb } from '@/platform/db/client';
 import { writeAudit } from '@/platform/audit';
 import { conflict, notFound, validationFailed } from '@/platform/errors';
 import { getPersonInChurch } from '@/modules/people/repository';
+import { wouldCreateCycle } from './hierarchy';
 import {
   toAppointmentResponse,
   toPositionResponse,
@@ -27,6 +28,8 @@ import type {
   ListAppointmentsQuery,
   ListPositionsQuery,
   ListUnitsQuery,
+  UpdatePositionBody,
+  UpdateUnitBody,
 } from './schemas';
 import * as repo from './repository';
 
@@ -60,6 +63,52 @@ export async function createOrganisationalUnit(ctx: Ctx, body: CreateUnitBody) {
       entityId: id,
     });
     const row = await repo.getUnitById(db, ctx, id);
+    if (!row) throw notFound();
+    return toUnitResponse(row);
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw conflict('An organisational unit with this kind and name already exists.');
+    }
+    throw error;
+  }
+}
+
+export async function updateOrganisationalUnit(
+  ctx: Ctx,
+  unitId: string,
+  body: UpdateUnitBody,
+) {
+  assertCanWriteUnits(ctx);
+  const db = getDb();
+  const existing = await repo.getUnitById(db, ctx, unitId);
+  if (!existing) throw notFound();
+
+  if (body.parentId !== undefined && body.parentId !== null) {
+    const parent = await repo.getUnitById(db, ctx, body.parentId);
+    if (!parent) throw notFound();
+
+    const edges = await repo.listAllUnitParentEdges(db, ctx);
+    const parentById = new Map(edges.map((e) => [e.id, e.parentId]));
+    if (wouldCreateCycle(unitId, body.parentId, parentById)) {
+      throw validationFailed([
+        {
+          field: 'parentId',
+          code: 'circular_hierarchy',
+          message: 'Parent assignment would create a circular hierarchy',
+        },
+      ]);
+    }
+  }
+
+  try {
+    await repo.updateUnit(db, ctx, unitId, body);
+    await writeAudit(db, ctx, {
+      action: 'organisation.unit.updated',
+      entityType: 'organisational_unit',
+      entityId: unitId,
+      metadata: { fields: Object.keys(body) },
+    });
+    const row = await repo.getUnitById(db, ctx, unitId);
     if (!row) throw notFound();
     return toUnitResponse(row);
   } catch (error) {
@@ -111,9 +160,26 @@ export async function listPositions(ctx: Ctx, query: ListPositionsQuery) {
   return { data: rows.map(toPositionResponse) };
 }
 
+export async function getPosition(ctx: Ctx, positionId: string) {
+  assertCanReadPositions(ctx);
+  const row = await repo.getPositionById(getDb(), ctx, positionId);
+  if (!row) throw notFound();
+  return toPositionResponse(row);
+}
+
 export async function createPosition(ctx: Ctx, body: CreatePositionBody) {
   assertCanWritePositions(ctx);
   const db = getDb();
+
+  if (body.organisationalUnitId) {
+    const unit = await repo.getUnitById(db, ctx, body.organisationalUnitId);
+    if (!unit) throw notFound();
+  }
+  if (body.reportsToPositionId) {
+    const reportsTo = await repo.getPositionById(db, ctx, body.reportsToPositionId);
+    if (!reportsTo) throw notFound();
+  }
+
   try {
     const id = await repo.insertPosition(db, ctx, body);
     await writeAudit(db, ctx, {
@@ -130,6 +196,52 @@ export async function createPosition(ctx: Ctx, body: CreatePositionBody) {
     }
     throw error;
   }
+}
+
+export async function updatePosition(
+  ctx: Ctx,
+  positionId: string,
+  body: UpdatePositionBody,
+) {
+  assertCanWritePositions(ctx);
+  const db = getDb();
+  const existing = await repo.getPositionById(db, ctx, positionId);
+  if (!existing) throw notFound();
+
+  if (body.organisationalUnitId) {
+    const unit = await repo.getUnitById(db, ctx, body.organisationalUnitId);
+    if (!unit) throw notFound();
+  }
+
+  if (body.reportsToPositionId !== undefined && body.reportsToPositionId !== null) {
+    const reportsTo = await repo.getPositionById(db, ctx, body.reportsToPositionId);
+    if (!reportsTo) throw notFound();
+
+    const edges = await repo.listAllPositionReportEdges(db, ctx);
+    const parentById = new Map(
+      edges.map((e) => [e.id, e.reportsToPositionId]),
+    );
+    if (wouldCreateCycle(positionId, body.reportsToPositionId, parentById)) {
+      throw validationFailed([
+        {
+          field: 'reportsToPositionId',
+          code: 'circular_hierarchy',
+          message: 'Reporting assignment would create a circular hierarchy',
+        },
+      ]);
+    }
+  }
+
+  await repo.updatePosition(db, ctx, positionId, body);
+  await writeAudit(db, ctx, {
+    action: 'organisation.position.updated',
+    entityType: 'position',
+    entityId: positionId,
+    metadata: { fields: Object.keys(body) },
+  });
+  const row = await repo.getPositionById(db, ctx, positionId);
+  if (!row) throw notFound();
+  return toPositionResponse(row);
 }
 
 export async function listAppointments(ctx: Ctx, query: ListAppointmentsQuery) {
@@ -163,12 +275,30 @@ export async function createAppointment(ctx: Ctx, body: CreateAppointmentBody) {
     ]);
   }
 
+  if (position.occupancyPolicy === 'single') {
+    const active = await repo.countActiveAppointmentsForPosition(
+      db,
+      ctx,
+      body.positionId,
+    );
+    if (active > 0) {
+      throw conflict(
+        'This position allows only one active occupant. End the current appointment first.',
+      );
+    }
+  }
+
+  // Appointments never grant RBAC — role assignment remains a separate explicit step.
   const id = await repo.insertAppointment(db, ctx, body);
   await writeAudit(db, ctx, {
     action: 'organisation.appointment.created',
     entityType: 'appointment',
     entityId: id,
-    metadata: { positionId: body.positionId, personId: body.personId },
+    metadata: {
+      positionId: body.positionId,
+      personId: body.personId,
+      grantsPermissions: false,
+    },
   });
   const row = await repo.getAppointmentById(db, ctx, id);
   if (!row) throw notFound();
