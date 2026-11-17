@@ -610,8 +610,30 @@ export async function upsertQrAttendanceRecord(
   checkInName?: string,
   checkInPhone?: string,
 ) {
+  const id = newId();
+  // Race-safe: concurrent double-scans for the same person hit the unique
+  // (session_id, person_id) index and resolve to the existing row.
+  const inserted = await db
+    .insert(attendanceRecords)
+    .values({
+      id,
+      sessionId,
+      personId,
+      presence: 'present',
+      source: 'qr',
+      checkInName,
+      checkInPhone,
+      createdBy: ctx.actor.userAccountId,
+      updatedBy: ctx.actor.userAccountId,
+    })
+    .onConflictDoNothing({
+      target: [attendanceRecords.sessionId, attendanceRecords.personId],
+    })
+    .returning({ id: attendanceRecords.id });
+  if (inserted[0]) return inserted[0].id;
+
   const [existing] = await db
-    .select()
+    .select({ id: attendanceRecords.id })
     .from(attendanceRecords)
     .where(
       and(
@@ -621,20 +643,7 @@ export async function upsertQrAttendanceRecord(
       ),
     )
     .limit(1);
-  if (existing) return existing.id;
-  const id = newId();
-  await db.insert(attendanceRecords).values({
-    id,
-    sessionId,
-    personId,
-    presence: 'present',
-    source: 'qr',
-    checkInName,
-    checkInPhone,
-    createdBy: ctx.actor.userAccountId,
-    updatedBy: ctx.actor.userAccountId,
-  });
-  return id;
+  return existing?.id ?? id;
 }
 
 export async function upsertAttendancePresence(

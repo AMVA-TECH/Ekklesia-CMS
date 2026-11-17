@@ -6,7 +6,8 @@ export function assertCanUploadMedia(ctx: Ctx): void {
   if (
     !can(ctx, 'media:upload') &&
     !can(ctx, 'events:write') &&
-    !can(ctx, 'people:update')
+    !can(ctx, 'people:update') &&
+    !can(ctx, 'church:update')
   ) {
     throw forbidden();
   }
@@ -17,7 +18,8 @@ export function assertCanReadMedia(ctx: Ctx): void {
     !can(ctx, 'media:upload') &&
     !can(ctx, 'events:read') &&
     !can(ctx, 'events:write') &&
-    !can(ctx, 'people:read')
+    !can(ctx, 'people:read') &&
+    !can(ctx, 'church:read')
   ) {
     throw forbidden();
   }
