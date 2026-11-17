@@ -80,9 +80,38 @@ export interface Membership {
 /** Organisational unit row. */
 export interface OrganisationalUnit {
   id: string;
+  code: string;
   kind: string;
   name: string;
+  description: string | null;
   parentId: string | null;
+  status: string;
+  metadata?: Record<string, unknown>;
+}
+
+/** Leadership position row. */
+export interface LeadershipPosition {
+  id: string;
+  code: string;
+  title: string;
+  description: string | null;
+  organisationalUnitId: string | null;
+  reportsToPositionId: string | null;
+  status: string;
+  occupancyPolicy: string;
+}
+
+/** Leadership appointment row. */
+export interface LeadershipAppointment {
+  id: string;
+  positionId: string;
+  personId: string;
+  organisationalUnitId: string | null;
+  appointmentKind: string;
+  notes: string | null;
+  appointedByUserId: string | null;
+  effectiveFrom: string;
+  effectiveTo: string | null;
   status: string;
 }
 
@@ -177,12 +206,11 @@ export interface Announcement {
 /** Message template row. */
 export interface MessageTemplate {
   id: string;
+  name: string;
   code: string;
   channel: string;
   locale: string;
-  subject: string | null;
   body: string;
-  status: string;
 }
 
 /** Approval request summary. */
@@ -194,6 +222,72 @@ export interface ApprovalRequest {
   status: string;
   currentStep: number | string | null;
   createdAt: string;
+}
+
+/** Resolved church config on `/api/v1/auth/me` (DEC-033). */
+export interface AuthMeChurchConfig {
+  branding: {
+    productName: string;
+    logoMediaId: string | null;
+    secondaryLogoMediaId?: string | null;
+    faviconMediaId?: string | null;
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
+    accentColor?: string | null;
+  };
+  identity?: {
+    description: string | null;
+    category: string | null;
+    vision: string | null;
+    mission: string | null;
+    mandate: string | null;
+    motto: string | null;
+    secondaryMotto: string | null;
+    coreValues: string | null;
+    history: string | null;
+  };
+  contact?: {
+    primaryContactName: string | null;
+    email: string | null;
+    phone: string | null;
+    alternatePhone: string | null;
+    alternateEmail: string | null;
+  };
+  location?: {
+    country: string | null;
+    region: string | null;
+    city: string | null;
+    addressLine1: string | null;
+    addressLine2: string | null;
+    postalCode: string | null;
+  };
+  presence?: {
+    website: string | null;
+    facebook: string | null;
+    instagram: string | null;
+    youtube: string | null;
+    twitter: string | null;
+    telegram: string | null;
+    tiktok: string | null;
+    otherLinks: Array<{ label: string; url: string }>;
+  };
+  terminology: {
+    organisationalUnitSingular: string;
+    organisationalUnitPlural: string;
+    membershipLabel: string;
+  };
+  modules: {
+    people: boolean;
+    membership: boolean;
+    organisation: boolean;
+    events: boolean;
+    attendance: boolean;
+    finance: boolean;
+    messaging: boolean;
+    governance: boolean;
+  };
+  workflows: { announcementDualControl: boolean };
+  thresholds: { adulthoodAgeYears: number };
 }
 
 /** Response shape of `/api/v1/auth/me`. */
@@ -208,9 +302,14 @@ export interface AuthMeResponse {
   church: {
     id: string;
     name: string | null;
+    shortName?: string | null;
+    displayName?: string | null;
     slug: string | null;
     timezone: string | null;
     defaultLocale: string | null;
+    logoMediaId?: string | null;
+    logoUrl?: string | null;
+    config?: AuthMeChurchConfig | null;
   };
   organisationUser: {
     id: string;
