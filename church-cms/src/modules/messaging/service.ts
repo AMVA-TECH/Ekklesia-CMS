@@ -31,8 +31,11 @@ import type {
   CreateAnnouncementBody,
   CreateMessageJobBody,
   CreateTemplateBody,
+  UpdateAnnouncementBody,
   UpdatePreferencesBody,
+  UpdateTemplateBody,
 } from './schemas';
+import { slugifyTemplateCode } from './template-code';
 import * as repo from './repository';
 
 async function announcementResponse(ctx: Ctx, id: string) {
@@ -62,24 +65,89 @@ export async function listMessageTemplates(ctx: Ctx) {
   assertCanWriteTemplates(ctx);
   return { data: (await repo.listTemplates(getDb(), ctx)).map(toTemplateResponse) };
 }
+
+async function allocateTemplateCode(
+  ctx: Ctx,
+  input: { preferred?: string; name: string; channel: string; locale: string },
+): Promise<string> {
+  const db = getDb();
+  const base = (input.preferred?.trim() || slugifyTemplateCode(input.name)).slice(
+    0,
+    40,
+  );
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const suffix =
+      attempt === 0 ? '' : `_${Math.random().toString(36).slice(2, 6)}`;
+    const code = `${base}${suffix}`.slice(0, 50);
+    const existing = await repo.findTemplateByCodeChannelLocale(db, ctx, {
+      code,
+      channel: input.channel,
+      locale: input.locale,
+    });
+    if (!existing) return code;
+  }
+  return `${base}_${Date.now().toString(36)}`.slice(0, 50);
+}
+
 export async function createMessageTemplate(ctx: Ctx, body: CreateTemplateBody) {
   assertCanWriteTemplates(ctx);
+  const locale = body.locale ?? 'sw';
+  const code = await allocateTemplateCode(ctx, {
+    preferred: body.code,
+    name: body.name,
+    channel: body.channel,
+    locale,
+  });
   try {
-    const id = await repo.insertTemplate(getDb(), ctx, body);
+    const id = await repo.insertTemplate(getDb(), ctx, {
+      name: body.name.trim(),
+      code,
+      channel: body.channel,
+      locale,
+      body: body.body,
+    });
     await writeAudit(getDb(), ctx, {
       action: 'messaging.template.created',
       entityType: 'message_template',
       entityId: id,
+      metadata: { code, channel: body.channel, locale },
     });
     const row = await repo.getTemplate(getDb(), ctx, id);
     if (!row) throw notFound();
     return toTemplateResponse(row);
   } catch (e) {
     if (isUniqueViolation(e)) {
-      throw conflict('Template already exists for this code/channel/locale.');
+      throw conflict('A template with this name already exists for this channel and language.');
     }
     throw e;
   }
+}
+
+export async function getMessageTemplate(ctx: Ctx, id: string) {
+  assertCanWriteTemplates(ctx);
+  const row = await repo.getTemplate(getDb(), ctx, id);
+  if (!row) throw notFound();
+  return toTemplateResponse(row);
+}
+
+export async function updateMessageTemplate(
+  ctx: Ctx,
+  id: string,
+  body: UpdateTemplateBody,
+) {
+  assertCanWriteTemplates(ctx);
+  const existing = await repo.getTemplate(getDb(), ctx, id);
+  if (!existing) throw notFound();
+  await repo.updateTemplate(getDb(), ctx, id, body);
+  await writeAudit(getDb(), ctx, {
+    action: 'messaging.template.updated',
+    entityType: 'message_template',
+    entityId: id,
+    metadata: { fields: Object.keys(body) },
+  });
+  const row = await repo.getTemplate(getDb(), ctx, id);
+  if (!row) throw notFound();
+  return toTemplateResponse(row);
 }
 
 export async function listAnnouncements(ctx: Ctx) {
@@ -130,6 +198,39 @@ export async function createAnnouncement(ctx: Ctx, body: CreateAnnouncementBody)
     metadata: {
       audienceTypes: audiences.map((a) => a.audienceType),
     },
+  });
+  return announcementResponse(ctx, id);
+}
+
+export async function getAnnouncement(ctx: Ctx, id: string) {
+  assertCanWriteAnnouncements(ctx);
+  return announcementResponse(ctx, id);
+}
+
+/** Edit title/body while still a draft or after rejection. */
+export async function updateAnnouncement(
+  ctx: Ctx,
+  id: string,
+  body: UpdateAnnouncementBody,
+) {
+  assertCanWriteAnnouncements(ctx);
+  const db = getDb();
+  const row = await repo.getAnnouncement(db, ctx, id);
+  if (!row) throw notFound();
+  if (row.status !== 'draft' && row.status !== 'rejected') {
+    throw conflict(
+      'Only draft or rejected announcements can be edited. Withdraw from approval first if needed.',
+    );
+  }
+  await repo.updateAnnouncement(db, ctx, id, body);
+  if (row.status === 'rejected') {
+    await repo.setAnnouncementStatus(db, ctx, id, 'draft', { publishedAt: null });
+  }
+  await writeAudit(db, ctx, {
+    action: 'messaging.announcement.updated',
+    entityType: 'announcement',
+    entityId: id,
+    metadata: { fields: Object.keys(body) },
   });
   return announcementResponse(ctx, id);
 }

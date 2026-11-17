@@ -15,8 +15,9 @@ import {
 import type {
   CreateAnnouncementBody,
   CreateMessageJobBody,
-  CreateTemplateBody,
+  UpdateAnnouncementBody,
   UpdatePreferencesBody,
+  UpdateTemplateBody,
 } from './schemas';
 
 export async function listTemplates(db: Db, ctx: Ctx) {
@@ -26,7 +27,7 @@ export async function listTemplates(db: Db, ctx: Ctx) {
     .where(
       and(eq(messageTemplates.churchId, ctx.churchId), isNull(messageTemplates.deletedAt)),
     )
-    .orderBy(asc(messageTemplates.code));
+    .orderBy(asc(messageTemplates.name), asc(messageTemplates.code));
 }
 export async function getTemplate(db: Db, ctx: Ctx, id: string) {
   const [row] = await db
@@ -42,19 +43,74 @@ export async function getTemplate(db: Db, ctx: Ctx, id: string) {
     .limit(1);
   return row ?? null;
 }
-export async function insertTemplate(db: Db, ctx: Ctx, body: CreateTemplateBody) {
+
+export async function findTemplateByCodeChannelLocale(
+  db: Db,
+  ctx: Ctx,
+  input: { code: string; channel: string; locale: string },
+) {
+  const [row] = await db
+    .select({ id: messageTemplates.id })
+    .from(messageTemplates)
+    .where(
+      and(
+        eq(messageTemplates.churchId, ctx.churchId),
+        eq(messageTemplates.code, input.code),
+        eq(messageTemplates.channel, input.channel),
+        eq(messageTemplates.locale, input.locale),
+        isNull(messageTemplates.deletedAt),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function insertTemplate(
+  db: Db,
+  ctx: Ctx,
+  input: {
+    name: string;
+    code: string;
+    channel: string;
+    locale?: string;
+    body: string;
+  },
+) {
   const id = newId();
   await db.insert(messageTemplates).values({
     id,
     churchId: ctx.churchId,
-    code: body.code,
-    channel: body.channel,
-    locale: body.locale ?? 'sw',
-    body: body.body,
+    name: input.name,
+    code: input.code,
+    channel: input.channel,
+    locale: input.locale ?? 'sw',
+    body: input.body,
     createdBy: ctx.actor.userAccountId,
     updatedBy: ctx.actor.userAccountId,
   });
   return id;
+}
+
+export async function updateTemplate(
+  db: Db,
+  ctx: Ctx,
+  id: string,
+  body: UpdateTemplateBody,
+) {
+  await db
+    .update(messageTemplates)
+    .set({
+      ...body,
+      updatedBy: ctx.actor.userAccountId,
+      updatedAt: sql`now()`,
+    })
+    .where(
+      and(
+        eq(messageTemplates.id, id),
+        eq(messageTemplates.churchId, ctx.churchId),
+        isNull(messageTemplates.deletedAt),
+      ),
+    );
 }
 
 export async function listAnnouncements(db: Db, ctx: Ctx, publishedOnly: boolean) {
@@ -173,6 +229,28 @@ export async function insertAnnouncement(db: Db, ctx: Ctx, body: CreateAnnouncem
     })),
   );
   return id;
+}
+
+export async function updateAnnouncement(
+  db: Db,
+  ctx: Ctx,
+  id: string,
+  body: UpdateAnnouncementBody,
+) {
+  await db
+    .update(announcements)
+    .set({
+      ...body,
+      updatedBy: ctx.actor.userAccountId,
+      updatedAt: sql`now()`,
+    })
+    .where(
+      and(
+        eq(announcements.id, id),
+        eq(announcements.churchId, ctx.churchId),
+        isNull(announcements.deletedAt),
+      ),
+    );
 }
 export async function setAnnouncementStatus(
   db: Db,

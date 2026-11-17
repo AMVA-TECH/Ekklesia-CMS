@@ -7,13 +7,39 @@ import {
   MESSAGE_CHANNELS,
 } from './constants';
 
-export const createTemplateBodySchema = z.object({
-  code: z.string().trim().min(1).max(50).regex(/^[a-z][a-z0-9_]*$/),
-  channel: z.enum(MESSAGE_CHANNELS),
-  locale: z.enum(LOCALES).optional(),
-  body: z.string().trim().min(1).max(2000),
-}).strict();
+export const createTemplateBodySchema = z
+  .object({
+    /** Human name shown in the admin UI. */
+    name: z.string().trim().min(1).max(120),
+    /**
+     * Optional internal code. When omitted the server generates one from `name`.
+     * Kept for API compatibility; staff UIs should not ask for this.
+     */
+    code: z
+      .string()
+      .trim()
+      .min(1)
+      .max(50)
+      .regex(/^[a-z][a-z0-9_]*$/)
+      .optional(),
+    channel: z.enum(MESSAGE_CHANNELS),
+    locale: z.enum(LOCALES).optional(),
+    body: z.string().trim().min(1).max(2000),
+  })
+  .strict();
 export type CreateTemplateBody = z.infer<typeof createTemplateBodySchema>;
+
+export const updateTemplateBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(120).optional(),
+    locale: z.enum(LOCALES).optional(),
+    body: z.string().trim().min(1).max(2000).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, {
+    message: 'At least one field is required',
+  });
+export type UpdateTemplateBody = z.infer<typeof updateTemplateBodySchema>;
 
 export const announcementAudienceBodySchema = z
   .object({
@@ -39,6 +65,17 @@ export const createAnnouncementBodySchema = z
   })
   .strict();
 export type CreateAnnouncementBody = z.infer<typeof createAnnouncementBodySchema>;
+
+export const updateAnnouncementBodySchema = z
+  .object({
+    title: z.string().trim().min(1).max(200).optional(),
+    body: z.string().trim().min(1).max(5000).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, {
+    message: 'At least one field is required',
+  });
+export type UpdateAnnouncementBody = z.infer<typeof updateAnnouncementBodySchema>;
 
 export const rejectAnnouncementBodySchema = z
   .object({

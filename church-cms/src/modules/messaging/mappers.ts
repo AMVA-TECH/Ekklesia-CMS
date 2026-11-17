@@ -18,6 +18,7 @@ type Delivery = typeof messageDeliveries.$inferSelect;
 export function toTemplateResponse(row: Template) {
   return {
     id: row.id,
+    name: row.name,
     code: row.code,
     channel: row.channel,
     locale: row.locale,
