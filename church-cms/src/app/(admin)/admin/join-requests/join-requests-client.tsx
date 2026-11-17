@@ -18,7 +18,7 @@ type DecideResult = {
   id: string;
   status: string;
   member?: {
-    email: string;
+    email: string | null;
     phoneE164: string | null;
     initialPin: string;
   };
@@ -68,7 +68,7 @@ export function JoinRequestsClient() {
     <div className="space-y-6">
       <PageHeader
         title="Join requests"
-        lede="People who searched for your church and asked to join. Approve to issue a member PIN."
+        lede="Approve to attach the person to your church and issue a member PIN for Sign in."
       />
 
       {error ? <p className="text-destructive">{error}</p> : null}
@@ -77,14 +77,15 @@ export function JoinRequestsClient() {
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="font-medium">Member credentials issued (once)</p>
           <p>
-            {issued.email}
-            {issued.phoneE164 ? ` · ${issued.phoneE164}` : ''}
+            {issued.phoneE164}
+            {issued.email ? ` · ${issued.email}` : ''}
           </p>
           <p>
             PIN: <code>{issued.initialPin}</code>
           </p>
           <p className="text-sm text-muted-foreground">
-            Share securely. This PIN is not stored in audit logs.
+            Share securely for Sign in (phone + PIN). Attachment unlocks this
+            church’s services. PIN is not stored in audit logs.
           </p>
         </div>
       ) : null}
@@ -101,8 +102,8 @@ export function JoinRequestsClient() {
               <div>
                 <p className="font-medium">{item.displayName}</p>
                 <p className="text-sm text-muted-foreground">
-                  {item.email ?? '—'}
-                  {item.phoneE164 ? ` · ${item.phoneE164}` : ''}
+                  {item.phoneE164 ?? '—'}
+                  {item.email ? ` · ${item.email}` : ''}
                 </p>
                 <StatusPill tone="pending">{item.status}</StatusPill>
               </div>
