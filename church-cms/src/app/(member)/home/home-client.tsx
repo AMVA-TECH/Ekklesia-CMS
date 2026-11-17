@@ -204,9 +204,10 @@ function FeaturedEventCard({ event }: { event: MemberEvent }): React.ReactElemen
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--surface-inverse)] via-[color:var(--surface-inverse)]/55 to-transparent" />
+      {/* Scrim strong enough that the caption stays legible over busy photos. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--surface-inverse)] via-[color:var(--surface-inverse)]/75 to-[color:var(--surface-inverse)]/25" />
       <div className="relative flex min-h-[14rem] flex-col justify-end gap-3 p-5 sm:min-h-[16rem] sm:p-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-white/70">
+        <p className="text-xs font-medium uppercase tracking-wide text-white/85">
           Up next · {formatServiceDate(event.serviceDate)}
           {time ? ` · ${time}` : null}
         </p>
