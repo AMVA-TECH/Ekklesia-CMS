@@ -114,7 +114,7 @@ export function JournalsClient(): React.ReactElement {
                 <TR noHover>
                   <TH>Entry</TH>
                   <TH>Date</TH>
-                  <TH>Memo</TH>
+                  <TH className="hidden lg:table-cell">Memo</TH>
                   <TH className="text-right">Amount</TH>
                   <TH>Status</TH>
                   <TH className="text-right">Actions</TH>
@@ -131,7 +131,7 @@ export function JournalsClient(): React.ReactElement {
                         <TD>
                           <button
                             type="button"
-                            className="-my-2 inline-flex min-h-10 items-center font-mono text-xs font-medium text-foreground hover:underline focus-ring"
+                            className="-my-2 inline-flex min-h-10 items-center whitespace-nowrap font-mono text-xs font-medium text-foreground hover:underline focus-ring"
                             aria-expanded={open}
                             onClick={() => setExpanded(open ? null : j.id)}
                           >
@@ -142,7 +142,7 @@ export function JournalsClient(): React.ReactElement {
                           </div>
                         </TD>
                         <TD className="text-sm">{formatDate(j.journalDate)}</TD>
-                        <TD className="max-w-xs truncate text-sm text-muted-foreground">
+                        <TD className="hidden max-w-xs truncate text-sm text-muted-foreground lg:table-cell">
                           {j.memo ?? '—'}
                         </TD>
                         <TD className="text-right tabular-nums">{formatMoney(total, currency)}</TD>
