@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
 import type { Ctx } from '@/platform/auth';
 import type { Db } from '@/platform/db/client';
 import { newId } from '@/platform/db/ids';
@@ -9,7 +9,7 @@ import {
 } from './db-schema';
 import type {
   CreateAccountBody, CreateFinancialYearBody, CreateFundBody, CreateJournalBody,
-  CreateOfferingBody, CreatePledgeApplicationBody, CreatePledgeBody,
+  CreateOfferingBody, CreatePledgeApplicationBody, CreatePledgeBody, ListJournalsQuery,
   CreateProjectAssignmentBody, CreateProjectBody, CreateProjectContributionBody,
   ExpressProjectInterestBody, ListOfferingsQuery, ListProjectsQuery, ListUnpaidPledgesQuery,
 } from './schemas';
@@ -211,6 +211,25 @@ export async function listUnpaidPledges(
 export async function getJournal(db: Db, ctx: Ctx, id: string) {
   const [row] = await db.select().from(journals).where(and(eq(journals.id, id), eq(journals.churchId, ctx.churchId), isNull(journals.deletedAt))).limit(1);
   return row ?? null;
+}
+export async function listJournals(db: Db, ctx: Ctx, query: ListJournalsQuery) {
+  const conditions = [eq(journals.churchId, ctx.churchId), isNull(journals.deletedAt)];
+  if (query.status) conditions.push(eq(journals.status, query.status));
+  if (query.financialYearId) conditions.push(eq(journals.financialYearId, query.financialYearId));
+  return db
+    .select()
+    .from(journals)
+    .where(and(...conditions))
+    .orderBy(desc(journals.journalDate), desc(journals.createdAt))
+    .limit(query.limit);
+}
+/** Lines for many journals in one query (list views). */
+export async function listJournalLinesFor(db: Db, journalIds: string[]) {
+  if (journalIds.length === 0) return [];
+  return db
+    .select()
+    .from(journalLines)
+    .where(and(inArray(journalLines.journalId, journalIds), isNull(journalLines.deletedAt)));
 }
 export async function listJournalLines(db: Db, journalId: string) {
   return db.select().from(journalLines).where(and(eq(journalLines.journalId, journalId), isNull(journalLines.deletedAt)));

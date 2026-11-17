@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   ACCOUNT_TYPES,
+  JOURNAL_STATUSES,
   ACTIVE_STATUSES,
   CURRENCIES,
   FUND_TYPES,
@@ -107,6 +108,15 @@ export const createJournalBodySchema = z.object({
   lines: z.array(journalLineBodySchema).min(2).max(100),
 }).strict();
 export type CreateJournalBody = z.infer<typeof createJournalBodySchema>;
+
+export const listJournalsQuerySchema = z
+  .object({
+    status: z.enum(JOURNAL_STATUSES).optional(),
+    financialYearId: z.guid().optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+  })
+  .strict();
+export type ListJournalsQuery = z.infer<typeof listJournalsQuerySchema>;
 
 export const createProjectBodySchema = z
   .object({

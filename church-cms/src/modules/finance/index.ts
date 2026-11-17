@@ -15,7 +15,7 @@ export {
 export {
   createFundBodySchema, createAccountBodySchema, createFinancialYearBodySchema, createOfferingBodySchema,
   listOfferingsQuerySchema, createPledgeBodySchema, createPledgeFollowUpBodySchema, createPledgeApplicationBodySchema,
-  listUnpaidPledgesQuerySchema, createJournalBodySchema,
+  listUnpaidPledgesQuerySchema, createJournalBodySchema, listJournalsQuerySchema,
   createProjectBodySchema, listProjectsQuerySchema, createProjectAssignmentBodySchema,
   createProjectContributionBodySchema, expressProjectInterestBodySchema, decideProjectInterestBodySchema,
   type CreateFundBody, type CreateAccountBody, type CreateFinancialYearBody, type CreateOfferingBody,
@@ -29,7 +29,7 @@ export {
   closeFinancialYear,
   listOfferings, createOffering, postOffering, listPledges, createPledge, addPledgeFollowUp,
   applyPledgeReceipt, listUnpaidPledges,
-  getJournal, createJournal, postJournal, reverseJournal,
+  listJournals, getJournal, createJournal, postJournal, reverseJournal,
   postApprovedExpense,
   listProjects, getProject, createProject, assignProjectPerson, recordProjectContribution,
   expressProjectInterest, decideProjectInterest,

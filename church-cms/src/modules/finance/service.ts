@@ -23,7 +23,8 @@ import type {
   CreateAccountBody, CreateFinancialYearBody, CreateFundBody, CreateJournalBody, CreateOfferingBody,
   CreatePledgeApplicationBody, CreatePledgeBody, CreatePledgeFollowUpBody, CreateProjectAssignmentBody,
   CreateProjectBody, CreateProjectContributionBody, DecideProjectInterestBody,
-  ExpressProjectInterestBody, ListOfferingsQuery, ListProjectsQuery, ListUnpaidPledgesQuery,
+  ExpressProjectInterestBody, ListJournalsQuery, ListOfferingsQuery, ListProjectsQuery,
+  ListUnpaidPledgesQuery,
 } from './schemas';
 import * as repo from './repository';
 
@@ -336,6 +337,21 @@ export async function listUnpaidPledges(ctx: Ctx, query: ListUnpaidPledgesQuery)
     }),
   );
   return { data };
+}
+
+export async function listJournals(ctx: Ctx, query: ListJournalsQuery) {
+  assertCanReadJournals(ctx);
+  const db = getDb();
+  const rows = await repo.listJournals(db, ctx, query);
+  const lines = await repo.listJournalLinesFor(db, rows.map((r) => r.id));
+  return {
+    data: rows.map((row) =>
+      toJournalResponse(
+        row,
+        lines.filter((l) => l.journalId === row.id),
+      ),
+    ),
+  };
 }
 
 export async function getJournal(ctx: Ctx, id: string) {
