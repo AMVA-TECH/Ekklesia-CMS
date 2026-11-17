@@ -8,9 +8,9 @@
 
 1. **Platform operator** creates a church tenant and issues the **first church administrator** credentials (email/phone + PIN; MFA required for admins).
 2. That admin customizes church profile/settings and invites leadership accounts.
-3. **Members** open a public registration form, **search/select the church by name**, and submit a join request.
+3. **Members** open a public registration form (full name, **phone required**, email optional), choose the **church to attach to**, and submit a join request.
 4. Church admins receive the request, **approve or reject**.
-5. Only after approval does the member receive a usable login (PIN / set-PIN) scoped to that church.
+5. Approval **attaches** the person to that church (membership + role), which unlocks that church’s services. Credentials (phone + PIN) are issued then; **registration never creates a session** and does not change the normal Sign in flow.
 
 Public “create my church” and instant login on register are **out of scope**.
 
