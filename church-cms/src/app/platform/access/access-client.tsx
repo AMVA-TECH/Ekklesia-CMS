@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useState } from 'react';
+import { useLoadEffect } from '@/app/_ekklesia/session';
 import { platformApi } from '../platform-api';
 
 type Operator = {
@@ -29,20 +30,23 @@ export function AccessClient() {
   const [userAccountId, setUserAccountId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     const [ops, sum] = await Promise.all([
       platformApi<{ items: Operator[] }>('/api/v1/platform/operators'),
       platformApi<AccessSummary>('/api/v1/platform/access/summary'),
     ]);
     setOperators(ops.items);
     setSummary(sum);
-  }
-
-  useEffect(() => {
-    refresh().catch((err: unknown) =>
-      setError(err instanceof Error ? err.message : 'Failed'),
-    );
   }, []);
+
+  const loadInitial = useCallback(
+    () =>
+      refresh().catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Failed'),
+      ),
+    [refresh],
+  );
+  useLoadEffect(loadInitial);
 
   async function onAdd(e: FormEvent) {
     e.preventDefault();
