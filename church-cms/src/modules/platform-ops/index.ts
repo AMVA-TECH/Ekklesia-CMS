@@ -31,3 +31,11 @@ export {
   platformMetricSnapshots,
 } from './db-schema';
 export { runSecurityDetectors } from './detectors';
+export {
+  applyChurchTemplate,
+  type ChurchTemplateId,
+} from './apply-template';
+export {
+  CROSSLIFE_PILOT_TEMPLATE_ID,
+  CROSSLIFE_PILOT_PROFILE,
+} from './templates/crosslife-pilot';

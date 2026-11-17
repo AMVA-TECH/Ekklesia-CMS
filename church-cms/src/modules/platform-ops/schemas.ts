@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { optionalTanzaniaPhoneE164Schema } from '@/platform/phone';
 import { FINDING_SEVERITIES, FINDING_STATUSES } from './constants';
 
 export const listPlatformAuditQuerySchema = z
@@ -36,7 +37,11 @@ export type PatchFindingBody = z.infer<typeof patchFindingBodySchema>;
 
 export const enterTenantBodySchema = z
   .object({
-    reason: z.string().trim().min(8).max(500),
+    reason: z
+      .string()
+      .trim()
+      .min(8, 'Write a short reason (at least 8 characters) for the audit log.')
+      .max(500, 'Reason is too long (max 500 characters).'),
   })
   .strict();
 
@@ -69,32 +74,47 @@ export const growthQuerySchema = z
 
 export type GrowthQuery = z.infer<typeof growthQuerySchema>;
 
-const e164Phone = z
-  .string()
-  .trim()
-  .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be E.164 (e.g. +2557…)');
-
 export const createChurchBodySchema = z
   .object({
-    name: z.string().trim().min(2).max(120),
+    name: z
+      .string()
+      .trim()
+      .min(2, 'Church name must be at least 2 characters.')
+      .max(120, 'Church name is too long.'),
     slug: z
       .string()
       .trim()
       .toLowerCase()
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase kebab-case')
-      .min(2)
-      .max(60)
+      .regex(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        'Use a simple slug like “hope-church” (lowercase letters, numbers, hyphens).',
+      )
+      .min(2, 'Slug must be at least 2 characters.')
+      .max(60, 'Slug is too long.')
       .optional(),
-    timezone: z.string().trim().min(3).max(64).default('Africa/Dar_es_Salaam'),
+    timezone: z
+      .string()
+      .trim()
+      .min(3, 'Choose a timezone, e.g. Africa/Dar_es_Salaam.')
+      .max(64)
+      .default('Africa/Dar_es_Salaam'),
     defaultLocale: z.enum(['en', 'sw']).default('sw'),
     admin: z
       .object({
-        displayName: z.string().trim().min(2).max(120),
-        email: z.string().trim().email().max(254),
-        phoneE164: e164Phone.optional(),
+        displayName: z
+          .string()
+          .trim()
+          .min(2, 'Admin name must be at least 2 characters.')
+          .max(120, 'Admin name is too long.'),
+        email: z
+          .string()
+          .trim()
+          .email('Enter a valid admin email address.')
+          .max(254),
+        phoneE164: optionalTanzaniaPhoneE164Schema,
         pin: z
           .string()
-          .regex(/^\d{4,8}$/, 'PIN must be 4–8 digits'),
+          .regex(/^\d{4,8}$/, 'PIN must be 4 to 8 digits.'),
       })
       .strict(),
   })
