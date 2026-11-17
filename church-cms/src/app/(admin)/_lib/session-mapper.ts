@@ -33,8 +33,13 @@ export function toUiSession(me: AuthMeResponse): Session {
   const church: SessionChurch | null = me.church?.id
     ? {
         id: me.church.id,
-        name: me.church.name ?? 'Your church',
+        name: me.church.displayName || me.church.name || 'Your church',
+        shortName: me.church.shortName ?? null,
+        displayName: me.church.displayName ?? null,
         slug: me.church.slug ?? undefined,
+        logoMediaId: me.church.logoMediaId ?? null,
+        logoUrl: me.church.logoUrl ?? null,
+        config: me.church.config ?? null,
       }
     : null;
 

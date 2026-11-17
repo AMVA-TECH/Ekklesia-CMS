@@ -1,3 +1,4 @@
+import { normalizeTanzaniaPhoneE164 } from '@/platform/phone';
 import { apiFetch } from './api-fetch';
 import { ROLE_CODES } from './types';
 
@@ -18,9 +19,12 @@ const ADMIN_ROLE_CODES = new Set<string>([
   ROLE_CODES.platformOperator,
 ]);
 
-/** Strip spaces/dashes so typed phone numbers still validate as E.164. */
+/**
+ * Normalize phone for Tanzania pilot forms.
+ * Accepts local `07…` and returns E.164 `+255…` (falls back to stripped input).
+ */
 export function normalizePhoneE164(raw: string): string {
-  return raw.trim().replace(/[\s()-]/g, '');
+  return normalizeTanzaniaPhoneE164(raw) ?? raw.trim().replace(/[\s()-]/g, '');
 }
 
 /**

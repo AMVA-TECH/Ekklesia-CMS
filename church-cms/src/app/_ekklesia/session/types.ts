@@ -6,11 +6,53 @@
  * fields are typed as `undefined`) so backend expansion doesn't break the UI.
  */
 
+/** Resolved church configuration exposed to the shell (DEC-033). */
+export interface SessionChurchConfig {
+  branding: {
+    productName: string;
+    logoMediaId: string | null;
+    secondaryLogoMediaId?: string | null;
+    faviconMediaId?: string | null;
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
+    accentColor?: string | null;
+  };
+  terminology: {
+    organisationalUnitSingular: string;
+    organisationalUnitPlural: string;
+    membershipLabel: string;
+  };
+  modules: {
+    people: boolean;
+    membership: boolean;
+    organisation: boolean;
+    events: boolean;
+    attendance: boolean;
+    finance: boolean;
+    messaging: boolean;
+    governance: boolean;
+  };
+  workflows: {
+    announcementDualControl: boolean;
+  };
+  thresholds: {
+    adulthoodAgeYears: number;
+  };
+}
+
 /** A single church membership visible to the current user. */
 export interface SessionChurch {
   id: string;
   name: string;
+  shortName?: string | null;
+  displayName?: string | null;
   slug?: string;
+  /** Organisation logo media id, when set. */
+  logoMediaId?: string | null;
+  /** Authorised content URL for the organisation logo. */
+  logoUrl?: string | null;
+  /** Typed church configuration with defaults applied. */
+  config?: SessionChurchConfig | null;
 }
 
 /** A single assigned role in the active church. */
