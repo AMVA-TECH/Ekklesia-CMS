@@ -209,7 +209,7 @@ export function SignInClient(): React.ReactElement {
             <button
               type="button"
               onClick={() => setShowPin((v) => !v)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-[color:var(--brand-gold-ink)] active:text-[color:var(--brand-gold-strong)] focus-ring rounded-sm"
+              className="-my-3 -mr-2 inline-flex min-h-10 items-center gap-1 rounded-sm px-2 text-xs font-medium text-muted-foreground hover:text-[color:var(--brand-gold-ink)] active:text-[color:var(--brand-gold-strong)] focus-ring"
               aria-pressed={showPin}
             >
               <Icon name={showPin ? 'eye-off' : 'eye'} size={14} />

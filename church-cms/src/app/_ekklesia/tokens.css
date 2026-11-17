@@ -308,3 +308,85 @@
   letter-spacing: 0;
   text-wrap: pretty;
 }
+
+/*
+ * Phone table layout: each row becomes a card of "Label  value" lines.
+ * Labels come from the column headers (see useColumnLabels in ui/table.tsx).
+ */
+@media (max-width: 639px) {
+  .ek-table-stack,
+  .ek-table-stack > tbody,
+  .ek-table-stack > tbody > tr,
+  .ek-table-stack > tbody > tr > td {
+    display: block;
+    width: 100%;
+  }
+  .ek-table-stack > thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ek-table-stack > tbody > tr {
+    padding: 0.75rem 1rem;
+  }
+  .ek-table-stack > tbody > tr > td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 0;
+    text-align: right;
+    max-width: none;
+  }
+  .ek-table-stack > tbody > tr > td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    max-width: 45%;
+    padding-top: 0.1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+  /* First cell is the row's title: full width, no label, slightly larger. */
+  .ek-table-stack > tbody > tr > td:first-child {
+    justify-content: flex-start;
+    text-align: left;
+    padding-bottom: 0.4rem;
+    font-size: 0.9375rem;
+  }
+  .ek-table-stack > tbody > tr > td:first-child::before,
+  .ek-table-stack > tbody > tr > td[data-label='']::before {
+    content: none;
+  }
+  /* Unlabelled cells (actions, group headers) sit on their own line. */
+  .ek-table-stack > tbody > tr > td[data-label=''] {
+    justify-content: flex-start;
+    text-align: left;
+  }
+  .ek-table-stack > tbody > tr > td:empty {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Row title stacks its own lines (name + sub-detail). */
+  .ek-table-stack > tbody > tr > td:first-child {
+    display: block;
+  }
+  /* Action cells: buttons on their own line, aligned to the card's end. */
+  .ek-table-stack > tbody > tr > td:last-child:has(button) {
+    justify-content: flex-end;
+    padding-top: 0.6rem;
+  }
+  .ek-table-stack > tbody > tr > td:last-child:has(button)::before {
+    content: none;
+  }
+  /* Decorative icon-only cells (row chevrons) add nothing in card view. */
+  .ek-table-stack > tbody > tr > td[data-label='']:has(svg):not(:has(button, a, input, select)) {
+    display: none;
+  }
+}

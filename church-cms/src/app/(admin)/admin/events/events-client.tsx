@@ -148,14 +148,30 @@ function EventCard({ event }: { event: EventRow }): React.ReactElement {
       href={`/admin/events/${event.id}`}
       className="group block overflow-hidden rounded-card border border-border bg-surface shadow-card transition-colors hover:border-foreground/15 focus-ring"
     >
-      <div className="aspect-[4/3] w-full bg-surface-muted">
-        <PosterImage
-          url={event.posterUrl}
-          alt={`${event.title} poster`}
-          className="h-full w-full object-cover"
-          emptyIcon="image"
-        />
-      </div>
+      {event.posterUrl ? (
+        <div className="aspect-[4/3] w-full bg-surface-muted">
+          <PosterImage
+            url={event.posterUrl}
+            alt={`${event.title} poster`}
+            className="h-full w-full object-cover"
+            emptyIcon="image"
+          />
+        </div>
+      ) : (
+        // No poster: a compact dated band on phones (no tall empty box),
+        // keeping the 4:3 rhythm of the grid from sm up.
+        <div
+          aria-hidden="true"
+          className="flex h-20 w-full items-center gap-3 px-4 tone-sky sm:aspect-[4/3] sm:h-auto sm:flex-col sm:justify-center"
+        >
+          <span className="text-3xl font-semibold leading-none sm:text-5xl">
+            {Number(event.serviceDate.slice(8, 10))}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-wide">
+            {new Date(`${event.serviceDate}T00:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+          </span>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-2 border-t border-border p-4">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">

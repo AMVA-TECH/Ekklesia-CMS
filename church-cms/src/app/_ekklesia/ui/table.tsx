@@ -1,10 +1,50 @@
-import type {
-  HTMLAttributes,
-  TableHTMLAttributes,
-  TdHTMLAttributes,
-  ThHTMLAttributes,
+'use client';
+
+import {
+  useEffect,
+  useRef,
+  type HTMLAttributes,
+  type TableHTMLAttributes,
+  type TdHTMLAttributes,
+  type ThHTMLAttributes,
 } from 'react';
 import { cn } from './utils';
+
+/**
+ * Copy each column's header text onto its body cells as `data-label`, so the
+ * phone layout (see `.ek-table-stack` in tokens.css) can show "Label  value"
+ * rows. Re-runs when rows change. Cells spanning several columns, and header
+ * cells left blank (action columns), get an empty label.
+ */
+function useColumnLabels(ref: React.RefObject<HTMLTableElement | null>): void {
+  useEffect(() => {
+    const table = ref.current;
+    if (!table) return;
+    const apply = (): void => {
+      const headRow = table.tHead?.rows[0];
+      if (!headRow) return;
+      const labels: string[] = [];
+      for (const th of Array.from(headRow.cells)) {
+        const text = (th.textContent ?? '').trim();
+        for (let i = 0; i < th.colSpan; i += 1) labels.push(text);
+      }
+      for (const body of Array.from(table.tBodies)) {
+        for (const row of Array.from(body.rows)) {
+          let col = 0;
+          for (const cell of Array.from(row.cells)) {
+            const label = cell.colSpan > 1 ? '' : (labels[col] ?? '');
+            if (cell.getAttribute('data-label') !== label) cell.setAttribute('data-label', label);
+            col += cell.colSpan;
+          }
+        }
+      }
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(table, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [ref]);
+}
 
 /**
  * Lightweight table primitives.
@@ -51,15 +91,29 @@ export function TableWrap({
 }
 
 /** Semantic `<table>` with Ekklesia defaults. */
+export interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
+  /**
+   * On phones (< 640px) render each row as a stacked card with column labels
+   * instead of a squeezed grid. Default `true`; turn off for dense numeric
+   * grids that read better scrolling sideways.
+   */
+  stackOnMobile?: boolean;
+}
+
 export function Table({
   className,
   children,
+  stackOnMobile = true,
   ...rest
-}: TableHTMLAttributes<HTMLTableElement>): React.ReactElement {
+}: TableProps): React.ReactElement {
+  const ref = useRef<HTMLTableElement>(null);
+  useColumnLabels(ref);
   return (
     <table
+      ref={ref}
       className={cn(
         'w-full border-collapse text-left text-sm text-foreground',
+        stackOnMobile && 'ek-table-stack',
         className,
       )}
       {...rest}

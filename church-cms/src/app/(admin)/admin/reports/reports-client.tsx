@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { apiFetch } from '@/app/_ekklesia/session';
+import { useCallback, useMemo, useState } from 'react';
+import { apiFetch, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
   Field,
@@ -86,6 +86,16 @@ export function ReportsClient({
     }
   };
 
+  // A deep link (?report=ID) runs straight away when no unit is required.
+  const [autoRan, setAutoRan] = useState(false);
+  const autoRun = useCallback(async (): Promise<void> => {
+    if (autoRan || !initialReportId || needsUnit(initialReportId)) return;
+    setAutoRan(true);
+    await execute(() => apiFetch<ReportResult>(`/api/v1/reports/${initialReportId}`));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialReportId]);
+  useLoadEffect(autoRun);
+
   const runSelected = (): void => {
     if (!selected) return;
     const params = new URLSearchParams();
@@ -128,7 +138,7 @@ export function ReportsClient({
                             type="button"
                             aria-current={selected === r.id ? 'true' : undefined}
                             className={
-                              'w-full rounded-md px-2 py-1.5 text-left text-sm focus-ring ' +
+                              'w-full rounded-md px-2 py-2.5 text-left text-sm focus-ring ' +
                               (selected === r.id
                                 ? 'bg-brand-gold-tint font-medium text-foreground'
                                 : 'hover:bg-surface-muted')
@@ -165,7 +175,7 @@ export function ReportsClient({
                   <li key={s.id}>
                     <button
                       type="button"
-                      className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-surface-muted focus-ring"
+                      className="w-full rounded-md px-2 py-2.5 text-left text-sm hover:bg-surface-muted focus-ring"
                       onClick={() => {
                         setSelected(s.reportId);
                         setFilters({

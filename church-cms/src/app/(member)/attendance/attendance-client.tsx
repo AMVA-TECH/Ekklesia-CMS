@@ -85,7 +85,7 @@ export function AttendanceClient(): React.ReactElement {
               value={data.sessionsHeld.toString()}
               icon="calendar"
               tone="sky"
-              hint={`${data.from} – ${data.to}`}
+              hint={`${formatServiceDate(data.from)} – ${formatServiceDate(data.to)}`}
             />
             <Metric
               label="Present"

@@ -129,7 +129,7 @@ export function ExpensesClient(): React.ReactElement {
                   <TH>Purpose</TH>
                   <TH>Date</TH>
                   <TH className="text-right">Amount</TH>
-                  <TH>Accounts</TH>
+                  <TH className="hidden lg:table-cell">Accounts</TH>
                   <TH>Status</TH>
                   <TH className="text-right">Actions</TH>
                 </TR>
@@ -149,7 +149,7 @@ export function ExpensesClient(): React.ReactElement {
                     <TD className="text-right tabular-nums">
                       {formatMoney(e.amountMinor, e.currency)}
                     </TD>
-                    <TD className="text-xs text-muted-foreground">
+                    <TD className="hidden text-xs text-muted-foreground lg:table-cell">
                       {e.accountId ? accountLabel(accountById.get(e.accountId)) : 'No expense account'}
                       <br />
                       {e.paymentAccountId

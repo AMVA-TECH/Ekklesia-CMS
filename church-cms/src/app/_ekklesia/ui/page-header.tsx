@@ -49,7 +49,8 @@ export function PageHeader({
         ) : null}
       </div>
       {actions ? (
-        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        // shrink-0 so header actions stay on one row beside the title.
+        <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:justify-end">
           {actions}
         </div>
       ) : null}

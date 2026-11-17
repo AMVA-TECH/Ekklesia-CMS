@@ -17,12 +17,14 @@ import {
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MemberPledge } from '../_shared/api-types';
 import { formatMoney, formatRelativeToToday } from '../_shared/formatters';
+import { useNameLookup } from '../_shared/use-name-lookup';
 
 export function GivingClient(): React.ReactElement {
   const [pledges, setPledges] = useState<MemberPledge[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
+  const fundNames = useNameLookup('/api/v1/funds');
 
   useEffect(() => {
     let cancelled = false;
@@ -148,10 +150,7 @@ export function GivingClient(): React.ReactElement {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground">
-                            Pledge to fund ·{' '}
-                            <span className="font-normal text-muted-foreground">
-                              {pledge.fundId.slice(0, 8)}
-                            </span>
+                            {fundNames.get(pledge.fundId) ?? 'Pledge to a church fund'}
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             Promised {formatMoney(pledge.amountMinor, pledge.currency)}

@@ -34,6 +34,8 @@ import { asList } from '../../_lib/list';
 interface DashboardCounts {
   people: number | null;
   members: number | null;
+  /** More active members exist than the page we counted. */
+  membersMore: boolean;
   ministries: number | null;
   pendingApprovals: number | null;
   offeringsTotalMinor: number | null;
@@ -44,6 +46,7 @@ interface DashboardCounts {
 const EMPTY_COUNTS: DashboardCounts = {
   people: null,
   members: null,
+  membersMore: false,
   ministries: null,
   pendingApprovals: null,
   offeringsTotalMinor: null,
@@ -70,7 +73,7 @@ export function DashboardClient(): React.ReactElement {
     const results = await Promise.allSettled([
       apiFetch<ListEnvelope<Person> & { meta?: ListMeta }>('/api/v1/people?limit=1'),
       apiFetch<ListEnvelope<Membership> & { meta?: ListMeta }>(
-        '/api/v1/memberships?status=member&limit=1',
+        '/api/v1/memberships?status=active&limit=100',
       ),
       apiFetch<OrganisationalUnit[] | { data: OrganisationalUnit[] }>(
         '/api/v1/organisational-units',
@@ -100,6 +103,8 @@ export function DashboardClient(): React.ReactElement {
     }
     if (membersRes.status === 'fulfilled') {
       nextCounts.members = countFromEnvelope(membersRes.value);
+      const meta = (membersRes.value as { meta?: ListMeta }).meta;
+      nextCounts.membersMore = Boolean(meta?.hasMore);
     }
     if (ministriesRes.status === 'fulfilled') {
       nextCounts.ministries = asList(ministriesRes.value).length;
@@ -159,7 +164,9 @@ export function DashboardClient(): React.ReactElement {
   const greeting = isClient ? buildGreeting(user?.displayName) : 'Welcome';
 
   const churchLabel = church?.name ?? 'your church';
-  const firstName = user?.displayName?.split(/[\s@]/)[0];
+  // displayName can fall back to the email address; show a tidy first name.
+  const rawFirst = user?.displayName?.split(/[\s@._]/)[0] ?? '';
+  const firstName = rawFirst ? rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1) : '';
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
@@ -235,11 +242,15 @@ export function DashboardClient(): React.ReactElement {
             <>
               <Metric
                 label="Members"
-                value={formatCount(counts.members ?? counts.people)}
+                value={
+                  counts.members === null
+                    ? '—'
+                    : `${formatCount(counts.members)}${counts.membersMore ? '+' : ''}`
+                }
                 icon="users"
                 tone="peach"
                 href="/admin/memberships"
-                hint="Active in your directory"
+                hint="Active members"
               />
               <Metric
                 label="Upcoming events"
@@ -279,17 +290,19 @@ export function DashboardClient(): React.ReactElement {
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Attendance — calm placeholder until series API exists */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <Panel
-            title="This month&apos;s attendance"
-            subtitle="Live monthly series will appear here when available."
+            title="Recent attendance"
+            subtitle="Total present per service day, last 8 weeks."
+            linkHref="/admin/attendance"
+            linkLabel="Attendance"
           >
-            <AttendancePlaceholder />
+            <AttendanceTrend />
           </Panel>
         </div>
 
         {/* Upcoming events with thumbs */}
-        <div className="lg:col-span-3">
+        <div className="min-w-0 lg:col-span-3">
           <Panel
             title="Upcoming events"
             subtitle="Next gatherings on the calendar"
@@ -349,26 +362,28 @@ export function DashboardClient(): React.ReactElement {
         <Panel
           title="Needs your attention"
           subtitle={`${counts.pendingApprovals} pending approval${counts.pendingApprovals === 1 ? '' : 's'}`}
-          linkHref="/admin/memberships"
+          linkHref="/admin/approvals"
           linkLabel="Review"
         >
           <ul className="space-y-3">
             {approvals.map((a) => (
-              <li
-                key={a.id}
-                className="rounded-xl border border-border bg-surface px-3 py-2.5"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {titleCase(a.subjectType)}
+              <li key={a.id}>
+                <Link
+                  href="/admin/approvals"
+                  className="block rounded-xl border border-border bg-surface px-3 py-2.5 transition-colors hover:border-foreground/15 hover:bg-surface-muted/50 focus-ring motion-reduce:transition-none"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {titleCase(a.subjectType)} awaiting a second approval
+                    </p>
+                    <StatusPill tone="pending" hideDot>
+                      Pending
+                    </StatusPill>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Submitted {formatDate(a.createdAt)}
                   </p>
-                  <StatusPill tone="pending" hideDot>
-                    Pending
-                  </StatusPill>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Opened {formatDate(a.createdAt)}
-                </p>
+                </Link>
               </li>
             ))}
           </ul>
@@ -437,27 +452,101 @@ function EventThumb({ event }: { event: EventRow }): React.ReactElement {
   );
 }
 
-function AttendancePlaceholder(): React.ReactElement {
+interface AttendanceDay {
+  serviceDate: string;
+  totalCount: number;
+}
+
+/**
+ * Live attendance bars from the R-SP-02 report (day aggregates). Shows a calm
+ * empty state rather than an invented chart when nothing is recorded yet.
+ */
+function AttendanceTrend(): React.ReactElement {
+  const [days, setDays] = useState<AttendanceDay[] | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
+
+  const load = useCallback(async (): Promise<void> => {
+    const since = new Date(Date.now() - 56 * 86_400_000).toISOString().slice(0, 10);
+    try {
+      const report = await apiFetch<{ data: { days?: AttendanceDay[] } }>(
+        `/api/v1/reports/R-SP-02?from=${since}`,
+      );
+      const rows = (report.data?.days ?? [])
+        .filter((d) => d.totalCount > 0)
+        .sort((a, b) => a.serviceDate.localeCompare(b.serviceDate))
+        .slice(-8);
+      setDays(rows);
+    } catch {
+      setUnavailable(true);
+      setDays([]);
+    }
+  }, []);
+  useLoadEffect(load);
+
+  if (days === null) return <Skeleton size="block" />;
+  if (days.length === 0) {
+    return (
+      <EmptyState
+        icon="calendar-check"
+        tone="sage"
+        title={unavailable ? 'Attendance totals unavailable' : 'No attendance recorded yet'}
+        description={
+          unavailable
+            ? 'Your role can’t view the attendance report.'
+            : 'Open a session on a service to start counting. Totals appear here after each service.'
+        }
+      />
+    );
+  }
+
+  const max = Math.max(...days.map((d) => d.totalCount));
+  const latest = days[days.length - 1]!;
+  const previous = days.length > 1 ? days[days.length - 2]! : null;
+  const change = previous ? latest.totalCount - previous.totalCount : null;
+
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">
-        Attendance trends will chart here once monthly totals are available from
-        the API. Until then, this space stays calm — no invented numbers.
-      </p>
+    <figure className="flex flex-col gap-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-3xl font-semibold tabular-nums text-foreground">
+          {formatCount(latest.totalCount)}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {formatDate(latest.serviceDate)}
+          {change !== null ? (
+            <span className={change >= 0 ? 'ml-2 text-[color:var(--success-ink)]' : 'ml-2 text-[color:var(--danger-ink)]'}>
+              {change >= 0 ? '+' : ''}
+              {formatCount(change)} vs previous
+            </span>
+          ) : null}
+        </p>
+      </div>
       <div
         aria-hidden="true"
-        className="flex h-36 items-end gap-2 rounded-xl bg-surface-muted/60 px-3 py-3"
+        className="flex h-36 items-end gap-2 rounded-xl bg-surface-muted/60 px-3 pb-2 pt-3"
       >
-        {[40, 55, 48, 70, 62, 85].map((h, i) => (
-          <div
-            key={i}
-            className="flex-1 rounded-t-md bg-gold-gradient opacity-40"
-            style={{ height: `${h}%` }}
-          />
+        {days.map((d, i) => (
+          <div key={d.serviceDate} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+            <div
+              className={
+                i === days.length - 1
+                  ? 'w-full rounded-t-md bg-gold-gradient'
+                  : 'w-full rounded-t-md bg-[color:var(--brand-gold-soft)]'
+              }
+              style={{ height: `${Math.max(6, Math.round((d.totalCount / max) * 100))}%` }}
+              title={`${formatDate(d.serviceDate)}: ${d.totalCount}`}
+            />
+          </div>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">Placeholder silhouette only</p>
-    </div>
+      <figcaption className="sr-only">
+        Attendance by service day:{' '}
+        {days.map((d) => `${formatDate(d.serviceDate)} ${d.totalCount}`).join('; ')}.
+      </figcaption>
+      <div className="flex justify-between text-[11px] text-muted-foreground" aria-hidden="true">
+        <span>{formatDate(days[0]!.serviceDate)}</span>
+        <span>{formatDate(latest.serviceDate)}</span>
+      </div>
+    </figure>
   );
 }
 

@@ -24,6 +24,7 @@ import type {
   MemberDirectoryEntry,
   MemberParticipationRequest,
 } from '../_shared/api-types';
+import { useNameLookup } from '../_shared/use-name-lookup';
 
 export function CommunityClient(): React.ReactElement {
   const [participations, setParticipations] = useState<
@@ -55,6 +56,9 @@ export function CommunityClient(): React.ReactElement {
       cancelled = true;
     };
   }, []);
+
+  const ministryNames = useNameLookup('/api/v1/organisational-units?limit=100');
+  const ministryName = (unitId: string): string => ministryNames.get(unitId) ?? 'Ministry';
 
   const approved = useMemo(
     () => (participations ?? []).filter((p) => p.status === 'approved'),
@@ -110,7 +114,7 @@ export function CommunityClient(): React.ReactElement {
                 {approved.map((p) => (
                   <MinistryRow
                     key={p.id}
-                    label={`Ministry · ${shortId(p.organisationalUnitId)}`}
+                    label={ministryName(p.organisationalUnitId)}
                     status="Active"
                   />
                 ))}
@@ -136,7 +140,7 @@ export function CommunityClient(): React.ReactElement {
                       >
                         <Icon name="users" size={16} />
                       </span>
-                      <span>Ministry · {shortId(p.organisationalUnitId)}</span>
+                      <span>{ministryName(p.organisationalUnitId)}</span>
                     </span>
                     <StatusPill tone="pending">Awaiting approval</StatusPill>
                   </li>
@@ -276,6 +280,3 @@ function messageFor(reason: unknown): string {
   return 'Something went wrong.';
 }
 
-function shortId(id: string): string {
-  return id.slice(0, 8);
-}

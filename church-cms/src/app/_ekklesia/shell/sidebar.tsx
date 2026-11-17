@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
 import { cn } from '../ui/utils';
@@ -37,6 +38,15 @@ export function Sidebar({
   footer,
 }: SidebarProps): React.ReactElement {
   const [collapsed, setCollapsed] = useState<boolean>(readInitialCollapsed);
+
+  // The admin rail is long; keep the current page's link in view so deep
+  // pages (e.g. Settings → Audit log) don't open with their item hidden.
+  const pathname = usePathname();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const active = scrollRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    active?.scrollIntoView({ block: 'nearest' });
+  }, [pathname, collapsed]);
 
   const toggle = (): void => {
     setCollapsed((current) => {
@@ -78,7 +88,7 @@ export function Sidebar({
           surface="dark"
         />
       </div>
-      <div className={cn('flex-1 overflow-y-auto pb-4', collapsed && 'px-1')}>
+      <div ref={scrollRef} className={cn('flex-1 overflow-y-auto pb-4', collapsed && 'px-1')}>
         <div className={collapsed ? 'sr-only' : ''}>
           <RoleNav groups={groups} />
         </div>

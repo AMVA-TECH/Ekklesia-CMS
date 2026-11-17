@@ -66,10 +66,9 @@ export function MemberEventsClient(): React.ReactElement {
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     const list = events ?? [];
-    const published = list.filter(
-      (e) => e.status === 'published' || e.status === 'draft' || !e.status,
-    );
-    const sorted = published
+    // Event statuses are scheduled / cancelled / completed. Show them all;
+    // cancelled ones carry a badge so members aren't caught out.
+    const sorted = list
       .slice()
       .sort((a, b) => a.serviceDate.localeCompare(b.serviceDate));
     if (!q) return sorted;
@@ -193,6 +192,7 @@ function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
             {time ? <span> · {time}</span> : null}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
+            {event.status === 'cancelled' ? <Badge tone="peach">Cancelled</Badge> : null}
             <Badge tone="sky">
               {event.eventTypeName ?? 'Gathering'}
             </Badge>
