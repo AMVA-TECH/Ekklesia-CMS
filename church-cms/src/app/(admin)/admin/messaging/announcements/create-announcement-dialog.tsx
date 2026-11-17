@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -23,54 +23,87 @@ interface CreateAnnouncementDialogProps {
   open: boolean;
   onClose: () => void;
   onCreated: (row: AnnouncementRow) => void;
+  /** When set, dialog opens this announcement for view/edit. */
+  announcement?: AnnouncementRow | null;
+  onUpdated?: (row: AnnouncementRow) => void;
 }
 
 /**
- * Create a church-wide announcement draft (default audience: all members).
+ * Create or edit a church-wide announcement draft.
  */
 export function CreateAnnouncementDialog({
   open,
   onClose,
   onCreated,
+  announcement = null,
+  onUpdated,
 }: CreateAnnouncementDialogProps): React.ReactElement {
   const formId = useId();
+  const editing = Boolean(announcement);
+  const readOnly =
+    editing &&
+    announcement !== null &&
+    announcement.status !== 'draft' &&
+    announcement.status !== 'rejected';
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  const reset = (): void => {
-    setTitle('');
-    setBody('');
+  useEffect(() => {
+    if (!open) return;
+    if (announcement) {
+      setTitle(announcement.title);
+      setBody(announcement.body);
+    } else {
+      setTitle('');
+      setBody('');
+    }
     setFieldErrors({});
     setFormError(null);
     setSubmitting(false);
-  };
+  }, [open, announcement]);
 
   const handleClose = (): void => {
     if (submitting) return;
-    reset();
     onClose();
   };
 
   const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (submitting) return;
+    if (submitting || readOnly) return;
     setSubmitting(true);
     setFieldErrors({});
     setFormError(null);
     try {
-      const created = await apiFetch<AnnouncementRow>('/api/v1/announcements', {
-        method: 'POST',
-        json: {
-          title: title.trim(),
-          body: body.trim(),
-          audiences: [{ audienceType: 'all_members' }],
-        },
-      });
-      reset();
-      onCreated(created);
+      if (editing && announcement) {
+        const updated = await apiFetch<AnnouncementRow>(
+          `/api/v1/announcements/${announcement.id}`,
+          {
+            method: 'PATCH',
+            json: {
+              title: title.trim(),
+              body: body.trim(),
+            },
+          },
+        );
+        onUpdated?.(updated);
+        onClose();
+      } else {
+        const created = await apiFetch<AnnouncementRow>(
+          '/api/v1/announcements',
+          {
+            method: 'POST',
+            json: {
+              title: title.trim(),
+              body: body.trim(),
+              audiences: [{ audienceType: 'all_members' }],
+            },
+          },
+        );
+        onCreated(created);
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         const problem = err.body as
@@ -89,7 +122,11 @@ export function CreateAnnouncementDialog({
         setFormError(problem?.detail ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create announcement.',
+          err instanceof Error
+            ? err.message
+            : editing
+              ? 'Could not save announcement.'
+              : 'Could not create announcement.',
         );
       }
       setSubmitting(false);
@@ -100,8 +137,20 @@ export function CreateAnnouncementDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New announcement"
-      description="Draft a notice for the whole congregation. Submit for approval or publish when ready."
+      title={
+        editing
+          ? readOnly
+            ? 'Announcement'
+            : 'Edit announcement'
+          : 'New announcement'
+      }
+      description={
+        editing
+          ? readOnly
+            ? 'This notice is locked while it awaits approval or after publishing.'
+            : 'Update the draft, then submit for approval or publish when ready.'
+          : 'Write a notice for your church family. Save as a draft first.'
+      }
       size="md"
       footer={
         <DialogFooter>
@@ -110,11 +159,17 @@ export function CreateAnnouncementDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {readOnly ? 'Close' : 'Cancel'}
           </Button>
-          <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Save draft'}
-          </Button>
+          {readOnly ? null : (
+            <Button type="submit" form={formId} loading={submitting}>
+              {submitting
+                ? 'Saving…'
+                : editing
+                  ? 'Save changes'
+                  : 'Save draft'}
+            </Button>
+          )}
         </DialogFooter>
       }
     >
@@ -141,13 +196,15 @@ export function CreateAnnouncementDialog({
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Sunday reminder"
             maxLength={200}
+            readOnly={readOnly}
+            disabled={readOnly}
           />
         </Field>
 
         <Field
-          label="Body"
+          label="Message"
           required
-          hint="Plain text shown in the member feed and any linked blast."
+          hint="What your church family needs to know."
           error={fieldErrors.body}
         >
           <Textarea
@@ -156,6 +213,8 @@ export function CreateAnnouncementDialog({
             placeholder="Share what your church family needs to know…"
             rows={6}
             maxLength={5000}
+            readOnly={readOnly}
+            disabled={readOnly}
           />
         </Field>
       </form>

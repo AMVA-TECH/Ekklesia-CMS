@@ -23,7 +23,7 @@ import {
   type StatusTone,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
-import { formatDate, titleCase } from '../../../_lib/format';
+import { formatDate } from '../../../_lib/format';
 import { asList } from '../../../_lib/list';
 import {
   CreateAnnouncementDialog,
@@ -45,8 +45,25 @@ function statusTone(status: string): StatusTone {
   }
 }
 
+function statusLabel(status: string): string {
+  switch (status) {
+    case 'draft':
+      return 'Draft';
+    case 'pending_approval':
+      return 'Waiting for approval';
+    case 'published':
+      return 'Published';
+    case 'rejected':
+      return 'Needs changes';
+    case 'archived':
+      return 'Archived';
+    default:
+      return status.replaceAll('_', ' ');
+  }
+}
+
 /**
- * Admin announcements — list, create draft, submit for approval, publish.
+ * Admin announcements — list, open/edit, submit for approval, publish.
  */
 export function AnnouncementsClient(): React.ReactElement {
   const { push } = useToast();
@@ -54,6 +71,7 @@ export function AnnouncementsClient(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<AnnouncementRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
@@ -99,7 +117,7 @@ export function AnnouncementsClient(): React.ReactElement {
         );
         push({
           tone: 'success',
-          message: 'Submitted for approval.',
+          message: 'Sent for approval.',
         });
       } else if (action === 'reject') {
         const updated = await apiFetch<AnnouncementRow>(
@@ -107,7 +125,7 @@ export function AnnouncementsClient(): React.ReactElement {
           { method: 'POST', json: {} },
         );
         setRows((prev) => prev.map((r) => (r.id === id ? updated : r)));
-        push({ tone: 'success', message: 'Announcement rejected.' });
+        push({ tone: 'success', message: 'Announcement sent back for changes.' });
       } else {
         const updated = await apiFetch<AnnouncementRow>(
           `/api/v1/announcements/${id}/publish`,
@@ -135,7 +153,7 @@ export function AnnouncementsClient(): React.ReactElement {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Announcements"
-        lede="Church-wide notices and updates for your congregation."
+        lede="Notices for your church family. Open one to read or edit, then publish when ready."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -186,7 +204,7 @@ export function AnnouncementsClient(): React.ReactElement {
           icon="bell"
           tone="peach"
           title="No announcements yet"
-          description="Draft a notice for your church family — then submit for approval or publish."
+          description="Write a notice for your church family, save the draft, then publish or send it for approval."
           action={
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
               New announcement
@@ -211,13 +229,24 @@ export function AnnouncementsClient(): React.ReactElement {
                 {rows.map((row) => {
                   const canSubmit =
                     row.status === 'draft' || row.status === 'rejected';
-                  // Direct publish only from draft (API rejects pending/rejected).
                   const canPublishDirect = row.status === 'draft';
                   const canReject = row.status === 'pending_approval';
                   const hasActions =
                     canSubmit || canPublishDirect || canReject;
                   return (
-                    <TR key={row.id}>
+                    <TR
+                      key={row.id}
+                      className="cursor-pointer"
+                      onClick={() => setEditing(row)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setEditing(row);
+                        }
+                      }}
+                      tabIndex={0}
+                      aria-label={`Open announcement ${row.title}`}
+                    >
                       <TD>
                         <div className="flex flex-col gap-0.5">
                           <span className="font-medium text-foreground">
@@ -230,13 +259,17 @@ export function AnnouncementsClient(): React.ReactElement {
                       </TD>
                       <TD>
                         <StatusPill tone={statusTone(row.status)}>
-                          {titleCase(row.status.replaceAll('_', ' '))}
+                          {statusLabel(row.status)}
                         </StatusPill>
                       </TD>
                       <TD className="text-muted-foreground">
                         {row.publishedAt ? formatDate(row.publishedAt) : '—'}
                       </TD>
-                      <TD>
+                      <TD
+                        onClick={(event) => {
+                          event.stopPropagation();
+                        }}
+                      >
                         {hasActions ? (
                           <Menu
                             align="end"
@@ -252,6 +285,13 @@ export function AnnouncementsClient(): React.ReactElement {
                               </Button>
                             }
                           >
+                            <MenuItem
+                              icon="edit"
+                              onClick={() => setEditing(row)}
+                            >
+                              Open
+                            </MenuItem>
+                            <MenuSeparator />
                             {canSubmit ? (
                               <MenuItem
                                 icon="inbox"
@@ -259,11 +299,8 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'submit');
                                 }}
                               >
-                                Submit for approval
+                                Send for approval
                               </MenuItem>
-                            ) : null}
-                            {canSubmit && canPublishDirect ? (
-                              <MenuSeparator />
                             ) : null}
                             {canPublishDirect ? (
                               <MenuItem
@@ -283,12 +320,18 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'reject');
                                 }}
                               >
-                                Reject
+                                Send back
                               </MenuItem>
                             ) : null}
                           </Menu>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditing(row)}
+                          >
+                            Open
+                          </Button>
                         )}
                       </TD>
                     </TR>
@@ -302,8 +345,8 @@ export function AnnouncementsClient(): React.ReactElement {
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon name="alert-circle" size={14} />
-        Church-wide notices need dual-control approval after submit. Direct
-        publish is available when your role includes publish rights.
+        Church-wide notices usually need a second person to approve before they
+        go live. Leaders with publish rights can publish a draft directly.
       </p>
 
       <CreateAnnouncementDialog
@@ -313,6 +356,18 @@ export function AnnouncementsClient(): React.ReactElement {
           setRows((prev) => [row, ...prev]);
           setCreateOpen(false);
           push({ tone: 'success', message: 'Draft saved.' });
+        }}
+      />
+
+      <CreateAnnouncementDialog
+        open={Boolean(editing)}
+        announcement={editing}
+        onClose={() => setEditing(null)}
+        onCreated={() => undefined}
+        onUpdated={(row) => {
+          setRows((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+          setEditing(null);
+          push({ tone: 'success', message: 'Announcement saved.' });
         }}
       />
     </div>
