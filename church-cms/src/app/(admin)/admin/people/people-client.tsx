@@ -22,6 +22,7 @@ import {
   THead,
   TR,
   useToast,
+  buttonClassName,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { ListEnvelope, ListMeta, Person } from '../../_lib/api-types';
@@ -120,9 +121,17 @@ export function PeopleClient(): React.ReactElement {
         title="People"
         lede="Everyone known to your church. Add a visitor, update a contact, or tap a name for the full profile."
         actions={
-          <Button iconLeft="user-plus" onClick={() => setCreateOpen(true)}>
-            Add a person
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/people/import"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              Import
+            </Link>
+            <Button iconLeft="user-plus" onClick={() => setCreateOpen(true)}>
+              Add a person
+            </Button>
+          </div>
         }
       />
 
