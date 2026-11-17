@@ -156,6 +156,12 @@ export function AttendanceClient(): React.ReactElement {
         lede="How many showed up to recent services, and who among your leaders might need a nudge."
         actions={
           <>
+            <Link
+              href="/admin/attendance/absences"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              Absence notices
+            </Link>
             <Button
               variant="primary"
               iconLeft="calendar-check"
