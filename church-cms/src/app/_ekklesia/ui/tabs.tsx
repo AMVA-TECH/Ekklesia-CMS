@@ -121,8 +121,10 @@ export function TabList({
       role="tablist"
       aria-orientation={orientation}
       className={cn(
-        'flex gap-1 border-b border-border',
-        orientation === 'vertical' && 'flex-col border-b-0 border-r',
+        // Horizontal lists scroll inside themselves on narrow screens rather
+        // than widening the page.
+        'flex max-w-full gap-1 overflow-x-auto border-b border-border',
+        orientation === 'vertical' && 'flex-col overflow-x-visible border-b-0 border-r',
         className,
       )}
       onKeyDown={onKeyDown}
@@ -159,7 +161,7 @@ export function Tab({
       tabIndex={selected ? 0 : -1}
       onClick={() => setValue(value)}
       className={cn(
-        'relative inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium focus-ring',
+        'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm font-medium focus-ring',
         'text-muted-foreground hover:text-foreground',
         selected && 'text-foreground',
         className,
