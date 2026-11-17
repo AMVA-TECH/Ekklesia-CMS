@@ -44,11 +44,14 @@ export function formatDate(
   if (!input) return '—';
   const date = typeof input === 'string' ? new Date(input) : input;
   if (Number.isNaN(date.getTime())) return typeof input === 'string' ? input : '—';
+  // Non-breaking spaces keep "12 Nov 2026" on one line in table cells.
   return new Intl.DateTimeFormat(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-  }).format(date);
+  })
+    .format(date)
+    .replace(/ /g, '\u00a0');
 }
 
 /** Format an ISO datetime into a "Mon 10 Nov · 09:30" style label. */
