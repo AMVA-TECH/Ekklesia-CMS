@@ -362,26 +362,28 @@ export function DashboardClient(): React.ReactElement {
         <Panel
           title="Needs your attention"
           subtitle={`${counts.pendingApprovals} pending approval${counts.pendingApprovals === 1 ? '' : 's'}`}
-          linkHref="/admin/memberships"
+          linkHref="/admin/approvals"
           linkLabel="Review"
         >
           <ul className="space-y-3">
             {approvals.map((a) => (
-              <li
-                key={a.id}
-                className="rounded-xl border border-border bg-surface px-3 py-2.5"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {titleCase(a.subjectType)}
+              <li key={a.id}>
+                <Link
+                  href="/admin/approvals"
+                  className="block rounded-xl border border-border bg-surface px-3 py-2.5 transition-colors hover:border-foreground/15 hover:bg-surface-muted/50 focus-ring motion-reduce:transition-none"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {titleCase(a.subjectType)} awaiting a second approval
+                    </p>
+                    <StatusPill tone="pending" hideDot>
+                      Pending
+                    </StatusPill>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Submitted {formatDate(a.createdAt)}
                   </p>
-                  <StatusPill tone="pending" hideDot>
-                    Pending
-                  </StatusPill>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Opened {formatDate(a.createdAt)}
-                </p>
+                </Link>
               </li>
             ))}
           </ul>

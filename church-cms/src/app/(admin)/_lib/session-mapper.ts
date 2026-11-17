@@ -17,8 +17,10 @@ import type { AuthMeResponse } from './api-types';
 export function toUiSession(me: AuthMeResponse): Session {
   const email = me.actor.email ?? undefined;
   const phoneE164 = me.actor.phoneE164 ?? undefined;
+  // No person name on /auth/me: derive a readable one from the email
+  // ("amani.juma@…" → "Amani Juma"), else the phone number.
   const displayName =
-    (email && email.split('@')[0]) ?? phoneE164 ?? 'Signed-in user';
+    (email && nameFromEmail(email)) || phoneE164 || 'Signed-in user';
   const initials = computeInitials(displayName);
 
   const user: SessionUser = {
@@ -66,4 +68,13 @@ function computeInitials(name: string): string {
   if (letters.length === 0) return '?';
   if (letters.length === 1) return letters[0].toUpperCase();
   return (letters[0] + letters[letters.length - 1]).toUpperCase();
+}
+
+function nameFromEmail(email: string): string {
+  return email
+    .split('@')[0]!
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
