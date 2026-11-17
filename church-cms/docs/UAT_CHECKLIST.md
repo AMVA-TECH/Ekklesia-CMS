@@ -16,7 +16,7 @@ Legend: **Pass** / **Fail** / **Blocked** / **Deferred (known gap)**
 | 6 | Membership approval by pastoral + admin leaders | `/membership-applications` (+ `/decision`), `/memberships/[id]` status + `/status-history` | | |
 | 7 | Ministry join (multi) + leader decision + pastoral visibility | `/participation-requests`, `/participation-requests/me`, decision, participations | | |
 | 8 | Events calendar + registration | `/events`, event-types (incl. Sunday Service), posters, `/events/{id}/registrations` (+ `/me` cancel); admin UI `/events` | | |
-| 9 | Attendance: QR, headcount, roll call, aggregates, absence, family views, nudges | Sessions + headcount/roll-call + day aggregates + QR + absence + corrections; `GET /attendance/me` (calendar/band/suggestedNudge), `GET /attendance/family`, `GET /attendance/stats/leadership`; family/nudge UI TBD | | |
+| 9 | Attendance: QR, headcount, roll call, aggregates, absence, family views, nudges | Sessions + headcount/roll-call + day aggregates + QR UI (`Attendance QR` on event, manage-session panel → `/check-in?token=`) + absence + corrections; `GET /attendance/me` (calendar/band/suggestedNudge), `GET /attendance/family`, `GET /attendance/stats/leadership`; family/nudge UI TBD | | |
 | 10 | Projects with period/goal (+ optional money link) | `/projects`, assignments, contributions, `/projects/{id}/interest`, interest decision | | |
 | 11 | Accounting: funds, CoA/accounts, years, journals post, dual-control intent | `/funds`, `/financial-years` (+ `/close`), `/journals` (+ `/post`, `/reverse`) | | |
 | 12 | Offerings + pledges + follow-ups + applications (manual; gateway deferred) | `/offerings` (+ post), `/pledges`, follow-ups, `/pledges/{id}/applications`, `/pledges/unpaid` | | |

@@ -12,6 +12,8 @@ Regenerate: `pnpm openapi:generate`
 | `POST` | `/api/v1/accounts` | Finance | session |
 | `GET` | `/api/v1/announcements` | Messaging | session |
 | `POST` | `/api/v1/announcements` | Messaging | session |
+| `GET` | `/api/v1/announcements/{id}` | Messaging | session |
+| `PATCH` | `/api/v1/announcements/{id}` | Messaging | session |
 | `POST` | `/api/v1/announcements/{id}/publish` | Messaging | session |
 | `POST` | `/api/v1/announcements/{id}/reject` | Messaging | session |
 | `POST` | `/api/v1/announcements/{id}/submit` | Messaging | session |
@@ -115,12 +117,16 @@ Regenerate: `pnpm openapi:generate`
 | `POST` | `/api/v1/message-jobs/{id}/dispatch` | Messaging | session |
 | `GET` | `/api/v1/message-templates` | Messaging | session |
 | `POST` | `/api/v1/message-templates` | Messaging | session |
+| `GET` | `/api/v1/message-templates/{id}` | Messaging | session |
+| `PATCH` | `/api/v1/message-templates/{id}` | Messaging | session |
 | `GET` | `/api/v1/offerings` | Finance | session |
 | `POST` | `/api/v1/offerings` | Finance | session |
 | `POST` | `/api/v1/offerings/{id}/post` | Finance | session |
+| `GET` | `/api/v1/organisation-users` | Access & ops | session |
 | `GET` | `/api/v1/organisational-units` | Organisation | session |
 | `POST` | `/api/v1/organisational-units` | Organisation | session |
 | `GET` | `/api/v1/organisational-units/{id}` | Organisation | session |
+| `PATCH` | `/api/v1/organisational-units/{id}` | Organisation | session |
 | `GET` | `/api/v1/organisational-units/{id}/participations` | Organisation | session |
 | `POST` | `/api/v1/organisational-units/{id}/participations` | Organisation | session |
 | `GET` | `/api/v1/organisational-units/{id}/programmes` | Organisation | session |
@@ -141,6 +147,7 @@ Regenerate: `pnpm openapi:generate`
 | `GET` | `/api/v1/platform/churches` | Platform | platform |
 | `POST` | `/api/v1/platform/churches` | Platform admin | create church + first admin (DEC-032); PIN returned once |
 | `GET` | `/api/v1/platform/churches/{id}` | Platform | platform |
+| `POST` | `/api/v1/platform/churches/{id}/apply-template` | Platform admin | Opt-in config template (e.g. `crosslife-pilot`); body `{ templateId, force? }` |
 | `GET` | `/api/v1/platform/growth` | Platform | platform |
 | `GET` | `/api/v1/platform/health` | Platform | platform |
 | `POST` | `/api/v1/platform/metrics/snapshot` | Platform | platform |
@@ -158,6 +165,8 @@ Regenerate: `pnpm openapi:generate`
 | `GET` | `/api/v1/pledges/unpaid` | Finance | session |
 | `GET` | `/api/v1/positions` | Organisation | session |
 | `POST` | `/api/v1/positions` | Organisation | session |
+| `GET` | `/api/v1/positions/{id}` | Organisation | session |
+| `PATCH` | `/api/v1/positions/{id}` | Organisation | session |
 | `GET` | `/api/v1/projects` | Finance | session |
 | `POST` | `/api/v1/projects` | Finance | session |
 | `GET` | `/api/v1/projects/{id}` | Finance | session |

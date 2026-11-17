@@ -17,7 +17,7 @@ Aligns with `14_LEADERSHIP_REPORT_CATALOGUE.md`, DEC-013, DEC-033.
 | Unit packs | `R-UNIT-01` roster, `R-UNIT-03` sessions, `R-UNIT-04` engagement |
 | Trial balance | `R-FIN-01` from posted journals (`from`/`to` required) |
 | Custom reports | Saved catalogue views (`/saved-reports`) — not free-form SQL |
-| QR / absence | Issue QR on session; public `/attendance/check-ins`; `/absence-notices` |
+| QR / absence | Issue QR on open session (admin UI + `POST …/qr`); public page `/check-in?token=` → `POST /attendance/check-ins`; `/absence-notices` |
 | Member progress | `GET /attendance/me` calendar + band + suggestedNudge |
 | Family attendance | `GET /attendance/family` (household day status full/partial/absent/notice) |
 | Leadership stats API | `GET /attendance/stats/leadership` (same bands as R-SP-03) |
