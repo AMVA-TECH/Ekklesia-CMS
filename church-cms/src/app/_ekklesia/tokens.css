@@ -91,14 +91,18 @@
   --info-ink: #2f6a97;
   --info-soft: #e8f1f8;
 
-  /* Admin sidebar chrome (mockup: charcoal rail, ivory labels, gold active) */
+  /* Admin sidebar chrome (mockup: charcoal rail, ivory labels, soft gold active) */
   --sidebar-background: var(--ek-charcoal);
   --sidebar-foreground: var(--ek-ivory);
   --sidebar-muted: #a3a9b3;
   --sidebar-border: color-mix(in srgb, var(--ek-ivory) 10%, var(--ek-charcoal));
   --sidebar-hover: color-mix(in srgb, var(--ek-ivory) 8%, var(--ek-charcoal));
-  --sidebar-active-foreground: var(--ek-charcoal);
-  --sidebar-active-bg: var(--gradient-gold);
+  /* Soft gold wash + ivory text — readable, not shiny metallic */
+  --sidebar-active-foreground: #f8f4ea;
+  --sidebar-active-muted: color-mix(in srgb, #f8f4ea 72%, var(--ek-gold-antique));
+  --sidebar-active-bg: color-mix(in srgb, var(--ek-gold) 22%, var(--ek-charcoal));
+  --sidebar-active-border: color-mix(in srgb, var(--ek-gold-antique) 70%, transparent);
+  --sidebar-active-accent: var(--ek-gold-antique);
 
   /* Layout contracts for shells (Agent 3) */
   --layout-sidebar-width: 16rem;

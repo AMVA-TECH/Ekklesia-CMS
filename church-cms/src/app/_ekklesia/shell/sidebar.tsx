@@ -28,7 +28,7 @@ export interface SidebarProps {
 }
 
 /**
- * Desktop sidebar: charcoal rail + dark-surface BrandMark + gold active nav.
+ * Desktop sidebar: charcoal rail + dark-surface BrandMark + soft-gold active nav.
  * FundFlow structure (sticky collapse-aware rail); Ekklesia mockup chrome.
  */
 export function Sidebar({

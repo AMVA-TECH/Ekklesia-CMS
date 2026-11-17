@@ -46,7 +46,7 @@ const TOPBAR_CLASSES =
 /**
  * Nav link with mockup-aligned treatments.
  *
- * - Sidebar: champagne-gold active pill on charcoal rail.
+ * - Sidebar: soft gold wash + accent bar on charcoal rail.
  * - Bottom-nav: gold label + icon when active.
  * - Topbar: muted underline treatment.
  */
@@ -129,17 +129,23 @@ export function NavLink({
       className={cn(
         SIDEBAR_CLASSES,
         isActive &&
-          'bg-gold-gradient font-semibold text-[color:var(--sidebar-active-foreground)] shadow-sm',
+          'bg-[color:var(--sidebar-active-bg)] font-semibold text-[color:var(--sidebar-active-foreground)] ring-1 ring-inset ring-[color:var(--sidebar-active-border)]',
         className,
       )}
       {...rest}
     >
+      {isActive ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-[color:var(--sidebar-active-accent)]"
+        />
+      ) : null}
       {icon ? (
         <span
           className={cn(
             'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center',
             isActive
-              ? 'text-[color:var(--sidebar-active-foreground)]'
+              ? 'text-[color:var(--sidebar-active-accent)]'
               : 'text-[color:var(--sidebar-muted)] group-hover:text-[color:var(--sidebar-foreground)]',
           )}
           aria-hidden="true"
@@ -154,7 +160,7 @@ export function NavLink({
             className={cn(
               'mt-0.5 block text-xs truncate',
               isActive
-                ? 'text-[color:var(--sidebar-active-foreground)]/70'
+                ? 'text-[color:var(--sidebar-active-muted)]'
                 : 'text-[color:var(--sidebar-muted)]',
             )}
           >

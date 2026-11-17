@@ -58,8 +58,14 @@ export function AdminProviders({ children }: AdminProvidersProps): React.ReactEl
       }
     };
     void load();
+
+    const onRefresh = (): void => {
+      void load();
+    };
+    window.addEventListener('ek-session-refresh', onRefresh);
     return () => {
       cancelled = true;
+      window.removeEventListener('ek-session-refresh', onRefresh);
     };
   }, []);
 

@@ -19,11 +19,10 @@ import {
 import { Icon } from '@/app/_ekklesia/icons';
 
 /**
- * Account menu rendered on the right side of the admin topbar.
+ * Church profile cluster on the far right of the admin topbar.
  *
- * Shows the signed-in user initials + display name with a dropdown of
- * identity, church settings, and sign out. Kept intentionally small — dense
- * admin chrome, not a dashboard.
+ * Shows the active church avatar + name. The menu still covers church
+ * settings and sign-out; the signed-in person lives in the sidebar footer.
  */
 export function TopbarEnd(): React.ReactElement {
   const { user, church, loading } = useSession();
@@ -32,10 +31,11 @@ export function TopbarEnd(): React.ReactElement {
   const [busy, setBusy] = useState(false);
 
   if (loading && !user) {
-    return <Skeleton size="line" className="h-8 w-40 rounded-md" />;
+    return <Skeleton size="line" className="h-8 w-44 rounded-md" />;
   }
 
-  const displayName = user?.displayName ?? 'Signed out';
+  const churchName = church?.name?.trim() || 'No church selected';
+  const userName = user?.displayName?.trim() || 'Signed out';
 
   const handleSignOut = async (): Promise<void> => {
     if (busy) return;
@@ -47,7 +47,6 @@ export function TopbarEnd(): React.ReactElement {
         title: 'Signed out',
         message: 'See you soon.',
       });
-      // Hard navigation so the root redirect (owned by Lead/Agent 5) re-runs.
       window.location.href = '/';
     } catch (err) {
       push({
@@ -65,37 +64,49 @@ export function TopbarEnd(): React.ReactElement {
   return (
     <Menu
       align="end"
-      label="Account menu"
+      label="Church profile menu"
       trigger={
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-surface-muted focus-ring"
+          className="inline-flex max-w-[16rem] items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-foreground hover:bg-surface-muted focus-ring"
         >
-          <Avatar name={displayName} size="sm" />
-          <span className="hidden min-w-0 max-w-[12rem] truncate text-left md:inline">
-            {displayName}
+          <Avatar
+            name={churchName}
+            src={church?.logoUrl}
+            size="sm"
+            tone="charcoal"
+            ring
+            className="ring-border"
+          />
+          <span className="hidden min-w-0 md:block">
+            <span className="block truncate font-semibold leading-tight">
+              {churchName}
+            </span>
+            <span className="block truncate text-[11px] leading-tight text-muted-foreground">
+              Church profile
+            </span>
           </span>
           <Icon
             name="chevron-down"
             size={14}
-            className="text-muted-foreground"
+            className="shrink-0 text-muted-foreground"
           />
         </button>
       }
     >
-      <MenuLabel>Signed in</MenuLabel>
+      <MenuLabel>Active church</MenuLabel>
       <div className="px-3 pb-2">
         <p className="truncate text-sm font-medium text-foreground">
-          {displayName}
+          {churchName}
         </p>
-        {user?.email ? (
-          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-        ) : null}
-        {church ? (
-          <p className="mt-1 truncate text-xs text-muted-foreground">
-            {church.name}
+        {church?.slug ? (
+          <p className="truncate text-xs text-muted-foreground">
+            /{church.slug}
           </p>
         ) : null}
+        <p className="mt-1 truncate text-xs text-muted-foreground">
+          Signed in as {userName}
+        </p>
       </div>
       <MenuSeparator />
       <MenuItem icon="settings" onClick={() => router.push('/admin/settings')}>

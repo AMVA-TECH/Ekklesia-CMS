@@ -44,6 +44,8 @@ interface AuthMeResponse {
     slug: string | null;
     timezone: string | null;
     defaultLocale: string | null;
+    logoMediaId?: string | null;
+    logoUrl?: string | null;
   };
   roles: Array<{
     assignmentId: string;
@@ -104,6 +106,8 @@ function toSession(me: AuthMeResponse): Session {
         id: me.church.id,
         name: me.church.name ?? 'Your church',
         slug: me.church.slug ?? undefined,
+        logoMediaId: me.church.logoMediaId ?? null,
+        logoUrl: me.church.logoUrl ?? null,
       }
     : null;
   return {
