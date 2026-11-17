@@ -94,16 +94,7 @@ export async function searchPublicChurches(query: PublicChurchSearchQuery) {
 export async function createPublicJoinRequest(body: CreateJoinRequestBody) {
   const db = getDb();
   const email = body.email?.trim().toLowerCase() || null;
-  const phone = body.phoneE164?.trim() || null;
-  if (!email && !phone) {
-    throw validationFailed([
-      {
-        field: 'email',
-        code: 'required',
-        message: 'Provide an email or phone number.',
-      },
-    ]);
-  }
+  const phone = body.phoneE164.trim();
 
   const church = await db
     .select({ id: churches.id, name: churches.name })
@@ -122,7 +113,7 @@ export async function createPublicJoinRequest(body: CreateJoinRequestBody) {
       throw conflict('An account with this email already exists. Sign in instead.');
     }
   }
-  if (phone) {
+  {
     const existingAccount = await db
       .select({ id: userAccounts.id })
       .from(userAccounts)
@@ -247,13 +238,14 @@ export async function decideJoinRequest(
     };
   }
 
-  const email = request.email;
-  if (!email) {
+  const email = request.email?.trim().toLowerCase() || null;
+  const phone = request.phoneE164?.trim() || null;
+  if (!phone) {
     throw validationFailed([
       {
-        field: 'email',
+        field: 'phoneE164',
         code: 'required',
-        message: 'Cannot approve: join request has no email (required for login).',
+        message: 'Cannot approve: join request has no phone (required for login).',
       },
     ]);
   }
@@ -293,24 +285,22 @@ export async function decideJoinRequest(
     updatedBy: ctx.actor.userAccountId,
   });
 
+  await db.insert(personContacts).values({
+    id: newId(),
+    personId,
+    channel: 'phone',
+    value: phone,
+    isPrimary: true,
+    createdBy: ctx.actor.userAccountId,
+    updatedBy: ctx.actor.userAccountId,
+  });
   if (email) {
     await db.insert(personContacts).values({
       id: newId(),
       personId,
       channel: 'email',
       value: email,
-      isPrimary: true,
-      createdBy: ctx.actor.userAccountId,
-      updatedBy: ctx.actor.userAccountId,
-    });
-  }
-  if (request.phoneE164) {
-    await db.insert(personContacts).values({
-      id: newId(),
-      personId,
-      channel: 'phone',
-      value: request.phoneE164,
-      isPrimary: !email,
+      isPrimary: false,
       createdBy: ctx.actor.userAccountId,
       updatedBy: ctx.actor.userAccountId,
     });
@@ -319,7 +309,7 @@ export async function decideJoinRequest(
   await db.insert(userAccounts).values({
     id: userAccountId,
     email,
-    phoneE164: request.phoneE164,
+    phoneE164: phone,
     status: 'active',
     createdBy: ctx.actor.userAccountId,
     updatedBy: ctx.actor.userAccountId,
@@ -356,11 +346,15 @@ export async function decideJoinRequest(
     updatedBy: ctx.actor.userAccountId,
   });
 
+  // Better Auth requires a unique email column; phone-only members use a
+  // non-login placeholder so sign-in stays phone + PIN (unchanged).
+  const authEmail = email ?? `${userAccountId}@phone.users.local`;
+
   await provisionCredentialAccount(db, {
     userAccountId,
     displayName: request.displayName,
-    email,
-    phoneE164: request.phoneE164,
+    email: authEmail,
+    phoneE164: phone,
     pin,
     twoFactorEnabled: false,
   });
@@ -387,6 +381,7 @@ export async function decideJoinRequest(
       userAccountId,
       personId,
       email,
+      phoneE164: phone,
     }),
   });
 
@@ -397,7 +392,7 @@ export async function decideJoinRequest(
       userAccountId,
       personId,
       email,
-      phoneE164: request.phoneE164,
+      phoneE164: phone,
       /** Shown once to the approving admin — not stored in audit. */
       initialPin: pin,
     },

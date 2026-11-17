@@ -1,10 +1,12 @@
 import { z } from 'zod';
 
+import {
+  TANZANIA_PHONE_INVALID_MESSAGE,
+  normalizeTanzaniaPhoneE164,
+  nullableTanzaniaPhoneE164Schema,
+  optionalTanzaniaPhoneE164Schema,
+} from '@/platform/phone';
 import { CONTACT_CHANNELS, LOCALES } from './constants';
-
-const e164Phone = z
-  .string()
-  .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be E.164 (+255…)');
 
 export const createPersonBodySchema = z
   .object({
@@ -16,7 +18,7 @@ export const createPersonBodySchema = z
       .optional(),
     preferredLocale: z.enum(LOCALES).optional(),
     directoryOptIn: z.boolean().optional(),
-    phoneE164: e164Phone.optional(),
+    phoneE164: optionalTanzaniaPhoneE164Schema,
     email: z.string().email().optional(),
   })
   .strict();
@@ -43,7 +45,7 @@ export type UpdatePersonBody = z.infer<typeof updatePersonBodySchema>;
 /** DEC-018 portal self-edit — restricted fields only. */
 export const updateMyProfileBodySchema = z
   .object({
-    phoneE164: e164Phone.nullable().optional(),
+    phoneE164: nullableTanzaniaPhoneE164Schema,
     email: z.string().email().nullable().optional(),
     preferredLocale: z.enum(LOCALES).optional(),
     directoryOptIn: z.boolean().optional(),
@@ -88,20 +90,28 @@ export const createPersonContactBodySchema = z
   })
   .strict()
   .superRefine((val, ctx) => {
-    if (val.channel === 'phone' && !/^\+[1-9]\d{6,14}$/.test(val.value)) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Phone must be E.164 (+255…)',
-        path: ['value'],
-      });
+    if (val.channel === 'phone') {
+      const normalized = normalizeTanzaniaPhoneE164(val.value);
+      if (!normalized) {
+        ctx.addIssue({
+          code: 'custom',
+          message: TANZANIA_PHONE_INVALID_MESSAGE,
+          path: ['value'],
+        });
+      }
     }
     if (val.channel === 'email' && !z.string().email().safeParse(val.value).success) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Invalid email',
+        message: 'Enter a valid email address.',
         path: ['value'],
       });
     }
+  })
+  .transform((val) => {
+    if (val.channel !== 'phone') return val;
+    const normalized = normalizeTanzaniaPhoneE164(val.value);
+    return normalized ? { ...val, value: normalized } : val;
   });
 export type CreatePersonContactBody = z.infer<typeof createPersonContactBodySchema>;
 

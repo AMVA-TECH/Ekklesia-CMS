@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
-const e164Phone = z
-  .string()
-  .trim()
-  .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be E.164 (e.g. +2557…)');
+import { tanzaniaPhoneE164Schema } from '@/platform/phone';
 
 export const publicChurchSearchQuerySchema = z
   .object({
@@ -20,14 +17,12 @@ export const createJoinRequestBodySchema = z
   .object({
     churchId: z.guid(),
     displayName: z.string().trim().min(2).max(120),
+    /** Optional — phone is the primary login identifier for members. */
     email: z.string().trim().email().max(254).optional(),
-    phoneE164: e164Phone.optional(),
+    phoneE164: tanzaniaPhoneE164Schema,
     preferredLocale: z.enum(['en', 'sw']).default('sw'),
   })
-  .strict()
-  .refine((v) => Boolean(v.email || v.phoneE164), {
-    message: 'Provide an email or phone number.',
-  });
+  .strict();
 
 export type CreateJoinRequestBody = z.infer<typeof createJoinRequestBodySchema>;
 
