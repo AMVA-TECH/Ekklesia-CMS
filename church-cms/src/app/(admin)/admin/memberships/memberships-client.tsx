@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -52,6 +53,7 @@ const STATUS_CHOICES = [
  * Status changes call `POST /api/v1/memberships/:id/status`.
  */
 export function MembershipsClient(): React.ReactElement {
+  const router = useRouter();
   const { push } = useToast();
   const [status, setStatus] = useState<string>('all');
   const [memberships, setMemberships] = useState<Membership[]>([]);
@@ -289,7 +291,7 @@ export function MembershipsClient(): React.ReactElement {
                               <MenuItem
                                 icon="user"
                                 onClick={() => {
-                                  window.location.href = `/admin/people/${p.id}`;
+                                  router.push(`/admin/people/${p.id}`);
                                 }}
                               >
                                 Open profile

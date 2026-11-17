@@ -47,7 +47,8 @@ export function TopbarEnd(): React.ReactElement {
         title: 'Signed out',
         message: 'See you soon.',
       });
-      window.location.href = '/';
+      // Full reload (not router.push) so no signed-in client state survives.
+      window.location.assign(new URL('/', window.location.origin));
     } catch (err) {
       push({
         tone: 'danger',
@@ -115,7 +116,8 @@ export function TopbarEnd(): React.ReactElement {
       <MenuItem
         icon="book"
         onClick={() => {
-          window.location.href = '/api/docs';
+          // Route handler, not a Next page — needs a document navigation.
+          window.location.assign(new URL('/api/docs', window.location.origin));
         }}
       >
         API reference
