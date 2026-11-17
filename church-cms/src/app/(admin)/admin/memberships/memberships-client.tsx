@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
+  buttonClassName,
   EmptyState,
   Menu,
   MenuItem,
@@ -146,9 +147,17 @@ export function MembershipsClient(): React.ReactElement {
         title="Memberships"
         lede="A snapshot of the people you serve — visitors becoming active members, and anyone paused."
         actions={
-          <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            Add membership
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/memberships/applications"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              Applications
+            </Link>
+            <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
+              Add membership
+            </Button>
+          </div>
         }
       />
 
