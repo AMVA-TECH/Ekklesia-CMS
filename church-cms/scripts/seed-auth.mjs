@@ -6,14 +6,36 @@
  * PIN (all three): DEV_AUTH_PIN or default `123456`
  * Admin + finance get twoFactorEnabled=true (OTP MFA).
  *
+ * Optional local overrides (never commit real PII — use `.env.local`):
+ *   DEV_ADMIN_EMAIL, DEV_ADMIN_PHONE (e.g. 0716… or +255…)
+ *
  * Usage: pnpm db:seed:auth
  */
 import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
+import { config as loadEnv } from 'dotenv';
+import { resolve } from 'node:path';
+
+loadEnv({ path: resolve(process.cwd(), '.env.local') });
+loadEnv();
 
 const databaseUrl =
   process.env.DATABASE_URL || 'postgresql://postgres@127.0.0.1:5432/church_cms';
 const pin = process.env.DEV_AUTH_PIN || '123456';
+
+/** Tanzania-friendly phone → E.164 +255… */
+function normalizeTzPhone(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return null;
+  const digits = trimmed.replace(/\D/g, '');
+  if (!digits) return null;
+  let national = digits;
+  if (digits.startsWith('255')) national = digits.slice(3);
+  else if (digits.startsWith('0')) national = digits.slice(1);
+  if (national.startsWith('0')) national = national.slice(1);
+  if (!/^[67]\d{8}$/.test(national)) return null;
+  return `+255${national}`;
+}
 
 const require = createRequire(import.meta.url);
 
@@ -36,12 +58,17 @@ try {
   ({ Pool } = require('/tmp/pg-full/node_modules/pg'));
 }
 
+const adminEmail =
+  process.env.DEV_ADMIN_EMAIL?.trim() || 'admin@example.test';
+const adminPhone =
+  normalizeTzPhone(process.env.DEV_ADMIN_PHONE || '') || '+255700000001';
+
 const USERS = [
   {
     id: 'cccccccc-0001-0001-0001-000000000001',
-    email: 'admin@example.test',
+    email: adminEmail,
     name: 'Dev Admin',
-    phone: '+255700000001',
+    phone: adminPhone,
     twoFactorEnabled: true,
   },
   {
@@ -121,6 +148,18 @@ async function main() {
           [randomUUID(), u.id, u.id, hashed],
         );
       }
+
+      // Keep CMS user_accounts in sync (login / OTP channel lookup).
+      await client.query(
+        `INSERT INTO user_accounts (id, email, phone_e164, status)
+         VALUES ($1::uuid, $2, $3, 'active')
+         ON CONFLICT (id) DO UPDATE
+           SET email = EXCLUDED.email,
+               phone_e164 = EXCLUDED.phone_e164,
+               status = 'active',
+               updated_at = now()`,
+        [u.id, u.email, u.phone],
+      );
     }
     console.log('SEED_AUTH_OK', {
       users: USERS.map((u) => ({
@@ -129,6 +168,9 @@ async function main() {
         mfa: u.twoFactorEnabled,
       })),
       pinEnv: process.env.DEV_AUTH_PIN ? 'DEV_AUTH_PIN' : 'default',
+      adminOverride: Boolean(
+        process.env.DEV_ADMIN_EMAIL || process.env.DEV_ADMIN_PHONE,
+      ),
     });
   } catch (error) {
     console.error('SEED_AUTH_FAIL', error);
