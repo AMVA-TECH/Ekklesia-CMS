@@ -28,7 +28,6 @@ import {
 type Filter = 'upcoming' | 'all';
 
 export function MemberEventsClient(): React.ReactElement {
-  const today = useMemo(() => todayIso(), []);
   const [filter, setFilter] = useState<Filter>('upcoming');
   const [events, setEvents] = useState<MemberEvent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +36,8 @@ export function MemberEventsClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
+    // Read the date here, not during render (Cache Components prerender).
+    const today = todayIso();
     const url =
       filter === 'upcoming'
         ? `/api/v1/events?from=${today}&limit=50`
@@ -60,7 +61,7 @@ export function MemberEventsClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [today, filter]);
+  }, [filter]);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
