@@ -1,5 +1,5 @@
 import type { Session, SessionChurchConfig } from '@/app/_ekklesia/session';
-import type { NavGroup } from '@/app/_ekklesia/shell';
+import type { NavGroup, NavItem } from '@/app/_ekklesia/shell';
 
 function can(permissions: ReadonlySet<string>, code: string): boolean {
   return permissions.has(code);
@@ -44,7 +44,7 @@ export function buildAdminGroups(session: Session | null): NavGroup[] {
     return groups;
   }
 
-  const peopleItems: NavGroup['items'] = [];
+  const peopleItems: NavItem[] = [];
   if (
     moduleOn(modules, 'people') &&
     (can(permissions, 'people:read') || can(permissions, 'people:create'))
@@ -87,7 +87,7 @@ export function buildAdminGroups(session: Session | null): NavGroup[] {
     groups.push({ label: 'People', items: peopleItems });
   }
 
-  const ministryItems: NavGroup['items'] = [];
+  const ministryItems: NavItem[] = [];
   if (moduleOn(modules, 'organisation') && can(permissions, 'units:read')) {
     ministryItems.push({
       label: 'Organisation',
@@ -171,7 +171,7 @@ export function buildAdminGroups(session: Session | null): NavGroup[] {
     });
   }
 
-  const commsItems: NavGroup['items'] = [];
+  const commsItems: NavItem[] = [];
   if (
     moduleOn(modules, 'messaging') &&
     (can(permissions, 'announcements:write') ||
