@@ -34,3 +34,4 @@ export {
   provisionCredentialAccount,
   type ProvisionCredentialInput,
 } from './provision-credentials';
+export { peekDevOtp } from './otp-delivery';

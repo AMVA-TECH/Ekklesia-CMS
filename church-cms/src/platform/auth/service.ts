@@ -5,29 +5,31 @@ import type { Ctx } from '@/platform/auth/ctx';
 import { getDb } from '@/platform/db/client';
 import { writeAudit } from '@/platform/audit';
 import { forbidden, unauthorized, validationFailed } from '@/platform/errors';
-import { churches } from '@/modules/churches/db-schema';
+import {
+  churchLogoContentUrl,
+  readLogoMediaId,
+} from '@/modules/churches/constants';
+import { churches, churchSettings } from '@/modules/churches/db-schema';
+import { resolveChurchSettings } from '@/modules/churches/settings-schema';
 import { listActiveAssignmentsForUser } from '@/modules/access-control/repository';
 import { organisationUsers, userAccounts } from '@/modules/people/db-schema';
+import { optionalTanzaniaPhoneE164Schema } from '@/platform/phone';
+import { getEnv } from '@/platform/config';
 import { getAuth } from './better-auth';
 import { userHasAdminDashboardAccess } from './admin-access';
 import {
   findActiveOrganisationUser,
   listEffectivePermissionCodes,
 } from './permissions-for-user';
-import { getEnv } from '@/platform/config';
 
 const pinSchema = z
   .string()
   .regex(/^\d{4,8}$/, 'PIN must be 4–8 digits');
 
-const phoneSchema = z
-  .string()
-  .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be E.164');
-
 export const loginBodySchema = z
   .object({
     email: z.string().email().optional(),
-    phoneE164: phoneSchema.optional(),
+    phoneE164: optionalTanzaniaPhoneE164Schema,
     pin: pinSchema,
   })
   .strict()
@@ -37,7 +39,7 @@ export const loginBodySchema = z
     if (hasEmail === hasPhone) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Provide exactly one of email or phoneE164',
+        message: 'Enter either your phone number or your email — not both.',
         path: hasEmail ? ['email'] : ['phoneE164'],
       });
     }
@@ -85,6 +87,8 @@ export async function getAuthMe(ctx: Ctx) {
     .select({
       id: churches.id,
       name: churches.name,
+      shortName: churches.shortName,
+      displayName: churches.displayName,
       slug: churches.slug,
       timezone: churches.timezone,
       defaultLocale: churches.defaultLocale,
@@ -92,6 +96,23 @@ export async function getAuthMe(ctx: Ctx) {
     .from(churches)
     .where(and(eq(churches.id, ctx.churchId), isNull(churches.deletedAt)))
     .limit(1);
+
+  const [settingsRow] = church
+    ? await db
+        .select({ settings: churchSettings.settings })
+        .from(churchSettings)
+        .where(
+          and(
+            eq(churchSettings.churchId, ctx.churchId),
+            isNull(churchSettings.deletedAt),
+          ),
+        )
+        .limit(1)
+    : [];
+  const settingsRaw =
+    (settingsRow?.settings as Record<string, unknown> | undefined) ?? {};
+  const logoMediaId = readLogoMediaId(settingsRaw);
+  const config = resolveChurchSettings(settingsRaw);
 
   const [orgUser] = await db
     .select({
@@ -138,11 +159,27 @@ export async function getAuthMe(ctx: Ctx) {
       ? {
           id: church.id,
           name: church.name,
+          shortName: church.shortName ?? null,
+          displayName: church.displayName ?? null,
           slug: church.slug,
           timezone: church.timezone,
           defaultLocale: church.defaultLocale,
+          logoMediaId,
+          logoUrl: churchLogoContentUrl(logoMediaId),
+          config,
         }
-      : { id: ctx.churchId, name: null, slug: null, timezone: null, defaultLocale: null },
+      : {
+          id: ctx.churchId,
+          name: null,
+          shortName: null,
+          displayName: null,
+          slug: null,
+          timezone: null,
+          defaultLocale: null,
+          logoMediaId: null,
+          logoUrl: null,
+          config: null,
+        },
     organisationUser: orgUser
       ? {
           id: orgUser.id,

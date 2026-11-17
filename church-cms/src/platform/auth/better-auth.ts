@@ -105,7 +105,7 @@ function createAuth() {
         requireVerification: false,
       }),
       twoFactor({
-        issuer: 'CrossLife CMS',
+        issuer: 'Ekklesia',
         schema: {
           twoFactor: {
             modelName: 'two_factor',

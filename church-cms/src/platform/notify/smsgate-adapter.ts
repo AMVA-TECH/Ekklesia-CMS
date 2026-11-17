@@ -1,3 +1,4 @@
+import { normalizeTanzaniaPhoneE164 } from '@/platform/phone';
 import type { NotifyAdapter, NotifyMessage, NotifySendResult } from './types';
 
 export type SmsGateConfig = {
@@ -14,6 +15,8 @@ export type SmsGateConfig = {
 
 /** Normalize to E.164 with leading +. Tanzania locals 07… → +2557… */
 export function normalizeSmsGatePhone(raw: string): string | null {
+  const tz = normalizeTanzaniaPhoneE164(raw);
+  if (tz) return tz;
   const trimmed = raw.trim();
   if (!trimmed) return null;
   if (trimmed.startsWith('+')) {
