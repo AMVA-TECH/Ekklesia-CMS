@@ -46,6 +46,7 @@ export { Tabs, TabList, Tab, TabPanel } from './tabs';
 export type { TabsProps, TabProps, TabPanelProps } from './tabs';
 
 export { TableWrap, Table, THead, TBody, TR, TH, TD } from './table';
+export type { TableProps } from './table';
 export type { TRProps } from './table';
 
 export { NavLink } from './nav-link';
