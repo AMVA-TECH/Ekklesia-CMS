@@ -42,6 +42,7 @@ export {
   appointments,
   appointmentHistory,
   delegations,
+  churchCodeSequences,
 } from '@/modules/organisation/db-schema';
 export {
   participationRequests,

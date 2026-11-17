@@ -6,6 +6,10 @@ import { auditColumns } from '@/platform/db/columns';
 export const churches = pgTable('churches', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  /** Short abbreviation (e.g. CMN). Editable; never used as FK. */
+  shortName: text('short_name'),
+  /** Member-facing display name (e.g. CrossLife). */
+  displayName: text('display_name'),
   slug: text('slug').notNull().unique(),
   timezone: text('timezone').notNull().default('Africa/Dar_es_Salaam'),
   defaultLocale: text('default_locale').notNull().default('sw'),

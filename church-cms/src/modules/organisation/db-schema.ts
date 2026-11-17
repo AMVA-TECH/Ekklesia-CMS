@@ -2,8 +2,10 @@
 import {
   type AnyPgColumn,
   date,
+  integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -15,8 +17,8 @@ import { people } from '@/modules/people/db-schema';
 import { auditColumns } from '@/platform/db/columns';
 
 /**
- * Departments/offices, ministries, and life groups (jumuiya).
- * kind: department | ministry | life_group
+ * Departments/offices, ministries, branches, teams, and life groups.
+ * kind: department | ministry | life_group | branch | team
  */
 
 export const organisationalUnits = pgTable(
@@ -28,9 +30,14 @@ export const organisationalUnits = pgTable(
       .references(() => churches.id),
     parentId: uuid('parent_id').references((): AnyPgColumn => organisationalUnits.id),
 
+    /** Server-generated human code (ORG-###### or MIN-######). Immutable. */
+    code: text('code').notNull(),
     kind: text('kind').notNull(),
     name: text('name').notNull(),
+    description: text('description'),
     status: text('status').notNull().default('active'),
+    /** Extensible flags (e.g. { proposed: true } for unverified functional areas). */
+    metadata: jsonb('metadata').notNull().default({}),
     ...auditColumns,
   },
   (table) => [
@@ -38,6 +45,10 @@ export const organisationalUnits = pgTable(
       table.churchId,
       table.kind,
       table.name,
+    ),
+    uniqueIndex('organisational_units_church_code_uidx').on(
+      table.churchId,
+      table.code,
     ),
   ],
 );
@@ -56,7 +67,7 @@ export const programmes = pgTable('programmes', {
   ...auditColumns,
 });
 
-/** Defined leadership/office position. */
+/** Defined leadership/office position. Title ≠ system permission. */
 export const positions = pgTable(
   'positions',
   {
@@ -64,8 +75,19 @@ export const positions = pgTable(
     churchId: uuid('church_id')
       .notNull()
       .references(() => churches.id),
+    /** Server-generated POS-###### (legacy snake_case codes may remain). */
     code: text('code').notNull(),
     title: text('title').notNull(),
+    description: text('description'),
+    organisationalUnitId: uuid('organisational_unit_id').references(
+      () => organisationalUnits.id,
+    ),
+    reportsToPositionId: uuid('reports_to_position_id').references(
+      (): AnyPgColumn => positions.id,
+    ),
+    status: text('status').notNull().default('active'),
+    /** single = one active occupant; multiple = several allowed. */
+    occupancyPolicy: text('occupancy_policy').notNull().default('single'),
     ...auditColumns,
   },
   (table) => [
@@ -88,6 +110,9 @@ export const appointments = pgTable('appointments', {
   organisationalUnitId: uuid('organisational_unit_id').references(
     () => organisationalUnits.id,
   ),
+  appointmentKind: text('appointment_kind').notNull().default('substantive'),
+  notes: text('notes'),
+  appointedByUserId: uuid('appointed_by_user_id'),
   effectiveFrom: date('effective_from').notNull(),
   effectiveTo: date('effective_to'),
   status: text('status').notNull().default('active'),
@@ -121,3 +146,16 @@ export const delegations = pgTable('delegations', {
   reason: text('reason'),
   ...auditColumns,
 });
+
+/** Per-church monotonic counters for human-readable codes. */
+export const churchCodeSequences = pgTable(
+  'church_code_sequences',
+  {
+    churchId: uuid('church_id')
+      .notNull()
+      .references(() => churches.id),
+    namespace: text('namespace').notNull(),
+    nextValue: integer('next_value').notNull().default(1),
+  },
+  (table) => [primaryKey({ columns: [table.churchId, table.namespace] })],
+);
