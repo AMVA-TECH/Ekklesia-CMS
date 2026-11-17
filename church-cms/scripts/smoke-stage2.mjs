@@ -5,7 +5,6 @@
  * Usage: node scripts/smoke-stage2.mjs
  */
 import { createRequire } from 'node:module';
-import { pathToFileURL } from 'node:url';
 
 const databaseUrl =
   process.env.DATABASE_URL || 'postgresql://postgres@127.0.0.1:5432/church_cms';

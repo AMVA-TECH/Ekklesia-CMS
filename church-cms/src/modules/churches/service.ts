@@ -31,10 +31,6 @@ async function settingsRawForChurch(
   );
 }
 
-async function logoMediaIdForChurch(ctx: Ctx): Promise<string | null> {
-  return readLogoMediaId(await settingsRawForChurch(ctx));
-}
-
 export async function getCurrentChurch(ctx: Ctx) {
   assertCanReadChurch(ctx);
   const row = await repo.getChurchById(getDb(), ctx.churchId);
