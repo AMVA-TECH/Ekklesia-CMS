@@ -41,9 +41,9 @@ export function CreateEventDialog({
   const formId = useId();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [serviceDate, setServiceDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  // Empty until the dialog opens: reading the clock during render breaks
+  // Cache Components prerendering of /admin/events.
+  const [serviceDate, setServiceDate] = useState('');
   const [eventTypeCode, setEventTypeCode] = useState('');
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -58,10 +58,20 @@ export function CreateEventDialog({
 
   const previewUrl = useObjectUrl(posterFile);
 
+  // Default the service date to today each time the dialog opens (client
+  // only, adjusted during render).
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open && !serviceDate) {
+      setServiceDate(new Date().toISOString().slice(0, 10));
+    }
+  }
+
   const reset = (): void => {
     setTitle('');
     setDescription('');
-    setServiceDate(new Date().toISOString().slice(0, 10));
+    setServiceDate('');
     setEventTypeCode('');
     setPosterFile(null);
     setFieldErrors({});

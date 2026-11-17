@@ -36,9 +36,9 @@ export function CreateOfferingDialog({
   onCreated,
 }: CreateOfferingDialogProps): React.ReactElement {
   const formId = useId();
-  const [serviceDate, setServiceDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  // Empty until the dialog opens: reading the clock during render breaks
+  // Cache Components prerendering of /admin/finance/offerings.
+  const [serviceDate, setServiceDate] = useState('');
   const [amount, setAmount] = useState('');
   const [fundId, setFundId] = useState('');
   const [incomeAccountId, setIncomeAccountId] = useState('');
@@ -63,6 +63,16 @@ export function CreateOfferingDialog({
     })();
   }, [open]);
 
+  // Default the service date to today each time the dialog opens (client
+  // only, adjusted during render).
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open && !serviceDate) {
+      setServiceDate(new Date().toISOString().slice(0, 10));
+    }
+  }
+
   const incomeAccounts = useMemo(
     () => accounts.filter((a) => a.accountType === 'income'),
     [accounts],
@@ -73,7 +83,7 @@ export function CreateOfferingDialog({
   );
 
   const reset = (): void => {
-    setServiceDate(new Date().toISOString().slice(0, 10));
+    setServiceDate('');
     setAmount('');
     setFundId('');
     setIncomeAccountId('');
