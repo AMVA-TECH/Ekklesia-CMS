@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useId, useMemo, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useId, useMemo, useState, type FormEvent } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -25,6 +25,7 @@ import {
   TR,
   Textarea,
   useToast,
+  buttonClassName,
 } from '@/app/_ekklesia/ui';
 import type {
   LeadershipAppointment,
@@ -80,9 +81,7 @@ export function LeadershipClient(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const occupied = useMemo(() => {
     const set = new Set<string>();
@@ -138,9 +137,17 @@ export function LeadershipClient(): React.ReactElement {
         title="Leadership"
         lede="Positions and reporting relationships. Appointments do not grant system access — assign roles separately under Church profile."
         actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            Add position
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/leadership/requests"
+              className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+            >
+              Appointment requests
+            </Link>
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              Add position
+            </Button>
+          </div>
         }
       />
 

@@ -80,6 +80,7 @@ const DRAWER_GROUPS: readonly NavGroup[] = [
       { label: 'Events', href: '/events', icon: 'calendar', hint: 'Browse and register' },
       { label: 'Community', href: '/community', icon: 'users', hint: 'Ministries & groups' },
       { label: 'Giving', href: '/giving', icon: 'hand', hint: 'Pledges & offerings' },
+      { label: 'Projects', href: '/projects', icon: 'briefcase', hint: 'Volunteer for church projects' },
     ],
   },
   {
@@ -160,8 +161,6 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setLoadError(null);
 
     void (async () => {
       try {
@@ -267,7 +266,14 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
                 <>
                   <h1 className="text-xl font-semibold text-foreground">We hit a bump</h1>
                   <p className="max-w-sm text-sm">{loadError}</p>
-                  <Button onClick={() => setAttempt((n) => n + 1)} iconLeft="refresh">
+                  <Button
+                    onClick={() => {
+                      setLoading(true);
+                      setLoadError(null);
+                      setAttempt((n) => n + 1);
+                    }}
+                    iconLeft="refresh"
+                  >
                     Try again
                   </Button>
                   <Link

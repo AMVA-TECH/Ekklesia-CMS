@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -44,18 +44,31 @@ export function OpenSessionDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const preferred =
-      presetEventId && events.some((e) => e.id === presetEventId)
-        ? presetEventId
-        : (events[0]?.id ?? '');
-    setEventId(preferred);
-    setMode('qr_mixed');
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open, presetEventId, events]);
+  // Reset the form when the dialog opens or its subject changes — adjusted
+  // during render (React's prop-change pattern) instead of in an effect.
+  const [resetFor, setResetFor] = useState({
+    open: false,
+    presetEventId,
+    events,
+  });
+  if (
+    resetFor.open !== open ||
+    resetFor.presetEventId !== presetEventId ||
+    resetFor.events !== events
+  ) {
+    setResetFor({ open, presetEventId, events });
+    if (open) {
+      const preferred =
+        presetEventId && events.some((e) => e.id === presetEventId)
+          ? presetEventId
+          : (events[0]?.id ?? '');
+      setEventId(preferred);
+      setMode('qr_mixed');
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }
 
   const handleClose = (): void => {
     if (submitting) return;

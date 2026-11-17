@@ -2,7 +2,6 @@ import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import type { Ctx } from '@/platform/auth';
 import type { Db } from '@/platform/db/client';
 import { newId } from '@/platform/db/ids';
-import { memberships } from '@/modules/membership/db-schema';
 import { participations } from '@/modules/ministries/db-schema';
 import {
   announcementAudiences,

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useLoadEffect } from '@/app/_ekklesia/session';
 import { platformApi } from '../platform-api';
 
 type Growth = {
@@ -20,16 +21,19 @@ export function GrowthClient() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await platformApi<Growth>('/api/v1/platform/growth?days=30');
     setData(res);
-  }
-
-  useEffect(() => {
-    load().catch((err: unknown) =>
-      setError(err instanceof Error ? err.message : 'Failed'),
-    );
   }, []);
+
+  const loadInitial = useCallback(
+    () =>
+      load().catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Failed'),
+      ),
+    [load],
+  );
+  useLoadEffect(loadInitial);
 
   async function snapshot() {
     setBusy(true);

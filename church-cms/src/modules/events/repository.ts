@@ -629,7 +629,9 @@ export async function upsertQrAttendanceRecord(
     .onConflictDoNothing({
       target: [attendanceRecords.sessionId, attendanceRecords.personId],
     })
-    .returning({ id: attendanceRecords.id });
+    // `Db` is a pg | neon-http union; partial `.returning({...})` does not
+    // resolve across it, so return the full row and read `id`.
+    .returning();
   if (inserted[0]) return inserted[0].id;
 
   const [existing] = await db

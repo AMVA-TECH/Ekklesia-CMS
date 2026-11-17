@@ -19,6 +19,8 @@ export const POST = withPlatformApiHandler(async (ctx, request, routeCtx) => {
     headers.append('Set-Cookie', cookie);
   }
 
-  const { setCookieHeaders: _cookies, ...payload } = result;
+  // Cookies travel as Set-Cookie headers only, never in the JSON body.
+  const payload: Partial<typeof result> = { ...result };
+  delete payload.setCookieHeaders;
   return Response.json(payload, { headers });
 });

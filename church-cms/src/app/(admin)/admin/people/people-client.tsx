@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Avatar,
   Button,
@@ -22,6 +22,7 @@ import {
   THead,
   TR,
   useToast,
+  buttonClassName,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { ListEnvelope, ListMeta, Person } from '../../_lib/api-types';
@@ -94,9 +95,7 @@ export function PeopleClient(): React.ReactElement {
     }
   }, [cursor, debouncedSearch]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const handlePageChange = (next: number): void => {
     if (next < 1) return;
@@ -122,9 +121,17 @@ export function PeopleClient(): React.ReactElement {
         title="People"
         lede="Everyone known to your church. Add a visitor, update a contact, or tap a name for the full profile."
         actions={
-          <Button iconLeft="user-plus" onClick={() => setCreateOpen(true)}>
-            Add a person
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/people/import"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              Import
+            </Link>
+            <Button iconLeft="user-plus" onClick={() => setCreateOpen(true)}>
+              Add a person
+            </Button>
+          </div>
         }
       />
 

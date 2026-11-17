@@ -42,26 +42,29 @@ export function CreateMembershipDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setQuery('');
-    setResults([]);
-    setPersonId('');
-    setMembershipType('individual');
-    setStatus('visitor');
-    setEffectiveFrom('');
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open]);
+  // Reset the form each time the dialog opens — adjusted during render
+  // (React's prop-change pattern) instead of in an effect.
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setQuery('');
+      setResults([]);
+      setPersonId('');
+      setMembershipType('individual');
+      setStatus('visitor');
+      setEffectiveFrom('');
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
     const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return;
-    }
+    // Short queries clear results in the input's onChange handler.
+    if (q.length < 2) return;
     const handle = window.setTimeout(() => {
       void (async () => {
         setSearching(true);
@@ -174,6 +177,7 @@ export function CreateMembershipDialog({
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
+              if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
             placeholder="Search by name…"

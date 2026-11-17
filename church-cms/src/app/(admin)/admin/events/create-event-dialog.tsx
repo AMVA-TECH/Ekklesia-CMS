@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -10,6 +10,7 @@ import {
   Input,
   Select,
   Textarea,
+  useObjectUrl,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { EventRow, EventType } from '../../_lib/api-types';
@@ -40,38 +41,37 @@ export function CreateEventDialog({
   const formId = useId();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [serviceDate, setServiceDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  // Empty until the dialog opens: reading the clock during render breaks
+  // Cache Components prerendering of /admin/events.
+  const [serviceDate, setServiceDate] = useState('');
   const [eventTypeCode, setEventTypeCode] = useState('');
   const [posterFile, setPosterFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Preselect sunday_service when present, otherwise first available type.
-  useEffect(() => {
-    if (!open || eventTypeCode) return;
-    const preferred =
-      types.find((t) => t.code === 'sunday_service') ?? types[0];
-    if (preferred) setEventTypeCode(preferred.code);
-  }, [open, eventTypeCode, types]);
+  // Preselect sunday_service when present, otherwise first available type,
+  // until the user picks one (derived — no state sync needed).
+  const preferredTypeCode =
+    (types.find((t) => t.code === 'sunday_service') ?? types[0])?.code ?? '';
+  const selectedTypeCode = eventTypeCode || preferredTypeCode;
 
-  useEffect(() => {
-    if (!posterFile) {
-      setPreviewUrl(null);
-      return;
+  const previewUrl = useObjectUrl(posterFile);
+
+  // Default the service date to today each time the dialog opens (client
+  // only, adjusted during render).
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open && !serviceDate) {
+      setServiceDate(new Date().toISOString().slice(0, 10));
     }
-    const url = URL.createObjectURL(posterFile);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [posterFile]);
+  }
 
   const reset = (): void => {
     setTitle('');
     setDescription('');
-    setServiceDate(new Date().toISOString().slice(0, 10));
+    setServiceDate('');
     setEventTypeCode('');
     setPosterFile(null);
     setFieldErrors({});
@@ -109,7 +109,7 @@ export function CreateEventDialog({
       const payload: Record<string, unknown> = {
         title: title.trim(),
         serviceDate,
-        eventTypeCode,
+        eventTypeCode: selectedTypeCode,
       };
       if (description.trim()) payload.description = description.trim();
       if (posterMediaId) payload.posterMediaId = posterMediaId;
@@ -191,7 +191,7 @@ export function CreateEventDialog({
           ) : (
             <Field label="Type" required error={fieldErrors.eventTypeCode}>
               <Select
-                value={eventTypeCode}
+                value={selectedTypeCode}
                 onChange={(e) => setEventTypeCode(e.target.value)}
                 required
               >
@@ -210,7 +210,7 @@ export function CreateEventDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={
-                eventTypeCode === 'sunday_service'
+                selectedTypeCode === 'sunday_service'
                   ? 'Sunday service · 1st service'
                   : 'Event title'
               }

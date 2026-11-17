@@ -56,8 +56,6 @@ export function NotificationsClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setLoadError(null);
     apiFetch<MemberPreferences>('/api/v1/communication-preferences/me')
       .then((data) => {
         if (cancelled) return;

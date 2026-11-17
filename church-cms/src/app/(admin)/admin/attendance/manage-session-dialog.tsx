@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -115,9 +115,18 @@ export function ManageSessionDialog({
     }
   }, []);
 
-  useEffect(() => {
-    if (!open || !session) return;
-    setCurrent(session);
+  // Reset the dialog when it opens or the session changes — adjusted during
+  // render (React's prop-change pattern) instead of in an effect.
+  const [resetFor, setResetFor] = useState({ open: false, session });
+  if (resetFor.open !== open || resetFor.session !== session) {
+    setResetFor({ open, session });
+    if (open && session) {
+      resetForSession(session);
+    }
+  }
+
+  function resetForSession(next: AttendanceSession): void {
+    setCurrent(next);
     setQuery('');
     setResults([]);
     setPersonId('');
@@ -127,24 +136,29 @@ export function ManageSessionDialog({
     setRecording(false);
     setSavingSummary(false);
     setFinalizing(false);
-    setMenCount(String(session.summary?.menCount ?? 0));
-    setWomenCount(String(session.summary?.womenCount ?? 0));
-    setChildrenCount(String(session.summary?.childrenCount ?? 0));
-    setVisitorsCount(String(session.summary?.visitorsCount ?? 0));
-    if (session.mode === 'roll_call' || session.mode === 'qr_mixed') {
-      void loadRecords(session.id);
-    } else {
+    setMenCount(String(next.summary?.menCount ?? 0));
+    setWomenCount(String(next.summary?.womenCount ?? 0));
+    setChildrenCount(String(next.summary?.childrenCount ?? 0));
+    setVisitorsCount(String(next.summary?.visitorsCount ?? 0));
+    if (next.mode !== 'roll_call' && next.mode !== 'qr_mixed') {
       setRecords([]);
     }
+  }
+
+  // Load roll-call / QR records for the session while the dialog is open.
+  const loadSessionRecords = useCallback(async (): Promise<void> => {
+    if (!open || !session) return;
+    if (session.mode === 'roll_call' || session.mode === 'qr_mixed') {
+      await loadRecords(session.id);
+    }
   }, [open, session, loadRecords]);
+  useLoadEffect(loadSessionRecords);
 
   useEffect(() => {
     if (!open || !isOpen || !allowsRecords) return;
     const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return;
-    }
+    // Short queries clear results in the input's onChange handler.
+    if (q.length < 2) return;
     const handle = window.setTimeout(() => {
       void (async () => {
         setSearching(true);
@@ -432,6 +446,7 @@ export function ManageSessionDialog({
                       value={query}
                       onChange={(e) => {
                         setQuery(e.target.value);
+                        if (e.target.value.trim().length < 2) setResults([]);
                         setPersonId('');
                       }}
                       placeholder="Search by name…"

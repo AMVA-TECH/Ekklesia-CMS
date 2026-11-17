@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useState } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   buttonClassName,
   EmptyState,
@@ -78,9 +78,7 @@ export function FinanceOverviewClient(): React.ReactElement {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const currency = offerings[0]?.currency ?? pledges[0]?.currency ?? 'TZS';
   const offeringsTotal = offerings.reduce(

@@ -43,7 +43,10 @@ export const optionalTanzaniaPhoneE164Schema = z
       return z.NEVER;
     }
     return normalized;
-  });
+  })
+  // zod 4: a union containing `z.undefined()` is not optional when the key is
+  // absent — `.optional()` lets callers omit the field entirely.
+  .optional();
 
 /**
  * Profile-style optional phone: explicit `null` clears; empty → undefined.
@@ -64,4 +67,5 @@ export const nullableTanzaniaPhoneE164Schema = z
       return z.NEVER;
     }
     return normalized;
-  });
+  })
+  .optional();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -45,17 +45,22 @@ export function EditPersonDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setDisplayName(person.displayName);
-    setFullName(person.fullName ?? '');
-    setDateOfBirth(person.dateOfBirth ?? '');
-    setLocale(person.preferredLocale || 'en');
-    setDirectoryOptIn(person.directoryOptIn);
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open, person]);
+  // Reset the form when the dialog opens or its subject changes — adjusted
+  // during render (React's prop-change pattern) instead of in an effect.
+  const [resetFor, setResetFor] = useState({ open: false, person });
+  if (resetFor.open !== open || resetFor.person !== person) {
+    setResetFor({ open, person });
+    if (open) {
+      setDisplayName(person.displayName);
+      setFullName(person.fullName ?? '');
+      setDateOfBirth(person.dateOfBirth ?? '');
+      setLocale(person.preferredLocale || 'en');
+      setDirectoryOptIn(person.directoryOptIn);
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }
 
   const handleClose = (): void => {
     if (submitting) return;

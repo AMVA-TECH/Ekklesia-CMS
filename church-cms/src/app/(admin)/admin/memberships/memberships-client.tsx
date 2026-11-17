@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
+  buttonClassName,
   EmptyState,
   Menu,
   MenuItem,
@@ -52,6 +54,7 @@ const STATUS_CHOICES = [
  * Status changes call `POST /api/v1/memberships/:id/status`.
  */
 export function MembershipsClient(): React.ReactElement {
+  const router = useRouter();
   const { push } = useToast();
   const [status, setStatus] = useState<string>('all');
   const [memberships, setMemberships] = useState<Membership[]>([]);
@@ -99,9 +102,7 @@ export function MembershipsClient(): React.ReactElement {
     }
   }, [status]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const counts = useMemo(() => {
     const out: Record<string, number> = { all: memberships.length };
@@ -146,9 +147,17 @@ export function MembershipsClient(): React.ReactElement {
         title="Memberships"
         lede="A snapshot of the people you serve — visitors becoming active members, and anyone paused."
         actions={
-          <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            Add membership
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/memberships/applications"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              Applications
+            </Link>
+            <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
+              Add membership
+            </Button>
+          </div>
         }
       />
 
@@ -291,7 +300,7 @@ export function MembershipsClient(): React.ReactElement {
                               <MenuItem
                                 icon="user"
                                 onClick={() => {
-                                  window.location.href = `/admin/people/${p.id}`;
+                                  router.push(`/admin/people/${p.id}`);
                                 }}
                               >
                                 Open profile

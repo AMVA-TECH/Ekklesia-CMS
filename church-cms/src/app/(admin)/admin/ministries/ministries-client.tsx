@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { Fragment, useCallback, useMemo, useState } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -87,13 +87,15 @@ export function MinistriesClient(): React.ReactElement {
     }
   }, [kind]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
-  useEffect(() => {
+  // Collapse the expanded row when switching unit kind (during render, not
+  // in an effect).
+  const [prevKind, setPrevKind] = useState(kind);
+  if (kind !== prevKind) {
+    setPrevKind(kind);
     setExpandedId(null);
-  }, [kind]);
+  }
 
   const loadParticipations = useCallback(async (unitId: string): Promise<void> => {
     setPartsLoading(true);

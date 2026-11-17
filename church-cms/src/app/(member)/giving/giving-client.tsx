@@ -26,9 +26,6 @@ export function GivingClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setForbidden(false);
     apiFetch<MemberPledge[]>('/api/v1/pledges/unpaid?limit=50')
       .then((data) => {
         if (cancelled) return;

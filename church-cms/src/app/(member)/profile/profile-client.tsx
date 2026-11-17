@@ -50,8 +50,6 @@ export function ProfileClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setLoadError(null);
     (async () => {
       try {
         const [personResult, membershipResult] = await Promise.allSettled([

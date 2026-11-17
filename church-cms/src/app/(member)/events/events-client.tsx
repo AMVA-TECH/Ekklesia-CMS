@@ -28,7 +28,6 @@ import {
 type Filter = 'upcoming' | 'all';
 
 export function MemberEventsClient(): React.ReactElement {
-  const today = useMemo(() => todayIso(), []);
   const [filter, setFilter] = useState<Filter>('upcoming');
   const [events, setEvents] = useState<MemberEvent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +36,8 @@ export function MemberEventsClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    // Read the date here, not during render (Cache Components prerender).
+    const today = todayIso();
     const url =
       filter === 'upcoming'
         ? `/api/v1/events?from=${today}&limit=50`
@@ -62,7 +61,7 @@ export function MemberEventsClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [today, filter]);
+  }, [filter]);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -88,7 +87,16 @@ export function MemberEventsClient(): React.ReactElement {
         lede="Services, gatherings, and special moments from your church."
       />
 
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+      <Tabs
+        value={filter}
+        onValueChange={(v) => {
+          // Reset in the handler, not the fetch effect, to avoid a
+          // cascading render.
+          setFilter(v as Filter);
+          setLoading(true);
+          setError(null);
+        }}
+      >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabList aria-label="Event range">
             <Tab value="upcoming">Upcoming</Tab>

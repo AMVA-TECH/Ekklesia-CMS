@@ -52,6 +52,9 @@
       "name": "Organisation"
     },
     {
+      "name": "Other"
+    },
+    {
       "name": "People"
     },
     {
@@ -720,6 +723,143 @@
         ],
         "summary": "POST /announcements/{id}/reject",
         "operationId": "post_api_v1_announcements_id_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/announcements/{id}": {
+      "get": {
+        "tags": [
+          "Messaging"
+        ],
+        "summary": "GET /announcements/{id}",
+        "operationId": "get_api_v1_announcements_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Messaging"
+        ],
+        "summary": "PATCH /announcements/{id}",
+        "operationId": "patch_api_v1_announcements_id",
         "parameters": [
           {
             "name": "id",
@@ -4505,6 +4645,59 @@
       }
     },
     "/api/v1/expenses": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "GET /expenses",
+        "operationId": "get_api_v1_expenses",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Finance"
@@ -5764,6 +5957,136 @@
         }
       }
     },
+    "/api/v1/join-requests/{id}/decision": {
+      "post": {
+        "tags": [
+          "Other"
+        ],
+        "summary": "POST /join-requests/{id}/decision",
+        "operationId": "post_api_v1_join_requests_id_decision",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/join-requests": {
+      "get": {
+        "tags": [
+          "Other"
+        ],
+        "summary": "GET /join-requests",
+        "operationId": "get_api_v1_join_requests",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
     "/api/v1/journals/{id}/post": {
       "post": {
         "tags": [
@@ -5979,12 +6302,131 @@
       }
     },
     "/api/v1/journals": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "GET /journals",
+        "operationId": "get_api_v1_journals",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Finance"
         ],
         "summary": "POST /journals",
         "operationId": "post_api_v1_journals",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leadership-invites": {
+      "post": {
+        "tags": [
+          "Other"
+        ],
+        "summary": "POST /leadership-invites",
+        "operationId": "post_api_v1_leadership_invites",
         "parameters": [
           {
             "$ref": "#/components/parameters/DevChurchId"
@@ -7325,6 +7767,143 @@
         }
       }
     },
+    "/api/v1/message-templates/{id}": {
+      "get": {
+        "tags": [
+          "Messaging"
+        ],
+        "summary": "GET /message-templates/{id}",
+        "operationId": "get_api_v1_message_templates_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Messaging"
+        ],
+        "summary": "PATCH /message-templates/{id}",
+        "operationId": "patch_api_v1_message_templates_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/message-templates": {
       "get": {
         "tags": [
@@ -7634,6 +8213,61 @@
                 "additionalProperties": true
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/organisation-users": {
+      "get": {
+        "tags": [
+          "Other"
+        ],
+        "summary": "GET /organisation-users",
+        "operationId": "get_api_v1_organisation_users",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
           }
         }
       }
@@ -7972,6 +8606,79 @@
           },
           "422": {
             "description": "Validation failed"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Organisation"
+        ],
+        "summary": "PATCH /organisational-units/{id}",
+        "operationId": "patch_api_v1_organisational_units_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
           }
         }
       }
@@ -8927,6 +9634,81 @@
         }
       }
     },
+    "/api/v1/platform/churches/{id}/apply-template": {
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "POST /platform/churches/{id}/apply-template",
+        "operationId": "post_api_v1_platform_churches_id_apply_template",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevPlatformOperator": []
+          },
+          {
+            "DevAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/platform/churches/{id}": {
       "get": {
         "tags": [
@@ -9042,6 +9824,70 @@
           },
           "422": {
             "description": "Validation failed"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "POST /platform/churches",
+        "operationId": "post_api_v1_platform_churches",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevPlatformOperator": []
+          },
+          {
+            "DevAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
           }
         }
       }
@@ -9990,6 +10836,143 @@
         }
       }
     },
+    "/api/v1/positions/{id}": {
+      "get": {
+        "tags": [
+          "Organisation"
+        ],
+        "summary": "GET /positions/{id}",
+        "operationId": "get_api_v1_positions_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Organisation"
+        ],
+        "summary": "PATCH /positions/{id}",
+        "operationId": "patch_api_v1_positions_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/positions": {
       "get": {
         "tags": [
@@ -10555,6 +11538,113 @@
             "SessionCookie": []
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/churches": {
+      "get": {
+        "tags": [
+          "Access & ops"
+        ],
+        "summary": "GET /public/churches",
+        "operationId": "get_api_v1_public_churches",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/api/v1/public/join-requests": {
+      "post": {
+        "tags": [
+          "Other"
+        ],
+        "summary": "POST /public/join-requests",
+        "operationId": "post_api_v1_public_join_requests",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [],
         "responses": {
           "200": {
             "description": "Success"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type HTMLAttributes } from 'react';
+import { useState, type HTMLAttributes } from 'react';
 import { cn, initialsFromName, stableIndex } from './utils';
 
 /** Props for `<Avatar>`. */
@@ -70,9 +70,13 @@ export function Avatar({
   ...rest
 }: AvatarProps): React.ReactElement {
   const [imageFailed, setImageFailed] = useState(false);
-  useEffect(() => {
+  // Retry the image when `src` changes (adjusted during render, not in an
+  // effect).
+  const [prevSrc, setPrevSrc] = useState(src);
+  if (src !== prevSrc) {
+    setPrevSrc(src);
     setImageFailed(false);
-  }, [src]);
+  }
   const initials = initialsFromName(name);
   const showImage = Boolean(src) && !imageFailed;
   const toneClass =

@@ -41,6 +41,7 @@ import type {
   CreateSavedReportBody,
   ListApprovalsQuery,
   ListDelegationsQuery,
+  ListExpensesQuery,
 } from './schemas';
 
 export async function insertExpense(db: Db, ctx: Ctx, body: CreateExpenseBody) {
@@ -93,6 +94,17 @@ export async function getExpense(db: Db, ctx: Ctx, id: string) {
     )
     .limit(1);
   return row ?? null;
+}
+
+export async function listExpenses(db: Db, ctx: Ctx, query: ListExpensesQuery) {
+  const conditions = [eq(expenses.churchId, ctx.churchId), isNull(expenses.deletedAt)];
+  if (query.status) conditions.push(eq(expenses.status, query.status));
+  return db
+    .select()
+    .from(expenses)
+    .where(and(...conditions))
+    .orderBy(desc(expenses.expenseDate), desc(expenses.createdAt))
+    .limit(query.limit);
 }
 
 export async function setExpenseStatus(

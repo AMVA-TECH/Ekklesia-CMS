@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useLoadEffect } from '@/app/_ekklesia/session';
 import { platformApi } from '../platform-api';
 
 type Finding = {
@@ -27,11 +28,14 @@ export function SecurityClient() {
     setItems(res.items);
   }, []);
 
-  useEffect(() => {
-    load().catch((err: unknown) =>
-      setError(err instanceof Error ? err.message : 'Failed'),
-    );
-  }, [load]);
+  const loadInitial = useCallback(
+    () =>
+      load().catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Failed'),
+      ),
+    [load],
+  );
+  useLoadEffect(loadInitial);
 
   async function runDetectors() {
     setBusy(true);

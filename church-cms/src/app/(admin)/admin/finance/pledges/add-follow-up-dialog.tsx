@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -33,13 +33,18 @@ export function AddFollowUpDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setNote('');
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open, pledgeId]);
+  // Reset the form when the dialog opens or its subject changes — adjusted
+  // during render (React's prop-change pattern) instead of in an effect.
+  const [resetFor, setResetFor] = useState({ open: false, pledgeId });
+  if (resetFor.open !== open || resetFor.pledgeId !== pledgeId) {
+    setResetFor({ open, pledgeId });
+    if (open) {
+      setNote('');
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }
 
   const handleClose = (): void => {
     if (submitting) return;

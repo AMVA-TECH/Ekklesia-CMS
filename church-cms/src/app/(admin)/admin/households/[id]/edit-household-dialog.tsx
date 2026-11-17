@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError, normalizePhoneE164 } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -41,16 +41,21 @@ export function EditHouseholdDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setLabel(household.label);
-    setSharedAddress(household.sharedAddress ?? '');
-    setEmergencyContactName(household.emergencyContactName ?? '');
-    setEmergencyContactPhone(household.emergencyContactPhone ?? '');
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open, household]);
+  // Reset the form when the dialog opens or its subject changes — adjusted
+  // during render (React's prop-change pattern) instead of in an effect.
+  const [resetFor, setResetFor] = useState({ open: false, household });
+  if (resetFor.open !== open || resetFor.household !== household) {
+    setResetFor({ open, household });
+    if (open) {
+      setLabel(household.label);
+      setSharedAddress(household.sharedAddress ?? '');
+      setEmergencyContactName(household.emergencyContactName ?? '');
+      setEmergencyContactPhone(household.emergencyContactPhone ?? '');
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }
 
   const handleClose = (): void => {
     if (submitting) return;

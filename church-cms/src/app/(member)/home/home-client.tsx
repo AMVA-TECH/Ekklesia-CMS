@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApiError, apiFetch, useSession } from '@/app/_ekklesia/session';
 import {
   Badge,
   EmptyState,
   Skeleton,
   buttonClassName,
+  useIsClient,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type {
@@ -49,12 +50,15 @@ export function HomeClient(): React.ReactElement {
   const { user, church, loading: sessionLoading } = useSession();
   const [data, setData] = useState<HomeData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
-  const today = useMemo(() => todayIso(), []);
-  const devotional = useMemo(() => pickDevotionalFor(today), [today]);
+  // Reading the clock during render breaks Cache Components prerendering, so
+  // the date-based verse appears once hydrated and the fetch reads the date
+  // inside its effect.
+  const isClient = useIsClient();
+  const devotional = isClient ? pickDevotionalFor(todayIso()) : null;
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    const today = todayIso();
     (async () => {
       const [eventsRes, announcementsRes, participationsRes, pledgesRes] =
         await Promise.allSettled([
@@ -91,10 +95,11 @@ export function HomeClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [today]);
+  }, []);
 
   const greetingName = firstName(user?.displayName);
-  const greeting = timeOfDayGreeting();
+  // Time-of-day text is client-only (clock read; see isClient above).
+  const greeting = isClient ? timeOfDayGreeting() : 'Welcome';
   const churchName = church?.name ?? 'your church';
   const featured = data.events[0] ?? null;
   const unpaidPledgeCount = data.pledges.length;
@@ -167,15 +172,19 @@ export function HomeClient(): React.ReactElement {
           <h2 id="home-devotional" className="sr-only">
             Daily verse
           </h2>
-          <blockquote className="scripture mt-3 text-lg text-foreground sm:text-xl">
-            &ldquo;{devotional.quote}&rdquo;
-          </blockquote>
-          {devotional.attribution ? (
+          {devotional ? (
+            <blockquote className="scripture mt-3 text-lg text-foreground sm:text-xl">
+              &ldquo;{devotional.quote}&rdquo;
+            </blockquote>
+          ) : (
+            <div aria-hidden className="mt-3 h-14" />
+          )}
+          {devotional?.attribution ? (
             <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {devotional.attribution}
             </p>
           ) : null}
-          {devotional.thought ? (
+          {devotional?.thought ? (
             <p className="mt-4 text-sm text-foreground/90">{devotional.thought}</p>
           ) : null}
         </article>

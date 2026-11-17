@@ -33,6 +33,7 @@ import {
   assertCanRequestDisbursement,
   assertCanWriteBudgets,
   assertCanWriteMinutes,
+  assertCanReadExpenses,
 } from './policies';
 import type {
   CreateAppointmentRequestBody,
@@ -44,6 +45,7 @@ import type {
   DecideAppointmentRequestBody,
   DecideApprovalBody,
   ListApprovalsQuery,
+  ListExpensesQuery,
   ListDelegationsQuery,
   ReportQuery,
 } from './schemas';
@@ -65,6 +67,12 @@ export async function createExpense(ctx: Ctx, body: CreateExpenseBody) {
   const row = await repo.getExpense(db, ctx, id);
   if (!row) throw notFound();
   return toExpenseResponse(row);
+}
+
+export async function listExpenses(ctx: Ctx, query: ListExpensesQuery) {
+  assertCanReadExpenses(ctx);
+  const rows = await repo.listExpenses(getDb(), ctx, query);
+  return { data: rows.map(toExpenseResponse) };
 }
 
 export async function submitExpense(ctx: Ctx, expenseId: string) {

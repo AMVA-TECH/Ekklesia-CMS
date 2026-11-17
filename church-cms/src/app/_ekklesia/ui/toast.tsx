@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useIsClient } from './hooks';
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
 import { cn } from './utils';
@@ -108,12 +109,9 @@ function ToastRegion({
   toasts: readonly Toast[];
   onDismiss: (id: string) => void;
 }): React.ReactElement | null {
-  // Defer portal until after mount so SSR and the first client paint match
+  // Defer portal until hydrated so SSR and the first client paint match
   // (avoids `typeof document` hydration mismatch).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
   if (!mounted) return null;
   return createPortal(
     <div

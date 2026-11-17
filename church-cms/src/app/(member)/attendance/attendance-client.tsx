@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError, apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -14,6 +15,7 @@ import {
   Skeleton,
   StatusPill,
   type StatusTone,
+  buttonClassName,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MyAttendance } from '../_shared/api-types';
@@ -27,9 +29,6 @@ export function AttendanceClient(): React.ReactElement {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setForbidden(false);
     apiFetch<MyAttendance>('/api/v1/attendance/me')
       .then((payload) => {
         if (cancelled) return;
@@ -60,6 +59,11 @@ export function AttendanceClient(): React.ReactElement {
       <PageHeader
         title="My attendance"
         lede="A gentle record of your Sundays and services — only visible to you."
+        actions={
+          <Link href="/attendance/family" className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
+            Family &amp; away notices
+          </Link>
+        }
       />
 
       {loading ? (

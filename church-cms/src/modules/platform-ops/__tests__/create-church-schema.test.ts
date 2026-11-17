@@ -16,6 +16,20 @@ describe('createChurchBodySchema', () => {
     assert.equal(parsed.timezone, 'Africa/Dar_es_Salaam');
     assert.equal(parsed.defaultLocale, 'sw');
     assert.equal(parsed.admin.pin, '123456');
+    assert.equal(parsed.admin.phoneE164, undefined);
+  });
+
+  it('normalizes a local admin phone to E.164', () => {
+    const parsed = createChurchBodySchema.parse({
+      name: 'Hope Church',
+      admin: {
+        displayName: 'Ada Admin',
+        email: 'ada@hope.example',
+        phoneE164: '0700123456',
+        pin: '123456',
+      },
+    });
+    assert.equal(parsed.admin.phoneE164, '+255700123456');
   });
 
   it('rejects a non-digit PIN', () => {
@@ -38,7 +52,7 @@ describe('createChurchBodySchema', () => {
         admin: {
           displayName: 'Ada Admin',
           email: 'ada@hope.example',
-          phoneE164: '0700123456',
+          phoneE164: '12345',
           pin: '123456',
         },
       }),

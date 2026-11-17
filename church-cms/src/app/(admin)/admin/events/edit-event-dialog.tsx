@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -10,6 +10,7 @@ import {
   Input,
   Select,
   Textarea,
+  useObjectUrl,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { EventRow, EventType } from '../../_lib/api-types';
@@ -53,36 +54,32 @@ export function EditEventDialog({
   );
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [clearPoster, setClearPoster] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setTitle(event.title);
-    setDescription(event.description ?? '');
-    setServiceDate(event.serviceDate);
-    setEventTypeId(event.eventTypeId ?? '');
-    setStatus(EVENT_STATUSES.find((s) => s === event.status) ?? 'scheduled');
-    setStartsAtLocal(toDatetimeLocalValue(event.startsAt));
-    setEndsAtLocal(toDatetimeLocalValue(event.endsAt));
-    setPosterFile(null);
-    setClearPoster(false);
-    setFieldErrors({});
-    setFormError(null);
-    setSubmitting(false);
-  }, [open, event]);
-
-  useEffect(() => {
-    if (!posterFile) {
-      setPreviewUrl(null);
-      return;
+  // Reset the form when the dialog opens or its subject changes — adjusted
+  // during render (React's prop-change pattern) instead of in an effect.
+  const [resetFor, setResetFor] = useState({ open: false, event });
+  if (resetFor.open !== open || resetFor.event !== event) {
+    setResetFor({ open, event });
+    if (open) {
+      setTitle(event.title);
+      setDescription(event.description ?? '');
+      setServiceDate(event.serviceDate);
+      setEventTypeId(event.eventTypeId ?? '');
+      setStatus(EVENT_STATUSES.find((s) => s === event.status) ?? 'scheduled');
+      setStartsAtLocal(toDatetimeLocalValue(event.startsAt));
+      setEndsAtLocal(toDatetimeLocalValue(event.endsAt));
+      setPosterFile(null);
+      setClearPoster(false);
+      setFieldErrors({});
+      setFormError(null);
+      setSubmitting(false);
     }
-    const url = URL.createObjectURL(posterFile);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [posterFile]);
+  }
+
+  const previewUrl = useObjectUrl(posterFile);
 
   const handleClose = (): void => {
     if (submitting) return;

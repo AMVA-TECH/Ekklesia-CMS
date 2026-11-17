@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Avatar,
   Button,
@@ -24,6 +24,7 @@ import {
   Tabs,
   Textarea,
   useToast,
+  useObjectUrl,
 } from '@/app/_ekklesia/ui';
 
 interface ChurchProfile {
@@ -140,7 +141,6 @@ export function ChurchProfileForm(): React.ReactElement {
   const [logoMediaId, setLogoMediaId] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
 
   const [productName, setProductName] = useState('Ekklesia');
@@ -273,19 +273,9 @@ export function ChurchProfileForm(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
-  useEffect(() => {
-    if (!logoFile) {
-      setLogoPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(logoFile);
-    setLogoPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [logoFile]);
+  const logoPreviewUrl = useObjectUrl(logoFile);
 
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent): void => {

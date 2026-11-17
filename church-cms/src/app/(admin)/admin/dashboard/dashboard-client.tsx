@@ -1,8 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError, useSession } from '@/app/_ekklesia/session';
+import { useCallback, useState } from 'react';
+import {
+  apiFetch,
+  ApiError,
+  useSession,
+  useLoadEffect,
+} from '@/app/_ekklesia/session';
 import {
   buttonClassName,
   EmptyState,
@@ -10,10 +15,10 @@ import {
   Panel,
   Skeleton,
   StatusPill,
+  useIsClient,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type {
-  Announcement,
   ApprovalRequest,
   EventRow,
   ListEnvelope,
@@ -76,7 +81,6 @@ export function DashboardClient(): React.ReactElement {
       apiFetch<EventRow[] | { data: EventRow[] }>(
         `/api/v1/events?from=${isoToday()}&limit=5`,
       ),
-      apiFetch<Announcement[] | { data: Announcement[] }>('/api/v1/announcements'),
       apiFetch<Offering[] | { data: Offering[] }>('/api/v1/offerings?limit=30'),
     ]);
 
@@ -86,7 +90,6 @@ export function DashboardClient(): React.ReactElement {
       ministriesRes,
       approvalsRes,
       eventsRes,
-      _announcementsRes,
       offeringsRes,
     ] = results;
 
@@ -148,14 +151,12 @@ export function DashboardClient(): React.ReactElement {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useLoadEffect(refresh);
 
-  const [greeting, setGreeting] = useState('Welcome');
-  useEffect(() => {
-    setGreeting(buildGreeting(user?.displayName));
-  }, [user?.displayName]);
+  // Time-of-day greeting is client-only (server clock/timezone differ), so
+  // render the neutral fallback until hydrated.
+  const isClient = useIsClient();
+  const greeting = isClient ? buildGreeting(user?.displayName) : 'Welcome';
 
   const churchLabel = church?.name ?? 'your church';
   const firstName = user?.displayName?.split(/[\s@]/)[0];

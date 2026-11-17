@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useState } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -118,9 +118,7 @@ export function AttendanceClient(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const upsertSessionLocally = useCallback(
     (session: AttendanceSession): void => {
@@ -158,6 +156,12 @@ export function AttendanceClient(): React.ReactElement {
         lede="How many showed up to recent services, and who among your leaders might need a nudge."
         actions={
           <>
+            <Link
+              href="/admin/attendance/absences"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              Absence notices
+            </Link>
             <Button
               variant="primary"
               iconLeft="calendar-check"

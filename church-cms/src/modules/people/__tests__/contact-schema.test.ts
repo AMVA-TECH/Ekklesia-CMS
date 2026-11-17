@@ -13,11 +13,19 @@ describe('createPersonContactBodySchema', () => {
     assert.equal(parsed.channel, 'phone');
   });
 
-  it('rejects non-E.164 phone', () => {
+  it('normalizes local Tanzania phone to E.164', () => {
+    const parsed = createPersonContactBodySchema.parse({
+      channel: 'phone',
+      value: '0711000111',
+    });
+    assert.equal(parsed.value, '+255711000111');
+  });
+
+  it('rejects an invalid phone', () => {
     assert.throws(() =>
       createPersonContactBodySchema.parse({
         channel: 'phone',
-        value: '0711000111',
+        value: '12345',
       }),
     );
   });
