@@ -173,11 +173,13 @@ export function ReportsClient({
                           to: s.filters?.to ?? '',
                           unitId: s.filters?.unitId ?? '',
                         });
-                        void execute(() =>
-                          apiFetch<ReportResult>(`/api/v1/saved-reports/${s.id}/run`, {
-                            method: 'POST',
-                          }),
-                        );
+                        void execute(async () => {
+                          const run = await apiFetch<{ result: ReportResult }>(
+                            `/api/v1/saved-reports/${s.id}/run`,
+                            { method: 'POST' },
+                          );
+                          return run.result;
+                        });
                       }}
                     >
                       {s.name}
