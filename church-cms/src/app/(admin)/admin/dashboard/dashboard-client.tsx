@@ -19,7 +19,6 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type {
-  Announcement,
   ApprovalRequest,
   EventRow,
   ListEnvelope,
@@ -82,7 +81,6 @@ export function DashboardClient(): React.ReactElement {
       apiFetch<EventRow[] | { data: EventRow[] }>(
         `/api/v1/events?from=${isoToday()}&limit=5`,
       ),
-      apiFetch<Announcement[] | { data: Announcement[] }>('/api/v1/announcements'),
       apiFetch<Offering[] | { data: Offering[] }>('/api/v1/offerings?limit=30'),
     ]);
 
@@ -92,7 +90,6 @@ export function DashboardClient(): React.ReactElement {
       ministriesRes,
       approvalsRes,
       eventsRes,
-      _announcementsRes,
       offeringsRes,
     ] = results;
 
