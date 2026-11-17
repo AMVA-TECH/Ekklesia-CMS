@@ -25,8 +25,13 @@ import {
   type MessageTemplateRow,
 } from './create-template-dialog';
 
+const LOCALE_LABELS: Record<string, string> = {
+  en: 'English',
+  sw: 'Kiswahili',
+};
+
 /**
- * Message templates list + create.
+ * Message templates list + create/edit for non-technical church staff.
  */
 export function TemplatesClient(): React.ReactElement {
   const { push } = useToast();
@@ -34,6 +39,7 @@ export function TemplatesClient(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<MessageTemplateRow | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -42,7 +48,12 @@ export function TemplatesClient(): React.ReactElement {
       const payload = await apiFetch<
         MessageTemplateRow[] | { data: MessageTemplateRow[] }
       >('/api/v1/message-templates');
-      setRows(asList(payload));
+      setRows(
+        asList(payload).map((row) => ({
+          ...row,
+          name: row.name || titleCase(row.code.replaceAll('_', ' ')),
+        })),
+      );
     } catch (err) {
       setRows([]);
       setError(
@@ -65,7 +76,7 @@ export function TemplatesClient(): React.ReactElement {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Message templates"
-        lede="Reusable SMS, WhatsApp, email, and in-app copy for your church."
+        lede="Saved messages you can reuse when texting the church."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -115,8 +126,8 @@ export function TemplatesClient(): React.ReactElement {
         <EmptyState
           icon="mail"
           tone="sky"
-          title="No templates yet"
-          description="Create reusable message copy once, then reuse it in blasts and reminders."
+          title="No saved messages yet"
+          description="Create a welcome or reminder once, then pick it when you send a message."
           action={
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
               New template
@@ -129,18 +140,30 @@ export function TemplatesClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Code</TH>
-                  <TH>Channel</TH>
-                  <TH>Locale</TH>
-                  <TH>Body</TH>
+                  <TH>Name</TH>
+                  <TH>Send as</TH>
+                  <TH>Language</TH>
+                  <TH>Message</TH>
                 </TR>
               </THead>
               <TBody>
                 {rows.map((row) => (
-                  <TR key={row.id}>
+                  <TR
+                    key={row.id}
+                    className="cursor-pointer"
+                    onClick={() => setEditing(row)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setEditing(row);
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label={`Edit template ${row.name}`}
+                  >
                     <TD>
                       <span className="font-medium text-foreground">
-                        {row.code}
+                        {row.name}
                       </span>
                     </TD>
                     <TD>
@@ -148,8 +171,8 @@ export function TemplatesClient(): React.ReactElement {
                         {titleCase(row.channel.replaceAll('_', ' '))}
                       </Badge>
                     </TD>
-                    <TD className="uppercase text-muted-foreground">
-                      {row.locale}
+                    <TD className="text-muted-foreground">
+                      {LOCALE_LABELS[row.locale] ?? row.locale.toUpperCase()}
                     </TD>
                     <TD>
                       <span className="line-clamp-2 text-sm text-muted-foreground">
@@ -171,6 +194,18 @@ export function TemplatesClient(): React.ReactElement {
           setRows((prev) => [row, ...prev]);
           setCreateOpen(false);
           push({ tone: 'success', message: 'Template created.' });
+        }}
+      />
+
+      <CreateTemplateDialog
+        open={Boolean(editing)}
+        template={editing}
+        onClose={() => setEditing(null)}
+        onCreated={() => undefined}
+        onUpdated={(row) => {
+          setRows((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+          setEditing(null);
+          push({ tone: 'success', message: 'Template saved.' });
         }}
       />
     </div>
