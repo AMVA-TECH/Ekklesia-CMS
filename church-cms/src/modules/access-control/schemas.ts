@@ -1,12 +1,8 @@
 import { z } from 'zod';
 
 import { INVITABLE_LEADERSHIP_ROLE_CODES } from '@/modules/platform-ops/role-bootstrap';
+import { optionalTanzaniaPhoneE164Schema } from '@/platform/phone';
 import { ROLE_SCOPE_TYPES } from './constants';
-
-const e164Phone = z
-  .string()
-  .trim()
-  .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be E.164 (e.g. +2557…)');
 
 export const listRolesQuerySchema = z
   .object({
@@ -56,7 +52,7 @@ export const inviteLeadershipBodySchema = z
   .object({
     displayName: z.string().trim().min(2).max(120),
     email: z.string().trim().email().max(254),
-    phoneE164: e164Phone.optional(),
+    phoneE164: optionalTanzaniaPhoneE164Schema,
     roleCode: z.enum(INVITABLE_LEADERSHIP_ROLE_CODES),
     preferredLocale: z.enum(['en', 'sw']).default('sw'),
     pin: z

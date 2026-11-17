@@ -25,6 +25,7 @@ export {
 export {
   listRoles,
   listRoleAssignments,
+  listOrganisationUsers,
   createRoleAssignment,
   revokeRoleAssignment,
 } from './service';

@@ -38,6 +38,35 @@ export async function listRoleAssignments(
   return { data: rows.map(toRoleAssignmentResponse) };
 }
 
+function organisationUserLabel(row: {
+  displayName: string | null;
+  email: string | null;
+  phoneE164: string | null;
+}): string {
+  const name = row.displayName?.trim();
+  if (name) return name;
+  if (row.email) return row.email;
+  if (row.phoneE164) return row.phoneE164;
+  return 'Signed-in user';
+}
+
+/** Active church users for assign-role pickers. */
+export async function listOrganisationUsers(ctx: Ctx) {
+  assertCanReadRoles(ctx);
+  const rows = await repo.listOrganisationUsers(getDb(), ctx);
+  return {
+    data: rows.map((row) => ({
+      id: row.id,
+      userAccountId: row.userAccountId,
+      personId: row.personId,
+      status: row.status,
+      label: organisationUserLabel(row),
+      email: row.email,
+      phoneE164: row.phoneE164,
+    })),
+  };
+}
+
 export async function createRoleAssignment(
   ctx: Ctx,
   body: CreateRoleAssignmentBody,

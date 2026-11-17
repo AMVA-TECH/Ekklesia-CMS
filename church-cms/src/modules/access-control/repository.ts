@@ -3,7 +3,11 @@ import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { Ctx } from '@/platform/auth';
 import type { Db } from '@/platform/db/client';
 import { newId } from '@/platform/db/ids';
-import { organisationUsers, userAccounts } from '@/modules/people/db-schema';
+import {
+  organisationUsers,
+  people,
+  userAccounts,
+} from '@/modules/people/db-schema';
 import {
   permissions,
   rolePermissions,
@@ -74,6 +78,35 @@ export async function getOrganisationUser(
     )
     .limit(1);
   return row ?? null;
+}
+
+/** Active organisation users for role-assign pickers (no raw UUID entry). */
+export async function listOrganisationUsers(db: Db, ctx: Ctx) {
+  return db
+    .select({
+      id: organisationUsers.id,
+      userAccountId: organisationUsers.userAccountId,
+      personId: organisationUsers.personId,
+      status: organisationUsers.status,
+      displayName: people.displayName,
+      email: userAccounts.email,
+      phoneE164: userAccounts.phoneE164,
+    })
+    .from(organisationUsers)
+    .innerJoin(
+      userAccounts,
+      eq(userAccounts.id, organisationUsers.userAccountId),
+    )
+    .leftJoin(people, eq(people.id, organisationUsers.personId))
+    .where(
+      and(
+        eq(organisationUsers.churchId, ctx.churchId),
+        eq(organisationUsers.status, 'active'),
+        isNull(organisationUsers.deletedAt),
+        isNull(userAccounts.deletedAt),
+      ),
+    )
+    .orderBy(asc(people.displayName), asc(userAccounts.email));
 }
 
 export async function getUserAccount(db: Db, userAccountId: string) {
