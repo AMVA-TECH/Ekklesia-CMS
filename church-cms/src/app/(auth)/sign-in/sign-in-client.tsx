@@ -55,8 +55,12 @@ export function SignInClient(): React.ReactElement {
         identifierKind === 'phone'
           ? 'Please enter your phone number.'
           : 'Please enter your email.';
-    } else if (identifierKind === 'phone' && !/^\+[1-9]\d{6,14}$/.test(trimmed)) {
-      nextFieldErrors.identifier = 'Use the international format, e.g. +255 7XX XXX XXX.';
+    } else if (
+      identifierKind === 'phone' &&
+      !/^\+255[67]\d{8}$/.test(trimmed)
+    ) {
+      nextFieldErrors.identifier =
+        'Enter a Tanzania mobile number, e.g. 0712 345 678.';
     } else if (identifierKind === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       nextFieldErrors.identifier = 'That email does not look right.';
     }
@@ -176,7 +180,7 @@ export function SignInClient(): React.ReactElement {
           required
           hint={
             identifierKind === 'phone'
-              ? 'International format, e.g. +255 7XX XXX XXX'
+              ? 'Tanzania mobile — type 0712 345 678 or +255…'
               : 'The email your church office has for you'
           }
           error={fieldErrors.identifier}
@@ -185,7 +189,9 @@ export function SignInClient(): React.ReactElement {
             type={identifierKind === 'phone' ? 'tel' : 'email'}
             inputMode={identifierKind === 'phone' ? 'tel' : 'email'}
             autoComplete={identifierKind === 'phone' ? 'tel' : 'email'}
-            placeholder={identifierKind === 'phone' ? '+255 7XX XXX XXX' : 'you@example.com'}
+            placeholder={
+              identifierKind === 'phone' ? '0712 345 678' : 'you@example.com'
+            }
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             autoCapitalize="none"

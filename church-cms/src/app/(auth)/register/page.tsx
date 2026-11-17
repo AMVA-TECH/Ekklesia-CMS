@@ -4,8 +4,8 @@ import { RegisterClient } from './register-client';
 export const instant = false;
 
 export const metadata: Metadata = {
-  title: 'Join a church',
-  description: 'Request to join your church on Ekklesia.',
+  title: 'Request to join',
+  description: 'Register and request to join your church on Ekklesia.',
 };
 
 export default function RegisterPage(): React.ReactElement {

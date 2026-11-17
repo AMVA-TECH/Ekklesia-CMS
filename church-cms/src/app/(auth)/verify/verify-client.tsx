@@ -32,6 +32,7 @@ export function VerifyClient(): React.ReactElement {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | undefined>(undefined);
   const [cooldownUntil, setCooldownUntil] = useState<number>(0);
   const [tick, setTick] = useState(0);
@@ -57,17 +58,28 @@ export function VerifyClient(): React.ReactElement {
     setSending(true);
     setError(null);
     try {
-      await apiFetch('/api/v1/auth/mfa/send-otp', {
+      const payload = await apiFetch<{
+        sent?: boolean;
+        message?: string;
+        devOtp?: string;
+      }>('/api/v1/auth/mfa/send-otp', {
         method: 'POST',
         json: {},
         skipDevAuth: true,
       });
       setCooldownUntil(now + RESEND_COOLDOWN_SECONDS * 1000);
-      setNotice(
-        silent
-          ? 'We sent a 6-digit code to your phone or email.'
-          : 'A fresh code is on the way.',
-      );
+      if (payload?.devOtp) {
+        setDevOtp(payload.devOtp);
+        setCode(payload.devOtp);
+        setNotice('Local/dev mode: use the code below (not sent by SMS).');
+      } else {
+        setDevOtp(null);
+        setNotice(
+          silent
+            ? 'We sent a 6-digit code to your phone or email.'
+            : 'A fresh code is on the way.',
+        );
+      }
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 401 || e.status === 403) {
@@ -162,6 +174,23 @@ export function VerifyClient(): React.ReactElement {
             </span>
           </span>
         </label>
+
+        {devOtp ? (
+          <div
+            className="rounded-xl border-2 border-[color:var(--success)] bg-[color:var(--success-soft)] px-4 py-3 text-center"
+            role="status"
+          >
+            <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--success-ink)]">
+              Dev verification code
+            </p>
+            <p className="mt-1 font-mono text-2xl font-semibold tracking-[0.35em] text-[color:var(--success-ink)]">
+              {devOtp}
+            </p>
+            <p className="mt-1 text-xs text-[color:var(--success-ink)] opacity-90">
+              Shown only when ALLOW_DEV_AUTH=1. Paste or use the filled field.
+            </p>
+          </div>
+        ) : null}
 
         {notice && !error ? (
           <div
