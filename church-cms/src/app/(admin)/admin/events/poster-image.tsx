@@ -33,9 +33,16 @@ export function PosterImage({
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
+  // Clear the previous poster when `url` changes (during render, not in the
+  // fetch effect, to avoid a cascading render).
+  const [prevUrl, setPrevUrl] = useState(url);
+  if (url !== prevUrl) {
+    setPrevUrl(url);
     setSrc(null);
     setFailed(false);
+  }
+
+  useEffect(() => {
     if (!url) return;
     let cancelled = false;
     let objectUrl: string | null = null;

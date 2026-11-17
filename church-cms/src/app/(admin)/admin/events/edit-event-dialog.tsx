@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -10,6 +10,7 @@ import {
   Input,
   Select,
   Textarea,
+  useObjectUrl,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { EventRow, EventType } from '../../_lib/api-types';
@@ -53,7 +54,6 @@ export function EditEventDialog({
   );
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [clearPoster, setClearPoster] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -79,15 +79,7 @@ export function EditEventDialog({
     }
   }
 
-  useEffect(() => {
-    if (!posterFile) {
-      setPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(posterFile);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [posterFile]);
+  const previewUrl = useObjectUrl(posterFile);
 
   const handleClose = (): void => {
     if (submitting) return;
