@@ -1,24 +1,30 @@
-import { ROLE_CODES, type Session } from '@/app/_ekklesia/session';
+import type { Session, SessionChurchConfig } from '@/app/_ekklesia/session';
 import type { NavGroup } from '@/app/_ekklesia/shell';
 
+function can(permissions: ReadonlySet<string>, code: string): boolean {
+  return permissions.has(code);
+}
+
+function moduleOn(
+  modules: SessionChurchConfig['modules'] | undefined,
+  id: keyof SessionChurchConfig['modules'],
+): boolean {
+  if (!modules) return true;
+  return modules[id] !== false;
+}
+
 /**
- * Build the admin sidebar nav from the active session.
- *
- * Checkpoint A Q9 pilot roles: `church_administrator` (full admin surface)
- * plus `finance_officer` (finance screens where they exist). Other roles
- * (pastor, ministry_leader, …) fall back to the "core" group only; expand
- * when their screens land.
- *
- * The factory stays data-driven so the shell/drawer render the same tree on
- * desktop and mobile — Agent 3's `<RoleNav>` handles the chrome.
+ * Build the admin sidebar from permissions + church module flags (DEC-033).
+ * Authorization uses permission codes — not leadership title / role-name strings.
  */
 export function buildAdminGroups(session: Session | null): NavGroup[] {
-  const roles = new Set((session?.roles ?? []).map((r) => r.code));
-  const isChurchAdmin = roles.has(ROLE_CODES.churchAdministrator);
-  const isFinanceOfficer = roles.has(ROLE_CODES.financeOfficer);
-  // Grant the full admin shell to administrators by default. Finance officers
-  // see the finance block without the people/governance surfaces.
-  const showAll = isChurchAdmin || roles.size === 0;
+  const permissions = new Set(session?.permissions ?? []);
+  const modules = session?.church?.config?.modules;
+  const terms = session?.church?.config?.terminology;
+  const unitPlural = terms?.organisationalUnitPlural ?? 'Ministries';
+  const membershipLabel = terms?.membershipLabel ?? 'Memberships';
+
+  const hasAnyPermission = permissions.size > 0;
 
   const groups: NavGroup[] = [
     {
@@ -34,63 +40,106 @@ export function buildAdminGroups(session: Session | null): NavGroup[] {
     },
   ];
 
-  if (showAll) {
-    groups.push({
-      label: 'People',
-      items: [
-        {
-          label: 'People',
-          hint: 'Members and visitors',
-          href: '/admin/people',
-          icon: 'users',
-        },
-        {
-          label: 'Households',
-          hint: 'Families and groups',
-          href: '/admin/households',
-          icon: 'building',
-        },
-        {
-          label: 'Memberships',
-          hint: 'Status and journeys',
-          href: '/admin/memberships',
-          icon: 'user-plus',
-        },
-        {
-          label: 'Join requests',
-          hint: 'Approve new members',
-          href: '/admin/join-requests',
-          icon: 'inbox',
-        },
-      ],
-    });
-
-    groups.push({
-      label: 'Ministry',
-      items: [
-        {
-          label: 'Ministries',
-          hint: 'Units and teams',
-          href: '/admin/ministries',
-          icon: 'hand',
-        },
-        {
-          label: 'Events',
-          hint: 'Services and gatherings',
-          href: '/admin/events',
-          icon: 'calendar',
-        },
-        {
-          label: 'Attendance',
-          hint: 'Services recorded',
-          href: '/admin/attendance',
-          icon: 'calendar-check',
-        },
-      ],
-    });
+  if (!hasAnyPermission) {
+    return groups;
   }
 
-  if (showAll || isFinanceOfficer) {
+  const peopleItems: NavGroup['items'] = [];
+  if (
+    moduleOn(modules, 'people') &&
+    (can(permissions, 'people:read') || can(permissions, 'people:create'))
+  ) {
+    peopleItems.push({
+      label: 'People',
+      hint: 'Members and visitors',
+      href: '/admin/people',
+      icon: 'users',
+    });
+  }
+  if (moduleOn(modules, 'people') && can(permissions, 'households:read')) {
+    peopleItems.push({
+      label: 'Households',
+      hint: 'Families and groups',
+      href: '/admin/households',
+      icon: 'building',
+    });
+  }
+  if (moduleOn(modules, 'membership') && can(permissions, 'memberships:read')) {
+    peopleItems.push({
+      label: membershipLabel,
+      hint: 'Status and journeys',
+      href: '/admin/memberships',
+      icon: 'user-plus',
+    });
+  }
+  if (
+    moduleOn(modules, 'membership') &&
+    can(permissions, 'memberships:approve')
+  ) {
+    peopleItems.push({
+      label: 'Join requests',
+      hint: 'Approve new members',
+      href: '/admin/join-requests',
+      icon: 'inbox',
+    });
+  }
+  if (peopleItems.length > 0) {
+    groups.push({ label: 'People', items: peopleItems });
+  }
+
+  const ministryItems: NavGroup['items'] = [];
+  if (moduleOn(modules, 'organisation') && can(permissions, 'units:read')) {
+    ministryItems.push({
+      label: 'Organisation',
+      hint: 'Structure and hierarchy',
+      href: '/admin/organisation',
+      icon: 'building',
+    });
+    ministryItems.push({
+      label: unitPlural,
+      hint: 'Units and participation',
+      href: '/admin/ministries',
+      icon: 'hand',
+    });
+  }
+  if (
+    moduleOn(modules, 'organisation') &&
+    (can(permissions, 'positions:write') || can(permissions, 'units:read'))
+  ) {
+    ministryItems.push({
+      label: 'Leadership',
+      hint: 'Positions and reporting',
+      href: '/admin/leadership',
+      icon: 'users',
+    });
+  }
+  if (moduleOn(modules, 'events') && can(permissions, 'events:read')) {
+    ministryItems.push({
+      label: 'Events',
+      hint: 'Services and gatherings',
+      href: '/admin/events',
+      icon: 'calendar',
+    });
+  }
+  if (moduleOn(modules, 'attendance') && can(permissions, 'attendance:read')) {
+    ministryItems.push({
+      label: 'Attendance',
+      hint: 'Services recorded',
+      href: '/admin/attendance',
+      icon: 'calendar-check',
+    });
+  }
+  if (ministryItems.length > 0) {
+    groups.push({ label: 'Ministry', items: ministryItems });
+  }
+
+  if (
+    moduleOn(modules, 'finance') &&
+    (can(permissions, 'funds:read') ||
+      can(permissions, 'offerings:write') ||
+      can(permissions, 'pledges:read') ||
+      can(permissions, 'finance_reports:read'))
+  ) {
     groups.push({
       label: 'Finance',
       items: [
@@ -122,31 +171,44 @@ export function buildAdminGroups(session: Session | null): NavGroup[] {
     });
   }
 
-  if (showAll) {
-    groups.push({
-      label: 'Communications',
-      items: [
-        {
-          label: 'Announcements',
-          hint: 'Church-wide notices',
-          href: '/admin/messaging/announcements',
-          icon: 'bell',
-        },
-        {
-          label: 'Send jobs',
-          hint: 'SMS and WhatsApp blasts',
-          href: '/admin/messaging/jobs',
-          icon: 'inbox',
-        },
-        {
-          label: 'Templates',
-          hint: 'Reusable messages',
-          href: '/admin/messaging/templates',
-          icon: 'mail',
-        },
-      ],
+  const commsItems: NavGroup['items'] = [];
+  if (
+    moduleOn(modules, 'messaging') &&
+    (can(permissions, 'announcements:write') ||
+      can(permissions, 'announcements:publish'))
+  ) {
+    commsItems.push({
+      label: 'Announcements',
+      hint: 'Church-wide notices',
+      href: '/admin/messaging/announcements',
+      icon: 'bell',
     });
+  }
+  if (
+    moduleOn(modules, 'messaging') &&
+    (can(permissions, 'messages:send') ||
+      can(permissions, 'messages:bulk_send'))
+  ) {
+    commsItems.push({
+      label: 'Send jobs',
+      hint: 'SMS and WhatsApp blasts',
+      href: '/admin/messaging/jobs',
+      icon: 'inbox',
+    });
+  }
+  if (moduleOn(modules, 'messaging') && can(permissions, 'templates:write')) {
+    commsItems.push({
+      label: 'Templates',
+      hint: 'Reusable messages',
+      href: '/admin/messaging/templates',
+      icon: 'mail',
+    });
+  }
+  if (commsItems.length > 0) {
+    groups.push({ label: 'Communications', items: commsItems });
+  }
 
+  if (can(permissions, 'church:read') || can(permissions, 'church:update')) {
     groups.push({
       label: 'Settings',
       items: [
