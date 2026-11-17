@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { apiFetch } from '@/app/_ekklesia/session';
+import { useCallback, useMemo, useState } from 'react';
+import { apiFetch, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
   Field,
@@ -85,6 +85,16 @@ export function ReportsClient({
       setRunning(false);
     }
   };
+
+  // A deep link (?report=ID) runs straight away when no unit is required.
+  const [autoRan, setAutoRan] = useState(false);
+  const autoRun = useCallback(async (): Promise<void> => {
+    if (autoRan || !initialReportId || needsUnit(initialReportId)) return;
+    setAutoRan(true);
+    await execute(() => apiFetch<ReportResult>(`/api/v1/reports/${initialReportId}`));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialReportId]);
+  useLoadEffect(autoRun);
 
   const runSelected = (): void => {
     if (!selected) return;
