@@ -141,6 +141,13 @@
       "when": 1794340000000,
       "tag": "0019_church_join_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794350000000,
+      "tag": "0020_message_template_name",
+      "breakpoints": true
     }
   ]
 }

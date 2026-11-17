@@ -15,6 +15,8 @@ export const messageTemplates = pgTable(
       .notNull()
       .references(() => churches.id),
     code: text('code').notNull(),
+    /** Human-facing label; staff see this instead of the internal code. */
+    name: text('name').notNull(),
     channel: text('channel').notNull(), // sms | whatsapp | email | in_app
     locale: text('locale').notNull().default('sw'),
     body: text('body').notNull(),
