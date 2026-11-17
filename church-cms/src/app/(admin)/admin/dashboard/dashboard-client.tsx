@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   apiFetch,
   ApiError,
@@ -15,6 +15,7 @@ import {
   Panel,
   Skeleton,
   StatusPill,
+  useIsClient,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type {
@@ -155,10 +156,10 @@ export function DashboardClient(): React.ReactElement {
 
   useLoadEffect(refresh);
 
-  const [greeting, setGreeting] = useState('Welcome');
-  useEffect(() => {
-    setGreeting(buildGreeting(user?.displayName));
-  }, [user?.displayName]);
+  // Time-of-day greeting is client-only (server clock/timezone differ), so
+  // render the neutral fallback until hydrated.
+  const isClient = useIsClient();
+  const greeting = isClient ? buildGreeting(user?.displayName) : 'Welcome';
 
   const churchLabel = church?.name ?? 'your church';
   const firstName = user?.displayName?.split(/[\s@]/)[0];
