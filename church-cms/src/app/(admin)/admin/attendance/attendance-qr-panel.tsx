@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import QRCode from 'qrcode';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import { Button, Field, Input } from '@/app/_ekklesia/ui';
 import { formatDateTime } from '../../_lib/format';
 
@@ -90,16 +90,22 @@ export function AttendanceQrPanel({
     }
   }, [canIssue, renderQr, sessionId]);
 
-  useEffect(() => {
+  // Clear the previous QR when the session (or permission) changes —
+  // adjusted during render rather than in the issuing effect.
+  const qrKey = `${sessionId}|${canIssue}`;
+  const [prevQrKey, setPrevQrKey] = useState(qrKey);
+  if (qrKey !== prevQrKey) {
+    setPrevQrKey(qrKey);
     setToken(null);
     setExpiresAt(null);
     setDataUrl(null);
     setCheckInUrl(null);
     setCopied(false);
     setError(null);
-    if (!canIssue) return;
-    void issue();
-  }, [sessionId, canIssue, issue]);
+  }
+
+  // Auto-issue a QR for the session (`issue` no-ops without permission).
+  useLoadEffect(issue);
 
   const handleCopy = async (): Promise<void> => {
     if (!checkInUrl) return;
