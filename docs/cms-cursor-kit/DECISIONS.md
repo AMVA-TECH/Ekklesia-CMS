@@ -36,6 +36,7 @@ Use statuses: Confirmed, Proposed, To validate, Deferred, Rejected.
 | DEC-030 | SMS + WhatsApp messaging incl. visitor thank-you SMS. | Confirmed | Consent-aware; closes channel choice for launch. |
 | DEC-031 | Excel member import in MVP. | Confirmed | Admin validate → preview → commit. |
 | DEC-032 | Platform provisions each church + first admin; members self-register by searching a church and await admin approval before login. | Confirmed | Operator-led tenant creation; no public “create church”; no login until join request approved. Supersedes staff-only person creation as the *only* member intake path. |
+| DEC-033 | Standardized SaaS core with church-level configurability; CrossLife expressed as configuration/templates, not special-case product code. | Confirmed | One domain model; typed church settings namespaces + structured entities; platform owns security/permission catalogue. See ADR-0004. **Note:** BA folder also uses DEC-033 for *Delegation when Senior Pastor is away* — different decision; prefer kit DEC-033 + ADR-0004 for configurability, and BA `13_ANNOUNCEMENTS_AND_DELEGATION.md` for delegation. |
 
 ### DEC-032 — Platform church setup and member self-registration
 - **Status:** Confirmed
@@ -47,6 +48,17 @@ Use statuses: Confirmed, Proposed, To validate, Deferred, Rejected.
 - **Rationale:** Matches platform-owner operations and church-controlled membership while keeping tenancy server-owned.
 - **Consequences/trade-offs:** Requires public safe church search; Better Auth signup stays disabled for direct account creation; join-request → provision account on approve. Phases B–D implemented (create-church, leadership invite, public register + approve).
 - **Related requirements/tasks:** BP-ORG-001; platform `POST /churches`; public join-requests (Phase D implemented).
+
+### DEC-033 — Standardized SaaS core with church-level configurability
+- **Status:** Confirmed
+- **Date:** 2026-11-13
+- **Decision owner:** Product owner (AMVA)
+- **Context/problem:** Churches differ in governance, titles, hierarchy, terminology and workflows, but Ekklesia must remain one secure multi-tenant product.
+- **Options considered:** (A) Hardcode CrossLife structures; (B) Fork per denomination; (C) Shared core + per-church configuration.
+- **Decision:** **C.** Platform core (identity, tenancy, permission catalogue, audit, domain integrity, security) is immutable. Churches configure governance labels, org structure data, terminology, module availability, workflow policies and branding through validated settings and shared entities. Display terminology maps to one domain model (e.g. organisational unit). CrossLife pilot uses the same model via configuration/templates, not special-case code.
+- **Rationale:** Aligns DEC-002/015/027/032 and BA configurable-structure requirements while preserving SaaS maintainability.
+- **Consequences/trade-offs:** Requires a Church Configuration Engine (typed settings namespaces + structured entities). Church admins cannot redefine platform permissions or tenancy. Full workflow engines and per-denomination schemas are out of scope for early phases.
+- **Related requirements/tasks:** ADR-0004; `docs/12-church-configuration.md`; FR-ORG / FR-GOV; Phase 1 typed `church_settings`.
 
 ## Decision record template
 
