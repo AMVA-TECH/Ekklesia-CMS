@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useMemo, useState } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
   EmptyState,
@@ -99,9 +99,7 @@ export function MembershipsClient(): React.ReactElement {
     }
   }, [status]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const counts = useMemo(() => {
     const out: Record<string, number> = { all: memberships.length };

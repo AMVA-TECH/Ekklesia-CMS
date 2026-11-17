@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useId, useState, type FormEvent } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
   EmptyState,
@@ -133,9 +133,7 @@ export function SettingsAccessClient(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void loadAccess();
-  }, [loadAccess]);
+  useLoadEffect(loadAccess);
 
   const roleName = (id: string): string =>
     roles.find((r) => r.id === id)?.name ?? shortId(id);

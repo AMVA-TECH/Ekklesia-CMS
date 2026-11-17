@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useState } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -82,9 +82,7 @@ export function HouseholdDetailClient({
     }
   }, [householdId]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   if (loading && !household) {
     return (

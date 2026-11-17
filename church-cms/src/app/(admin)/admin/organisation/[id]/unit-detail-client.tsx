@@ -3,12 +3,11 @@
 import Link from 'next/link';
 import {
   useCallback,
-  useEffect,
   useId,
   useState,
   type FormEvent,
 } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -145,9 +144,7 @@ export function UnitDetailClient({
     }
   }, [unitId]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const handleSave = async (event: FormEvent): Promise<void> => {
     event.preventDefault();

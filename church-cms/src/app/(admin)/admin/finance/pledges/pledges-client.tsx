@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useMemo, useState } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
   EmptyState,
@@ -73,9 +73,7 @@ export function PledgesClient(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const fundMap = useMemo(
     () => Object.fromEntries(funds.map((f) => [f.id, f] as const)),

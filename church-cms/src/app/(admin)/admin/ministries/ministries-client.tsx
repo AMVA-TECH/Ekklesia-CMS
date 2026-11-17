@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -87,9 +87,7 @@ export function MinistriesClient(): React.ReactElement {
     }
   }, [kind]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   useEffect(() => {
     setExpandedId(null);

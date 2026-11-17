@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useId, useMemo, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { useCallback, useId, useMemo, useState, type FormEvent } from 'react';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -80,9 +80,7 @@ export function LeadershipClient(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const occupied = useMemo(() => {
     const set = new Set<string>();

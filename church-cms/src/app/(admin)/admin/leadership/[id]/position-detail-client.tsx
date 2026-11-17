@@ -3,13 +3,12 @@
 import Link from 'next/link';
 import {
   useCallback,
-  useEffect,
   useId,
   useMemo,
   useState,
   type FormEvent,
 } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -134,9 +133,7 @@ export function PositionDetailClient({
     }
   }, [positionId]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const reportsToPosition = useMemo(
     () =>

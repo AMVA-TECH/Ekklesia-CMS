@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
   Button,
@@ -83,9 +83,7 @@ export function HouseholdsClient(): React.ReactElement {
     }
   }, [cursor, debouncedSearch]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   const handlePageChange = (next: number): void => {
     if (next < 1) return;

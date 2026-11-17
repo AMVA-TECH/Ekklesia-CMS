@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError, useSession } from '@/app/_ekklesia/session';
+import {
+  apiFetch,
+  ApiError,
+  useSession,
+  useLoadEffect,
+} from '@/app/_ekklesia/session';
 import {
   buttonClassName,
   EmptyState,
@@ -148,9 +153,7 @@ export function DashboardClient(): React.ReactElement {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useLoadEffect(refresh);
 
   const [greeting, setGreeting] = useState('Welcome');
   useEffect(() => {

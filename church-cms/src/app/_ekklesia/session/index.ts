@@ -11,6 +11,7 @@ export { SessionProvider, useSessionContext } from './session-context';
 export type { SessionProviderProps } from './session-context';
 
 export { useSession } from './use-session';
+export { useLoadEffect } from './use-load-effect';
 
 export {
   normalizePhoneE164,

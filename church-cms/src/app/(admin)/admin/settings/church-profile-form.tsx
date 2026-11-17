@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from 'react';
-import { apiFetch, ApiError } from '@/app/_ekklesia/session';
+import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Avatar,
   Button,
@@ -273,9 +273,7 @@ export function ChurchProfileForm(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useLoadEffect(load);
 
   useEffect(() => {
     if (!logoFile) {
