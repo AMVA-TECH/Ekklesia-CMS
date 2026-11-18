@@ -60,7 +60,10 @@ export function AttendanceClient(): React.ReactElement {
     };
   }, []);
 
-  const bandCopy = useMemo(() => bandNarrative(data?.band), [data?.band]);
+  const bandCopy = useMemo(
+    () => bandNarrative(data?.suggestedNudge ?? null, data?.band),
+    [data?.suggestedNudge, data?.band],
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -329,14 +332,31 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
   );
 }
 
-function bandNarrative(band: string | undefined): {
+/**
+ * Member-facing encouragement. Driven by the API's suggested nudge, with the
+ * attendance band (consistent / irregular / missing / insufficient_data) as a
+ * fallback.
+ */
+function bandNarrative(
+  nudge: 'congratulate' | 'encourage' | 'remind' | null,
+  band: string | undefined,
+): {
   title: string;
   message: string;
   icon: Parameters<typeof Icon>[0]['name'];
   toneClass: string;
 } {
-  switch (band) {
-    case 'strong':
+  const kind =
+    nudge ??
+    (band === 'consistent'
+      ? 'congratulate'
+      : band === 'irregular'
+        ? 'encourage'
+        : band === 'missing'
+          ? 'remind'
+          : null);
+  switch (kind) {
+    case 'congratulate':
       return {
         title: 'Steady and present',
         message:
@@ -344,34 +364,26 @@ function bandNarrative(band: string | undefined): {
         icon: 'heart',
         toneClass: 'tone-sage',
       };
-    case 'steady':
+    case 'encourage':
       return {
         title: 'Keeping in rhythm',
         message:
-          'You’ve been attending regularly. Keep walking at a pace that fits your life.',
+          'You’ve been with us some weeks. Keep walking at a pace that fits your life — we’re glad when you’re here.',
         icon: 'check-circle',
         toneClass: 'tone-sky',
       };
-    case 'light':
+    case 'remind':
       return {
         title: 'We’ve missed you',
         message:
-          'It has been a little while between services. We’d love to see you when you’re able.',
+          'It has been a little while between services. We’d love to see you, and your pastor is glad to pray with you about anything.',
         icon: 'heart',
         toneClass: 'tone-peach',
-      };
-    case 'absent':
-      return {
-        title: 'Hoping to welcome you back',
-        message:
-          'We haven’t seen you in a while. Reach out to your pastor if there’s anything we can pray for.',
-        icon: 'alert',
-        toneClass: 'tone-lavender',
       };
     default:
       return {
         title: 'Your attendance',
-        message: 'Here is a quiet look at your recent services.',
+        message: 'Here is a quiet look at your recent services. It fills in after a few Sundays.',
         icon: 'calendar-check',
         toneClass: 'tone-sky',
       };
