@@ -16,6 +16,12 @@ import {
   StatusPill,
   type StatusTone,
   buttonClassName,
+  Button,
+  Dialog,
+  DialogFooter,
+  Field,
+  Textarea,
+  useToast,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MyAttendance } from '../_shared/api-types';
@@ -26,6 +32,8 @@ export function AttendanceClient(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
+  const [correcting, setCorrecting] = useState<{ serviceDate: string; sessionId: string } | null>(null);
+  const [requested, setRequested] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -160,9 +168,29 @@ export function AttendanceClient(): React.ReactElement {
                           </p>
                         </div>
                       </div>
-                      <StatusPill tone={statusPillTone(entry.status)}>
-                        {statusLabel(entry.status)}
-                      </StatusPill>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {entry.status === 'absent' && entry.sessionId ? (
+                          requested.has(entry.serviceDate) ? (
+                            <span className="text-xs text-muted-foreground">Correction sent</span>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                setCorrecting({
+                                  serviceDate: entry.serviceDate,
+                                  sessionId: entry.sessionId!,
+                                })
+                              }
+                            >
+                              I was there
+                            </Button>
+                          )
+                        ) : null}
+                        <StatusPill tone={statusPillTone(entry.status)}>
+                          {statusLabel(entry.status)}
+                        </StatusPill>
+                      </div>
                     </li>
                   ))}
               </ul>
@@ -170,7 +198,104 @@ export function AttendanceClient(): React.ReactElement {
           </Panel>
         </>
       ) : null}
+
+      {correcting && data ? (
+        <CorrectionDialog
+          personId={data.personId}
+          serviceDate={correcting.serviceDate}
+          sessionId={correcting.sessionId}
+          onClose={() => setCorrecting(null)}
+          onSent={() => {
+            setRequested((s) => new Set(s).add(correcting.serviceDate));
+            setCorrecting(null);
+          }}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function CorrectionDialog({
+  personId,
+  serviceDate,
+  sessionId,
+  onClose,
+  onSent,
+}: {
+  personId: string;
+  serviceDate: string;
+  sessionId: string;
+  onClose: () => void;
+  onSent: () => void;
+}): React.ReactElement {
+  const { push } = useToast();
+  const [note, setNote] = useState('');
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (): Promise<void> => {
+    setSending(true);
+    setError(null);
+    try {
+      await apiFetch('/api/v1/attendance/correction-requests', {
+        method: 'POST',
+        json: {
+          personId,
+          sessionId,
+          requestedPresence: 'present',
+          ...(note.trim() ? { note: note.trim() } : {}),
+        },
+      });
+      push({
+        tone: 'success',
+        title: 'Correction sent',
+        message: 'Your church team will review it and update your record.',
+      });
+      onSent();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Could not send. Try again.');
+      setSending(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open
+      onClose={() => {
+        if (!sending) onClose();
+      }}
+      title="Fix my attendance"
+      description={`Tell the church you were at the service on ${formatServiceDate(serviceDate)}.`}
+      size="sm"
+      sheetOnMobile
+      footer={
+        <DialogFooter>
+          <Button variant="secondary" onClick={onClose} disabled={sending}>
+            Cancel
+          </Button>
+          <Button loading={sending} onClick={() => void submit()}>
+            Send
+          </Button>
+        </DialogFooter>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        {error ? (
+          <p role="alert" className="text-sm text-[color:var(--danger-ink)]">
+            {error}
+          </p>
+        ) : null}
+        <Field label="Note" hint="Optional — e.g. I came late and missed the scan.">
+          <Textarea
+            data-autofocus
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={3}
+            maxLength={1000}
+          />
+        </Field>
+      </div>
+    </Dialog>
   );
 }
 

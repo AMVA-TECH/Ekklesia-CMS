@@ -99,10 +99,14 @@ export interface MyAttendance {
   noticeCount: number;
   rate: number | null;
   band: string;
+  /** Gentle follow-up the church suggests for this attendance pattern. */
+  suggestedNudge?: 'congratulate' | 'encourage' | 'remind' | null;
   householdId: string | null;
   calendar: ReadonlyArray<{
     serviceDate: string;
     status: 'present' | 'absent' | 'notice';
+    /** Finalized session for the day — needed to request a correction. */
+    sessionId?: string | null;
   }>;
 }
 
