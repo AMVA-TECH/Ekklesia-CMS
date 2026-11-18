@@ -86,6 +86,7 @@ export const participationRequestResponseSchema = z.object({
   personId: z.guid(),
   status: z.string(),
   decidedAt: z.string().nullable(),
+  createdAt: z.string(),
 });
 
 export type ParticipationRequestResponse = z.infer<

@@ -102,6 +102,14 @@ export function buildAdminGroups(session: Session | null): NavGroup[] {
       icon: 'hand',
     });
   }
+  if (moduleOn(modules, 'organisation') && can(permissions, 'participations:approve')) {
+    ministryItems.push({
+      label: 'Ministry requests',
+      hint: 'Members asking to join',
+      href: '/admin/ministries/requests',
+      icon: 'user-plus',
+    });
+  }
   if (
     moduleOn(modules, 'organisation') &&
     (can(permissions, 'positions:write') || can(permissions, 'units:read'))
