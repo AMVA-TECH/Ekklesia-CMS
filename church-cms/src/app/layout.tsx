@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
+import { I18nProvider } from "./_ekklesia/i18n/provider";
 
 // DM Sans: all UI. Fraunces: scripture/devotional quote class only (not chrome).
 const dmSans = DM_Sans({
@@ -57,7 +58,7 @@ export default function RootLayout({
       className={`${dmSans.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
-        {children}
+        <I18nProvider>{children}</I18nProvider>
       </body>
     </html>
   );

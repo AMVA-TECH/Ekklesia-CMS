@@ -1,3 +1,5 @@
+import { intlLocale, t } from '@/app/_ekklesia/i18n/core';
+
 /**
  * Formatting helpers shared by admin pages.
  *
@@ -9,7 +11,7 @@
 export function formatMoney(
   amountMinor: number,
   currency: string = 'TZS',
-  locale: string = 'en-TZ',
+  locale: string = intlLocale(),
 ): string {
   const major = amountMinor / 100;
   try {
@@ -27,7 +29,7 @@ export function formatMoney(
 /** Format a count with thousand separators. */
 export function formatCount(
   value: number | null | undefined,
-  locale: string = 'en-TZ',
+  locale: string = intlLocale(),
 ): string {
   if (value === null || value === undefined) return '—';
   return value.toLocaleString(locale);
@@ -39,7 +41,7 @@ export function formatCount(
  */
 export function formatDate(
   input: string | Date | null | undefined,
-  locale: string = 'en-TZ',
+  locale: string = intlLocale(),
 ): string {
   if (!input) return '—';
   const date = typeof input === 'string' ? new Date(input) : input;
@@ -57,7 +59,7 @@ export function formatDate(
 /** Format an ISO datetime into a "Mon 10 Nov · 09:30" style label. */
 export function formatDateTime(
   input: string | Date | null | undefined,
-  locale: string = 'en-TZ',
+  locale: string = intlLocale(),
 ): string {
   if (!input) return '—';
   const date = typeof input === 'string' ? new Date(input) : input;
@@ -77,15 +79,19 @@ export function formatDateTime(
 /** Title-case a snake_case or kebab-case identifier for display. */
 export function titleCase(code: string | null | undefined): string {
   if (!code) return '';
-  return code
-    .replace(/[_-]+/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  // Status/type codes ("pending_approval") read as labels; translated here so
+  // every status pill follows the UI language.
+  return t(
+    code
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase()),
+  );
 }
 
 /** Return "N days ago" style label; falls back to a formatted date. */
 export function relativeTime(
   input: string | Date | null | undefined,
-  locale: string = 'en',
+  locale: string = intlLocale(),
 ): string {
   if (!input) return '—';
   const date = typeof input === 'string' ? new Date(input) : input;
