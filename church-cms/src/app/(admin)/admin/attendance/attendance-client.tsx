@@ -37,6 +37,7 @@ interface LeadershipStatsEnvelope {
     sessionsHeld: number;
     rate: number | null;
     band: string;
+    suggestedNudge?: 'congratulate' | 'encourage' | 'remind' | null;
   }>;
 }
 
@@ -53,6 +54,7 @@ export function AttendanceClient(): React.ReactElement {
   >({});
   const [stats, setStats] = useState<LeadershipStatsEnvelope | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [followUpOnly, setFollowUpOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -337,7 +339,19 @@ export function AttendanceClient(): React.ReactElement {
 
       <Panel
         title="Leadership attendance"
-        subtitle="How consistently each leader is showing up."
+        subtitle="How consistently each leader is showing up, and a suggested next step."
+        actions={
+          stats && stats.people.length > 0 ? (
+            <Button
+              size="sm"
+              variant={followUpOnly ? 'primary' : 'secondary'}
+              aria-pressed={followUpOnly}
+              onClick={() => setFollowUpOnly((v) => !v)}
+            >
+              {followUpOnly ? 'Showing follow-ups' : 'Needs follow-up only'}
+            </Button>
+          ) : null
+        }
       >
         {statsError ? (
           <div className="rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]">
@@ -361,10 +375,14 @@ export function AttendanceClient(): React.ReactElement {
                   <TH>Sessions attended</TH>
                   <TH>Rate</TH>
                   <TH>Band</TH>
+                  <TH>Suggested follow-up</TH>
                 </TR>
               </THead>
               <TBody>
-                {stats.people.slice(0, 15).map((p) => (
+                {stats.people
+                  .filter((p) => !followUpOnly || p.band === 'irregular' || p.band === 'missing')
+                  .slice(0, followUpOnly ? 50 : 15)
+                  .map((p) => (
                   <TR key={p.personId}>
                     <TD>
                       <Link
@@ -384,6 +402,20 @@ export function AttendanceClient(): React.ReactElement {
                       <StatusPill tone={bandTone(p.band)}>
                         {titleCase(p.band)}
                       </StatusPill>
+                    </TD>
+                    <TD className="text-sm">
+                      {p.suggestedNudge ? (
+                        <>
+                          <span className="font-medium text-foreground">
+                            {NUDGE_COPY[p.suggestedNudge].label}
+                          </span>
+                          <div className="text-xs text-muted-foreground">
+                            {NUDGE_COPY[p.suggestedNudge].hint}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">Too early to tell</span>
+                      )}
                     </TD>
                   </TR>
                 ))}
@@ -466,6 +498,13 @@ function aggregateTotals(
   return { total, adults, children, visitors };
 }
 
+/** Leader-facing wording for the API's suggested nudge. */
+const NUDGE_COPY = {
+  congratulate: { label: 'Say thank you', hint: 'Consistently present — a word of thanks goes a long way.' },
+  encourage: { label: 'Encourage', hint: 'Coming some weeks — check in warmly.' },
+  remind: { label: 'Reach out', hint: 'Missing recently — a call or visit may help.' },
+} as const;
+
 function bandTone(
   band: string,
 ): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
@@ -473,6 +512,10 @@ function bandTone(
     case 'strong':
     case 'consistent':
       return 'success';
+    case 'irregular':
+      return 'warning';
+    case 'missing':
+      return 'danger';
     case 'drifting':
       return 'warning';
     case 'at_risk':
