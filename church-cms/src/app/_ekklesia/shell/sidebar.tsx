@@ -1,22 +1,49 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
 import { cn } from '../ui/utils';
 import { RoleNav, type NavGroup } from './role-nav';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const STORAGE_KEY = 'ek-sidebar-collapsed';
 
-function readInitialCollapsed(): boolean {
-  if (typeof window === 'undefined') return false;
+const collapsedListeners = new Set<() => void>();
+
+function readCollapsed(): boolean {
   try {
     return window.localStorage.getItem(STORAGE_KEY) === '1';
   } catch {
     return false;
   }
+}
+
+function subscribeCollapsed(onStoreChange: () => void): () => void {
+  collapsedListeners.add(onStoreChange);
+  const onStorage = (event: StorageEvent): void => {
+    if (event.key === STORAGE_KEY || event.key === null) onStoreChange();
+  };
+  window.addEventListener('storage', onStorage);
+  return () => {
+    collapsedListeners.delete(onStoreChange);
+    window.removeEventListener('storage', onStorage);
+  };
+}
+
+function writeCollapsed(next: boolean): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
+  } catch {
+    /* ignore quota / private mode */
+  }
+  for (const listener of collapsedListeners) listener();
 }
 
 /** Props for `<Sidebar>` (desktop rail). */
@@ -38,7 +65,14 @@ export function Sidebar({
   churchName,
   footer,
 }: SidebarProps): React.ReactElement {
-  const [collapsed, setCollapsed] = useState<boolean>(readInitialCollapsed);
+  const t = useTranslations('Common');
+  // External store keeps SSR (expanded) and client localStorage in sync
+  // without setState-in-effect hydration cascades.
+  const collapsed = useSyncExternalStore(
+    subscribeCollapsed,
+    readCollapsed,
+    () => false,
+  );
 
   // The admin rail is long; keep the current page's link in view so deep
   // pages (e.g. Settings → Audit log) don't open with their item hidden.
@@ -50,15 +84,7 @@ export function Sidebar({
   }, [pathname, collapsed]);
 
   const toggle = (): void => {
-    setCollapsed((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
+    writeCollapsed(!collapsed);
   };
 
   return (
@@ -72,7 +98,7 @@ export function Sidebar({
           ? 'w-[var(--layout-sidebar-collapsed)]'
           : 'w-[var(--layout-sidebar-width)]',
       )}
-      aria-label={t('Primary navigation')}
+      aria-label={t('primaryNav')}
     >
       <div
         className={cn(
@@ -109,7 +135,7 @@ export function Sidebar({
         type="button"
         onClick={toggle}
         aria-pressed={collapsed}
-        aria-label={collapsed ? t('Expand sidebar') : t('Collapse sidebar')}
+        aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
         className={cn(
           'border-t border-[color:var(--sidebar-border)] py-2 text-xs font-medium',
           'text-[color:var(--sidebar-muted)] hover:bg-[color:var(--sidebar-hover)] hover:text-[color:var(--sidebar-foreground)] focus-ring',
@@ -117,25 +143,26 @@ export function Sidebar({
         )}
       >
         <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={14} />
-        {collapsed ? null : <span>{t('Collapse')}</span>}
+        {collapsed ? null : <span>{t('collapse')}</span>}
       </button>
     </aside>
   );
 }
 
 function CollapsedNav({ groups }: { groups: readonly NavGroup[] }): React.ReactElement {
+  const t = useTranslations('Common');
   return (
-    <nav aria-label={t('Primary (collapsed)')} className="flex flex-col items-center gap-1 py-2">
+    <nav aria-label={t('primaryNavCollapsed')} className="flex flex-col items-center gap-1 py-2">
       {groups.flatMap((g) =>
         g.items.map((item) => (
           <a
             key={item.href}
             href={item.href}
             className="group relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--sidebar-muted)] hover:bg-[color:var(--sidebar-hover)] hover:text-[color:var(--sidebar-foreground)] focus-ring"
-            title={t(item.label)}
+            title={item.label}
           >
             {item.icon ? <Icon name={item.icon} size={18} /> : null}
-            <span className="sr-only">{t(item.label)}</span>
+            <span className="sr-only">{item.label}</span>
           </a>
         )),
       )}

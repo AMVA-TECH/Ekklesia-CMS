@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -16,7 +17,6 @@ import {
 import type { OrganisationalUnit } from '../../_lib/api-types';
 import { asList } from '../../_lib/list';
 import { CreateUnitDialog } from '../ministries/create-unit-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 function buildTree(units: OrganisationalUnit[]): Array<{
   unit: OrganisationalUnit;
@@ -54,6 +54,9 @@ function buildTree(units: OrganisationalUnit[]): Array<{
 }
 
 export function OrganisationClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const to = useTranslations('AdminOrganisation');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [units, setUnits] = useState<OrganisationalUnit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,11 +79,12 @@ export function OrganisationClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load organisational structure'),
+            : to('unableLoadStructure'),
       );
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -99,7 +103,8 @@ export function OrganisationClient(): React.ReactElement {
       setUnits((prev) => prev.map((u) => (u.id === unit.id ? updated : u)));
       push({
         tone: 'success',
-        message: next === 'active' ? t('Unit activated.') : t('Unit deactivated.'),
+        message:
+          next === 'active' ? to('unitActivated') : to('unitDeactivated'),
       });
     } catch (err) {
       push({
@@ -107,7 +112,7 @@ export function OrganisationClient(): React.ReactElement {
         message:
           err instanceof ApiError
             ? err.message
-            : t('Could not update unit status.'),
+            : to('couldNotUpdateStatus'),
       });
     } finally {
       setTogglingId(null);
@@ -117,17 +122,17 @@ export function OrganisationClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Organisation')}
-        lede={t('Hierarchical units for this church. Structure does not grant system permissions.')}
+        title={t('organisation')}
+        lede={t('organisationLede')}
         actions={
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            {t('Add unit')}
+            {to('addUnit')}
           </Button>
         }
       />
 
       {loading ? (
-        <Panel title={t('Structure')}>
+        <Panel title={to('structure')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -138,11 +143,11 @@ export function OrganisationClient(): React.ReactElement {
         <EmptyState
           icon="building"
           tone="gold"
-          title={t('Could not load structure')}
+          title={to('couldNotLoadStructure')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              {t('Try again')}
+              {tc('retry')}
             </Button>
           }
         />
@@ -150,16 +155,16 @@ export function OrganisationClient(): React.ReactElement {
         <EmptyState
           icon="building"
           tone="gold"
-          title={t('No organisational units yet')}
-          description={t('Create departments, ministries, teams, or branches for this church.')}
+          title={to('noUnitsYet')}
+          description={to('noUnitsBody')}
           action={
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              {t('Add unit')}
+              {to('addUnit')}
             </Button>
           }
         />
       ) : (
-        <Panel title={t('Structure')}>
+        <Panel title={to('structure')}>
           <ul className="divide-y divide-border">
             {tree.map(({ unit, depth }) => (
               <li
@@ -178,7 +183,7 @@ export function OrganisationClient(): React.ReactElement {
                     <Badge>{unit.code}</Badge>
                     <Badge>{unit.kind.replace('_', ' ')}</Badge>
                     {unit.metadata?.proposed === true ? (
-                      <Badge>{t('Proposed')}</Badge>
+                      <Badge>{to('proposed')}</Badge>
                     ) : null}
                     <StatusPill
                       tone={unit.status === 'active' ? 'success' : 'neutral'}
@@ -195,7 +200,7 @@ export function OrganisationClient(): React.ReactElement {
                 <div className="flex flex-wrap gap-2">
                   <Link href={`/admin/organisation/${unit.id}`}>
                     <Button size="sm" variant="secondary">
-                      {t('Open')}
+                      {tc('open')}
                     </Button>
                   </Link>
                   <Button
@@ -204,7 +209,9 @@ export function OrganisationClient(): React.ReactElement {
                     loading={togglingId === unit.id}
                     onClick={() => void toggleStatus(unit)}
                   >
-                    {unit.status === 'active' ? t('Deactivate') : t('Activate')}
+                    {unit.status === 'active'
+                      ? to('deactivate')
+                      : to('activate')}
                   </Button>
                 </div>
               </li>
@@ -220,7 +227,7 @@ export function OrganisationClient(): React.ReactElement {
         onCreated={(unit) => {
           setUnits((prev) => [...prev, unit]);
           setCreateOpen(false);
-          push({ tone: 'success', message: t('Unit created.') });
+          push({ tone: 'success', message: to('unitCreated') });
         }}
       />
     </div>

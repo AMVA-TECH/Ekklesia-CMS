@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
@@ -30,7 +31,6 @@ import { titleCase } from '../../../_lib/format';
 import { AddChildDialog } from './add-child-dialog';
 import { AddMemberDialog } from './add-member-dialog';
 import { EditHouseholdDialog } from './edit-household-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface HouseholdDetailClientProps {
   householdId: string;
@@ -39,6 +39,7 @@ interface HouseholdDetailClientProps {
 export function HouseholdDetailClient({
   householdId,
 }: HouseholdDetailClientProps): React.ReactElement {
+  const th = useTranslations('AdminHouseholds');
   const { push } = useToast();
   const [household, setHousehold] = useState<Household | null>(null);
   const [memberPeople, setMemberPeople] = useState<Record<string, Person>>({});
@@ -75,13 +76,13 @@ export function HouseholdDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load this household.'),
+            : th('unableLoadHousehold'),
       );
       setHousehold(null);
     } finally {
       setLoading(false);
     }
-  }, [householdId]);
+  }, [householdId, th]);
 
   useLoadEffect(load);
 
@@ -104,17 +105,17 @@ export function HouseholdDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              {t('Back to households')}
+              {th('backToHouseholds')}
             </Link>
           }
-          title={t('Household not found')}
-          lede={error ?? t('This household may have been removed.')}
+          title={th('householdNotFound')}
+          lede={error ?? th('householdNotFoundLede')}
           actions={
             <Link
               href="/admin/households"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Back to list')}
+              {th('backToList')}
             </Link>
           }
         />
@@ -131,10 +132,10 @@ export function HouseholdDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            {t('Back to households')}
+            {th('backToHouseholds')}
           </Link>
         }
-        title={t(household.label)}
+        title={household.label}
         lede={household.sharedAddress ?? undefined}
         actions={
           <Button
@@ -142,7 +143,7 @@ export function HouseholdDetailClient({
             iconLeft="edit"
             onClick={() => setEditOpen(true)}
           >
-            {t('Edit')}
+            {th('edit')}
           </Button>
         }
       />
@@ -150,7 +151,7 @@ export function HouseholdDetailClient({
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t('Emergency contact')}</CardTitle>
+            <CardTitle>{th('emergencyContact')}</CardTitle>
           </CardHeader>
           {household.emergencyContactName ? (
             <div className="space-y-1 text-sm">
@@ -166,22 +167,22 @@ export function HouseholdDetailClient({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              {t('No emergency contact on file.')}
+              {th('noEmergencyContact')}
             </p>
           )}
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('At a glance')}</CardTitle>
+            <CardTitle>{th('atAGlance')}</CardTitle>
           </CardHeader>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center justify-between">
-              <span className="text-muted-foreground">{t('Members')}</span>
+              <span className="text-muted-foreground">{th('members')}</span>
               <Badge tone="sage">{household.members.length}</Badge>
             </li>
             <li className="flex items-center justify-between">
-              <span className="text-muted-foreground">{t('Children')}</span>
+              <span className="text-muted-foreground">{th('children')}</span>
               <Badge tone={household.children.length ? 'lavender' : 'neutral'}>
                 {household.children.length}
               </Badge>
@@ -191,8 +192,8 @@ export function HouseholdDetailClient({
       </div>
 
       <Panel
-        title={t('Members')}
-        subtitle={t('People linked to this household.')}
+        title={th('members')}
+        subtitle={th('membersSubtitle')}
         flush
         actions={
           <Button
@@ -201,7 +202,7 @@ export function HouseholdDetailClient({
             iconLeft="plus"
             onClick={() => setMemberOpen(true)}
           >
-            {t('Add member')}
+            {th('addMember')}
           </Button>
         }
       >
@@ -209,15 +210,15 @@ export function HouseholdDetailClient({
           <EmptyState
             icon="users"
             tone="sage"
-            title={t('No members yet')}
-            description={t('Link people from the directory to this household.')}
+            title={th('noMembersYet')}
+            description={th('noMembersYetDesc')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setMemberOpen(true)}
               >
-                {t('Add member')}
+                {th('addMember')}
               </Button>
             }
           />
@@ -226,9 +227,9 @@ export function HouseholdDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Person')}</TH>
-                  <TH>{t('Relationship')}</TH>
-                  <TH>{t('Primary contact')}</TH>
+                  <TH>{th('colPerson')}</TH>
+                  <TH>{th('colRelationship')}</TH>
+                  <TH>{th('colPrimaryContact')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -258,11 +259,11 @@ export function HouseholdDetailClient({
                       <TD>
                         {m.isPrimaryContact ? (
                           <StatusPill tone="success" hideDot>
-                            {t('Primary')}
+                            {th('primary')}
                           </StatusPill>
                         ) : (
                           <span className="text-xs text-muted-foreground">
-                            —
+                            {th('dash')}
                           </span>
                         )}
                       </TD>
@@ -276,8 +277,8 @@ export function HouseholdDetailClient({
       </Panel>
 
       <Panel
-        title={t('Children')}
-        subtitle={t('Non-member children in this household.')}
+        title={th('children')}
+        subtitle={th('childrenSubtitle')}
         flush
         actions={
           <Button
@@ -286,7 +287,7 @@ export function HouseholdDetailClient({
             iconLeft="plus"
             onClick={() => setChildOpen(true)}
           >
-            {t('Add child')}
+            {th('addChild')}
           </Button>
         }
       >
@@ -294,15 +295,15 @@ export function HouseholdDetailClient({
           <EmptyState
             icon="users"
             tone="lavender"
-            title={t('No children on file')}
-            description={t('Add children when you want ages for Sunday school and safeguarding records.')}
+            title={th('noChildren')}
+            description={th('noChildrenDesc')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setChildOpen(true)}
               >
-                {t('Add child')}
+                {th('addChild')}
               </Button>
             }
           />
@@ -311,8 +312,8 @@ export function HouseholdDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Name')}</TH>
-                  <TH>{t('Age')}</TH>
+                  <TH>{th('colName')}</TH>
+                  <TH>{th('colAge')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -336,8 +337,8 @@ export function HouseholdDetailClient({
           setHousehold(updated);
           push({
             tone: 'success',
-            title: t('Household updated'),
-            message: t('{0} was saved.', updated.label),
+            title: th('householdUpdated'),
+            message: th('householdUpdatedMessage', { label: updated.label }),
           });
         }}
       />
@@ -350,8 +351,8 @@ export function HouseholdDetailClient({
           void load();
           push({
             tone: 'success',
-            title: t('Member added'),
-            message: t('The person is now linked to this household.'),
+            title: th('memberAdded'),
+            message: th('memberAddedMessage'),
           });
         }}
       />
@@ -363,8 +364,8 @@ export function HouseholdDetailClient({
           setHousehold(updated);
           push({
             tone: 'success',
-            title: t('Child added'),
-            message: t('The child record is on file.'),
+            title: th('childAdded'),
+            message: th('childAddedMessage'),
           });
         }}
       />

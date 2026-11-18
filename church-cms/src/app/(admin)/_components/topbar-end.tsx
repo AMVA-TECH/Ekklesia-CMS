@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { LocaleSwitcher } from '@/app/_ekklesia/i18n/locale-switcher';
 import {
   apiFetch,
   ApiError,
@@ -17,27 +19,30 @@ import {
   useToast,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
-import { t } from '@/app/_ekklesia/i18n/core';
-import { LanguageToggle } from '@/app/_ekklesia/i18n/language-toggle';
 
 /**
- * Church profile cluster on the far right of the admin topbar.
+ * Right cluster on the admin topbar: locale switcher + church menu.
  *
- * Shows the active church avatar + name. The menu still covers church
- * settings and sign-out; the signed-in person lives in the sidebar footer.
+ * Language stays always visible; the signed-in person lives in the sidebar footer.
  */
 export function TopbarEnd(): React.ReactElement {
+  const t = useTranslations('AdminChrome');
   const { user, church, loading } = useSession();
   const { push } = useToast();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   if (loading && !user) {
-    return <Skeleton size="line" className="h-8 w-44 rounded-md" />;
+    return (
+      <div className="flex items-center gap-2">
+        <LocaleSwitcher tone="light" />
+        <Skeleton size="line" className="h-8 w-44 rounded-md" />
+      </div>
+    );
   }
 
-  const churchName = church?.name?.trim() || t('No church selected');
-  const userName = user?.displayName?.trim() || t('Signed out');
+  const churchName = church?.name?.trim() || t('noChurch');
+  const userName = user?.displayName?.trim() || t('signedOut');
 
   const handleSignOut = async (): Promise<void> => {
     if (busy) return;
@@ -46,19 +51,19 @@ export function TopbarEnd(): React.ReactElement {
       await apiFetch('/api/v1/auth/logout', { method: 'POST' });
       push({
         tone: 'success',
-        title: t('Signed out'),
-        message: t('See you soon.'),
+        title: t('signedOutTitle'),
+        message: t('seeYouSoon'),
       });
       // Full reload (not router.push) so no signed-in client state survives.
       window.location.assign(new URL('/', window.location.origin));
     } catch (err) {
       push({
         tone: 'danger',
-        title: t('Could not sign out'),
+        title: t('signOutFail'),
         message:
           err instanceof ApiError
             ? err.message
-            : t('Please try again in a moment.'),
+            : t('tryAgain'),
       });
       setBusy(false);
     }
@@ -66,10 +71,10 @@ export function TopbarEnd(): React.ReactElement {
 
   return (
     <div className="flex items-center gap-2">
-      <LanguageToggle />
+      <LocaleSwitcher tone="light" persistProfile />
       <Menu
         align="end"
-        label={t('Church profile menu')}
+        label={t('churchMenu')}
         trigger={
           <button
             type="button"
@@ -88,7 +93,7 @@ export function TopbarEnd(): React.ReactElement {
                 {churchName}
               </span>
               <span className="block truncate text-[11px] leading-tight text-muted-foreground">
-                {t('Church profile')}
+                {t('churchProfile')}
               </span>
             </span>
             <Icon
@@ -99,7 +104,7 @@ export function TopbarEnd(): React.ReactElement {
           </button>
         }
       >
-        <MenuLabel>{t('Active church')}</MenuLabel>
+        <MenuLabel>{t('activeChurch')}</MenuLabel>
         <div className="px-3 pb-2">
           <p className="truncate text-sm font-medium text-foreground">
             {churchName}
@@ -110,12 +115,12 @@ export function TopbarEnd(): React.ReactElement {
             </p>
           ) : null}
           <p className="mt-1 truncate text-xs text-muted-foreground">
-            {t('Signed in as')} {userName}
+            {t('signedInAs', { name: userName })}
           </p>
         </div>
         <MenuSeparator />
         <MenuItem icon="settings" onClick={() => router.push('/admin/settings')}>
-          {t('Church settings')}
+          {t('churchSettings')}
         </MenuItem>
         <MenuItem
           icon="book"
@@ -124,7 +129,7 @@ export function TopbarEnd(): React.ReactElement {
             window.location.assign(new URL('/api/docs', window.location.origin));
           }}
         >
-          {t('API reference')}
+          {t('apiReference')}
         </MenuItem>
         <MenuSeparator />
         <MenuItem
@@ -134,7 +139,7 @@ export function TopbarEnd(): React.ReactElement {
           }}
           disabled={busy}
         >
-          {busy ? t('Signing out…') : t('Sign out')}
+          {busy ? t('signingOut') : t('signOut')}
         </MenuItem>
       </Menu>
     </div>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ApiError,
@@ -15,7 +16,6 @@ import {
   Input,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -23,6 +23,8 @@ const RESEND_COOLDOWN_SECONDS = 30;
  * MFA OTP verification — same split auth shell as sign-in (FundFlow panel rhythm).
  */
 export function VerifyClient(): React.ReactElement {
+  const t = useTranslations('Verify');
+  const tCommon = useTranslations('Common');
   const router = useRouter();
   const params = useSearchParams();
   const requestedRedirect = sanitizeAppRedirect(params?.get('redirect'));
@@ -48,7 +50,7 @@ export function VerifyClient(): React.ReactElement {
 
   useEffect(() => {
     if (cooldownUntil <= Date.now()) return;
-    const id = window.setInterval(() => setTick((t) => t + 1), 1000);
+    const id = window.setInterval(() => setTick((n) => n + 1), 1000);
     return () => window.clearInterval(id);
   }, [cooldownUntil]);
 
@@ -72,14 +74,10 @@ export function VerifyClient(): React.ReactElement {
       if (payload?.devOtp) {
         setDevOtp(payload.devOtp);
         setCode(payload.devOtp);
-        setNotice(t('Local/dev mode: use the code below (not sent by SMS).'));
+        setNotice(t('devNotice'));
       } else {
         setDevOtp(null);
-        setNotice(
-          silent
-            ? t('We sent a 6-digit code to your phone or email.')
-            : t('A fresh code is on the way.'),
-        );
+        setNotice(silent ? t('sentSilent') : t('sentFresh'));
       }
     } catch (e) {
       if (e instanceof ApiError) {
@@ -87,9 +85,9 @@ export function VerifyClient(): React.ReactElement {
           router.push('/sign-in');
           return;
         }
-        setError(e.message || t('We could not send a new code just now.'));
+        setError(e.message || t('errorSend'));
       } else {
-        setError(t('Check your connection and try again.'));
+        setError(t('errorNetwork'));
       }
     } finally {
       setSending(false);
@@ -102,7 +100,7 @@ export function VerifyClient(): React.ReactElement {
     setFieldError(undefined);
     const trimmed = code.trim();
     if (!/^\d{6}$/.test(trimmed)) {
-      setFieldError(t('The code is 6 digits.'));
+      setFieldError(t('codeInvalid'));
       return;
     }
     setSubmitting(true);
@@ -117,14 +115,14 @@ export function VerifyClient(): React.ReactElement {
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 400 || e.status === 401 || e.status === 422) {
-          setFieldError(t('That code did not match. Check for typos or ask for a new one.'));
+          setFieldError(t('codeMismatch'));
         } else if (e.status === 429) {
-          setError(t('Too many attempts. Please wait a minute.'));
+          setError(t('errorRateLimit'));
         } else {
-          setError(e.message || t('We could not verify that code.'));
+          setError(e.message || t('errorVerify'));
         }
       } else {
-        setError(t('Check your connection and try again.'));
+        setError(t('errorNetwork'));
       }
     } finally {
       setSubmitting(false);
@@ -139,15 +137,15 @@ export function VerifyClient(): React.ReactElement {
     <div className="flex flex-col">
       <div className="mb-8 text-center lg:text-left">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-          {t('One more step')}
+          {t('title')}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {t('Enter the 6-digit code we sent to keep your church account safe.')}
+          {t('subtitle')}
         </p>
       </div>
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-        <Field label={t('6-digit code')} required error={fieldError}>
+        <Field label={t('codeLabel')} required error={fieldError}>
           <Input
             type="text"
             inputMode="numeric"
@@ -169,9 +167,9 @@ export function VerifyClient(): React.ReactElement {
             className="mt-1 h-4 w-4 rounded-sm border-border accent-[color:var(--brand-gold-ink)] focus-ring"
           />
           <span>
-            {t('Trust this device for a while')}
+            {t('trustDevice')}
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              {t('Only turn this off on shared or public phones.')}
+              {t('trustHint')}
             </span>
           </span>
         </label>
@@ -182,13 +180,13 @@ export function VerifyClient(): React.ReactElement {
             role="status"
           >
             <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--success-ink)]">
-              {t('Dev verification code')}
+              {t('devTitle')}
             </p>
             <p className="mt-1 font-mono text-2xl font-semibold tracking-[0.35em] text-[color:var(--success-ink)]">
               {devOtp}
             </p>
             <p className="mt-1 text-xs text-[color:var(--success-ink)] opacity-90">
-              {t('Shown only when ALLOW_DEV_AUTH=1. Paste or use the filled field.')}
+              {t('devHint')}
             </p>
           </div>
         ) : null}
@@ -214,7 +212,7 @@ export function VerifyClient(): React.ReactElement {
         ) : null}
 
         <Button type="submit" size="lg" block loading={submitting} className="mt-1">
-          {submitting ? t('Verifying…') : t('Verify and continue')}
+          {submitting ? t('submitting') : t('submit')}
         </Button>
 
         <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
@@ -226,16 +224,16 @@ export function VerifyClient(): React.ReactElement {
           >
             <Icon name="refresh" size={14} />
             {sending
-              ? t('Sending…')
+              ? tCommon('sending')
               : canResend
-                ? t('Send a new code')
-                : t('Send a new code in {0}s', secondsRemaining)}
+                ? t('resend')
+                : t('resendIn', { seconds: secondsRemaining })}
           </button>
           <Link
             href="/sign-in"
             className="link-ink text-xs underline-offset-2 hover:underline focus-ring rounded-sm"
           >
-            {t('Use a different phone or email')}
+            {t('differentAccount')}
           </Link>
         </div>
       </form>

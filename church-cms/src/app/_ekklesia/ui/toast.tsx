@@ -9,11 +9,11 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import { useIsClient } from './hooks';
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
 import { cn } from './utils';
-import { t, tn } from '@/app/_ekklesia/i18n/core';
 
 /** Available toast tones. */
 export type ToastTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
@@ -135,6 +135,7 @@ function ToastItem({
   toast: Toast;
   onDismiss: (id: string) => void;
 }): React.ReactElement {
+  const t = useTranslations('Common');
   const duration = toast.duration ?? 5000;
   useEffect(() => {
     if (!duration) return;
@@ -154,14 +155,14 @@ function ToastItem({
       <Icon name={TONE_ICON[tone]} size={18} className="mt-0.5 shrink-0" />
       <div className="min-w-0 flex-1">
         {toast.title ? (
-          <p className="text-sm font-semibold">{tn(toast.title)}</p>
+          <p className="text-sm font-semibold">{toast.title}</p>
         ) : null}
-        <p className="text-sm">{tn(toast.message)}</p>
+        <p className="text-sm">{toast.message}</p>
       </div>
       <button
         type="button"
         onClick={() => onDismiss(toast.id)}
-        aria-label={t('Dismiss notification')}
+        aria-label={t('dismissNotification')}
         className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-sm text-current/80 hover:text-current focus-ring"
       >
         <Icon name="close" size={14} />

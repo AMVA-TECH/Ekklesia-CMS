@@ -1,7 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from './utils';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Where the mark sits — selects light/dark assets for contrast. */
 export type BrandSurface = 'light' | 'dark' | 'auto';
@@ -114,10 +116,12 @@ export function BrandMark({
   surface,
   tone = 'default',
 }: BrandMarkProps): React.ReactElement {
+  const t = useTranslations('Common');
   const markVariant = resolveVariant(variant);
   const markSurface = resolveSurface(surface, variant, tone);
   const pair = ASSETS[markVariant];
   const inverse = markSurface === 'dark';
+  const appName = t('appName');
 
   const mark =
     markSurface === 'auto' ? (
@@ -153,7 +157,7 @@ export function BrandMark({
               'font-[family-name:var(--font-scripture)] not-italic',
             )}
           >
-            {t('Ekklesia')}
+            {appName}
           </span>
           {subline ? (
             <span
@@ -169,14 +173,14 @@ export function BrandMark({
           ) : null}
         </span>
       ) : (
-        <span className="sr-only">{t('Ekklesia')}</span>
+        <span className="sr-only">{appName}</span>
       )}
     </span>
   );
 
   if (href) {
     return (
-      <Link href={href} className="focus-ring rounded-sm" aria-label={t('Ekklesia home')}>
+      <Link href={href} className="focus-ring rounded-sm" aria-label={t('homeAria')}>
         {content}
       </Link>
     );

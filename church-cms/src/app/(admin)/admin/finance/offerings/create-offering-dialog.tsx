@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -14,7 +15,6 @@ import {
 import type { Fund, Offering } from '../../../_lib/api-types';
 import { asList } from '../../../_lib/list';
 import { extractValidationErrors } from '../../people/form-errors';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AccountOption {
   id: string;
@@ -36,6 +36,8 @@ export function CreateOfferingDialog({
   onClose,
   onCreated,
 }: CreateOfferingDialogProps): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
+  const tc = useTranslations('Common');
   const formId = useId();
   // Empty until the dialog opens: reading the clock during render breaks
   // Cache Components prerendering of /admin/finance/offerings.
@@ -106,7 +108,7 @@ export function CreateOfferingDialog({
     if (submitting) return;
     const amountNumber = Number(amount);
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-      setFieldErrors({ amountMinor: t('Enter an amount greater than zero.') });
+      setFieldErrors({ amountMinor: tf('amountGreaterThanZero') });
       return;
     }
     setSubmitting(true);
@@ -135,7 +137,7 @@ export function CreateOfferingDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not record offering.'),
+          err instanceof Error ? err.message : tf('couldNotRecordOffering'),
         );
       }
       setSubmitting(false);
@@ -146,8 +148,8 @@ export function CreateOfferingDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={t('Record offering')}
-      description={t('Amount is entered in the major unit (e.g. TZS 10,000). Set income and deposit accounts if you plan to post to the ledger.')}
+      title={tf('recordOfferingTitle')}
+      description={tf('recordOfferingDesc')}
       size="sm"
       footer={
         <DialogFooter>
@@ -156,10 +158,10 @@ export function CreateOfferingDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            {t('Cancel')}
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? t('Saving…') : t('Save offering')}
+            {submitting ? tf('saving') : tf('saveOffering')}
           </Button>
         </DialogFooter>
       }
@@ -180,7 +182,7 @@ export function CreateOfferingDialog({
           </div>
         ) : null}
 
-        <Field label={t('Service date')} required error={fieldErrors.serviceDate}>
+        <Field label={tf('serviceDate')} required error={fieldErrors.serviceDate}>
           <Input
             type="date"
             value={serviceDate}
@@ -190,9 +192,9 @@ export function CreateOfferingDialog({
         </Field>
 
         <Field
-          label={t('Amount')}
+          label={tf('amount')}
           required
-          hint={t('Entered in the main currency unit (e.g. TZS).')}
+          hint={tf('amountHint')}
           error={fieldErrors.amountMinor}
         >
           <Input
@@ -207,9 +209,9 @@ export function CreateOfferingDialog({
           />
         </Field>
 
-        <Field label={t('Fund')} hint={t('Optional')} error={fieldErrors.fundId}>
+        <Field label={tf('fund')} hint={tc('optional')} error={fieldErrors.fundId}>
           <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-            <option value="">{t('Unassigned')}</option>
+            <option value="">{tf('unassigned')}</option>
             {funds.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name} ({f.code})
@@ -219,15 +221,15 @@ export function CreateOfferingDialog({
         </Field>
 
         <Field
-          label={t('Income account')}
-          hint={t('Needed to post to the ledger')}
+          label={tf('incomeAccount')}
+          hint={tf('incomeAccountHint')}
           error={fieldErrors.incomeAccountId}
         >
           <Select
             value={incomeAccountId}
             onChange={(e) => setIncomeAccountId(e.target.value)}
           >
-            <option value="">{t('Not set')}</option>
+            <option value="">{tf('notSet')}</option>
             {incomeAccounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.code} — {a.name}
@@ -237,15 +239,15 @@ export function CreateOfferingDialog({
         </Field>
 
         <Field
-          label={t('Deposit account')}
-          hint={t('Cash or bank asset account for posting')}
+          label={tf('depositAccount')}
+          hint={tf('depositAccountHint')}
           error={fieldErrors.depositAccountId}
         >
           <Select
             value={depositAccountId}
             onChange={(e) => setDepositAccountId(e.target.value)}
           >
-            <option value="">{t('Not set')}</option>
+            <option value="">{tf('notSet')}</option>
             {depositAccounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.code} — {a.name}
@@ -254,13 +256,13 @@ export function CreateOfferingDialog({
           </Select>
         </Field>
 
-        <Field label={t('Note')} error={fieldErrors.note}>
+        <Field label={tf('note')} error={fieldErrors.note}>
           <Textarea
             rows={2}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={500}
-            placeholder={t('Optional reference')}
+            placeholder={tf('optionalNotePlaceholder')}
           />
         </Field>
       </form>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Avatar,
@@ -31,7 +32,6 @@ import { formatDate, titleCase } from '../../../_lib/format';
 import { asList } from '../../../_lib/list';
 import { AddContactDialog } from './add-contact-dialog';
 import { EditPersonDialog } from './edit-person-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface PersonDetailClientProps {
   personId: string;
@@ -41,9 +41,43 @@ interface PersonDetailClientProps {
  * Person profile page — live `/api/v1/people/:id` with identity edit,
  * directory toggle, and contact add against backend-supported mutations.
  */
+function membershipTypeLabel(
+  value: string,
+  tm: (key: string) => string,
+): string {
+  switch (value) {
+    case 'individual':
+      return tm('typeIndividual');
+    case 'household':
+      return tm('typeHousehold');
+    case 'family':
+      return tm('typeFamily');
+    default:
+      return titleCase(value);
+  }
+}
+
+function membershipStatusLabel(
+  value: string,
+  tm: (key: string) => string,
+): string {
+  switch (value) {
+    case 'visitor':
+      return tm('statusVisitor');
+    case 'active':
+      return tm('statusActive');
+    case 'inactive':
+      return tm('statusInactive');
+    default:
+      return titleCase(value);
+  }
+}
+
 export function PersonDetailClient({
   personId,
 }: PersonDetailClientProps): React.ReactElement {
+  const tp = useTranslations('AdminPeople');
+  const tm = useTranslations('AdminMemberships');
   const { push } = useToast();
   const [person, setPerson] = useState<Person | null>(null);
   const [memberships, setMemberships] = useState<Membership[]>([]);
@@ -64,7 +98,7 @@ export function PersonDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load this profile.'),
+            : tp('unableLoadProfile'),
       );
       setPerson(null);
     } finally {
@@ -82,7 +116,7 @@ export function PersonDetailClient({
     } catch {
       setMemberships([]);
     }
-  }, [personId]);
+  }, [personId, tp]);
 
   useLoadEffect(load);
 
@@ -97,14 +131,16 @@ export function PersonDetailClient({
       setPerson(updated);
       push({
         tone: 'success',
-        title: nextOptIn ? t('Added to directory') : t('Removed from directory'),
-        message: t('{0} is now {1}.', updated.displayName, nextOptIn ? 'visible to members' : 'hidden from the directory'),
+        title: nextOptIn ? tp('addedToDirectory') : tp('removedFromDirectory'),
+        message: nextOptIn
+          ? tp('nowVisible', { name: updated.displayName })
+          : tp('nowHidden', { name: updated.displayName }),
       });
     } catch (err) {
       push({
         tone: 'danger',
-        title: t('Could not update'),
-        message: err instanceof ApiError ? err.message : t('Please try again.'),
+        title: tp('couldNotUpdate'),
+        message: err instanceof ApiError ? err.message : tp('pleaseTryAgain'),
       });
     }
   };
@@ -128,14 +164,14 @@ export function PersonDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              {t('Back to people')}
+              {tp('backToPeople')}
             </Link>
           }
-          title={t('Person not found')}
-          lede={error ?? t('We couldn\'t find this record in the directory.')}
+          title={tp('personNotFound')}
+          lede={error ?? tp('personNotFoundLede')}
           actions={
             <Link href="/admin/people" className={buttonClassName({ variant: 'secondary' })}>
-              {t('Back to list')}
+              {tp('backToList')}
             </Link>
           }
         />
@@ -155,7 +191,7 @@ export function PersonDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            {t('Back to people')}
+            {tp('backToPeople')}
           </Link>
         }
         title={
@@ -172,7 +208,7 @@ export function PersonDetailClient({
               iconLeft="edit"
               onClick={() => setEditOpen(true)}
             >
-              {t('Edit')}
+              {tp('edit')}
             </Button>
             <Button
               variant="secondary"
@@ -181,7 +217,7 @@ export function PersonDetailClient({
                 void handleToggleDirectory();
               }}
             >
-              {person.directoryOptIn ? t('Hide from directory') : t('Show in directory')}
+              {person.directoryOptIn ? tp('hideFromDirectory') : tp('showInDirectoryBtn')}
             </Button>
           </>
         }
@@ -190,26 +226,26 @@ export function PersonDetailClient({
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>{t('Identity')}</CardTitle>
+            <CardTitle>{tp('identity')}</CardTitle>
             <Badge tone="neutral">{person.preferredLocale.toUpperCase()}</Badge>
           </CardHeader>
           <dl className="space-y-3 text-sm">
-            <Row label={t('Display name')} value={person.displayName} />
-            <Row label={t('Full name')} value={person.fullName ?? '—'} />
+            <Row label={tp('displayName')} value={person.displayName} />
+            <Row label={tp('fullName')} value={person.fullName ?? tp('dash')} />
             <Row
-              label={t('Date of birth')}
-              value={person.dateOfBirth ? formatDate(person.dateOfBirth) : '—'}
+              label={tp('dateOfBirth')}
+              value={person.dateOfBirth ? formatDate(person.dateOfBirth) : tp('dash')}
             />
-            <Row label={t('Added')} value={formatDate(person.createdAt)} />
+            <Row label={tp('added')} value={formatDate(person.createdAt)} />
             <Row
-              label={t('Directory')}
+              label={tp('colDirectory')}
               value={
                 person.directoryOptIn ? (
                   <StatusPill tone="success" hideDot>
-                    {t('Opted in')}
+                    {tp('optedIn')}
                   </StatusPill>
                 ) : (
-                  <span className="text-muted-foreground">{t('Private')}</span>
+                  <span className="text-muted-foreground">{tp('private')}</span>
                 )
               }
             />
@@ -218,7 +254,7 @@ export function PersonDetailClient({
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('Primary contact')}</CardTitle>
+            <CardTitle>{tp('primaryContact')}</CardTitle>
           </CardHeader>
           {primaryContact ? (
             <div className="space-y-3 text-sm">
@@ -232,23 +268,23 @@ export function PersonDetailClient({
               </p>
               <p className="text-xs text-muted-foreground">
                 {person.contacts.length === 1
-                  ? t('Only contact on file.')
-                  : t('+{0} more on record.', person.contacts.length - 1)}
+                  ? tp('onlyContact')
+                  : tp('moreContacts', { count: person.contacts.length - 1 })}
               </p>
             </div>
           ) : (
             <EmptyState
               icon="phone"
               tone="sky"
-              title={t('No contact yet')}
-              description={t('Add a phone or email so your team can reach this person.')}
+              title={tp('noContactYet')}
+              description={tp('noContactYetDesc')}
               action={
                 <Button
                   size="sm"
                   iconLeft="plus"
                   onClick={() => setContactOpen(true)}
                 >
-                  {t('Add contact')}
+                  {tp('addContact')}
                 </Button>
               }
             />
@@ -257,12 +293,12 @@ export function PersonDetailClient({
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('Memberships')}</CardTitle>
+            <CardTitle>{tp('memberships')}</CardTitle>
             <Badge tone="neutral">{memberships.length}</Badge>
           </CardHeader>
           {memberships.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {t('Not currently linked to any membership record.')}
+              {tp('noMemberships')}
             </p>
           ) : (
             <ul className="space-y-2 text-sm">
@@ -273,15 +309,21 @@ export function PersonDetailClient({
                 >
                   <div>
                     <p className="font-medium text-foreground">
-                      {titleCase(m.membershipType)}
+                      {membershipTypeLabel(m.membershipType, tm)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {t('From')} {formatDate(m.effectiveFrom)}
-                      {m.effectiveTo ? (' ' + t('· to {0}', formatDate(m.effectiveTo))) : ''}
+                      {m.effectiveTo
+                        ? tp('membershipFromTo', {
+                            start: formatDate(m.effectiveFrom),
+                            end: formatDate(m.effectiveTo),
+                          })
+                        : tp('membershipFrom', {
+                            start: formatDate(m.effectiveFrom),
+                          })}
                     </p>
                   </div>
                   <StatusPill tone={membershipStatusTone(m.status)}>
-                    {titleCase(m.status)}
+                    {membershipStatusLabel(m.status, tm)}
                   </StatusPill>
                 </li>
               ))}
@@ -291,8 +333,8 @@ export function PersonDetailClient({
       </div>
 
       <Panel
-        title={t('All contact channels')}
-        subtitle={t('Primary channel shown first.')}
+        title={tp('allContactChannels')}
+        subtitle={tp('allContactChannelsSubtitle')}
         flush
         actions={
           <Button
@@ -301,7 +343,7 @@ export function PersonDetailClient({
             iconLeft="plus"
             onClick={() => setContactOpen(true)}
           >
-            {t('Add contact')}
+            {tp('addContact')}
           </Button>
         }
       >
@@ -309,15 +351,15 @@ export function PersonDetailClient({
           <EmptyState
             icon="mail"
             tone="neutral"
-            title={t('No channels on file')}
-            description={t('Contact channels appear here once added to this person.')}
+            title={tp('noChannels')}
+            description={tp('noChannelsDesc')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setContactOpen(true)}
               >
-                {t('Add contact')}
+                {tp('addContact')}
               </Button>
             }
           />
@@ -326,9 +368,9 @@ export function PersonDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Channel')}</TH>
-                  <TH>{t('Value')}</TH>
-                  <TH>{t('Primary')}</TH>
+                  <TH>{tp('colChannel')}</TH>
+                  <TH>{tp('colValue')}</TH>
+                  <TH>{tp('colPrimary')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -350,10 +392,10 @@ export function PersonDetailClient({
                       <TD>
                         {c.isPrimary ? (
                           <StatusPill tone="success" hideDot>
-                            {t('Primary')}
+                            {tp('primary')}
                           </StatusPill>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-xs text-muted-foreground">{tp('dash')}</span>
                         )}
                       </TD>
                     </TR>
@@ -372,8 +414,8 @@ export function PersonDetailClient({
           setPerson(updated);
           push({
             tone: 'success',
-            title: t('Person updated'),
-            message: t('{0}\'s details were saved.', updated.displayName),
+            title: tp('personUpdated'),
+            message: tp('personUpdatedMessage', { name: updated.displayName }),
           });
         }}
       />
@@ -385,8 +427,8 @@ export function PersonDetailClient({
           setPerson(updated);
           push({
             tone: 'success',
-            title: t('Contact added'),
-            message: t('The new channel is on file.'),
+            title: tp('contactAdded'),
+            message: tp('contactAddedMessage'),
           });
         }}
       />
@@ -404,7 +446,7 @@ function Row({
   return (
     <div className="flex items-start justify-between gap-3">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {t(label)}
+        {label}
       </dt>
       <dd className="text-right text-sm text-foreground">{value}</dd>
     </div>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useId, useMemo, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
@@ -33,9 +34,11 @@ import type {
   OrganisationalUnit,
 } from '../../_lib/api-types';
 import { asList } from '../../_lib/list';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export function LeadershipClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tl = useTranslations('AdminLeadership');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const formId = useId();
   const [positions, setPositions] = useState<LeadershipPosition[]>([]);
@@ -75,11 +78,12 @@ export function LeadershipClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load leadership positions'),
+            : tl('unableLoadPositions'),
       );
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -120,12 +124,12 @@ export function LeadershipClient(): React.ReactElement {
       setDescription('');
       setReportsTo('');
       setUnitId('');
-      push({ tone: 'success', message: t('Position created (vacant).') });
+      push({ tone: 'success', message: tl('positionCreated') });
     } catch (err) {
       push({
         tone: 'danger',
         message:
-          err instanceof ApiError ? err.message : t('Could not create position.'),
+          err instanceof ApiError ? err.message : tl('couldNotCreatePosition'),
       });
     } finally {
       setSubmitting(false);
@@ -135,25 +139,25 @@ export function LeadershipClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Leadership')}
-        lede={t('Positions and reporting relationships. Appointments do not grant system access — assign roles separately under Church profile.')}
+        title={t('leadership')}
+        lede={t('leadershipLede')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/leadership/requests"
               className={buttonClassName({ variant: 'secondary', size: 'sm' })}
             >
-              {t('Appointment requests')}
+              {tl('appointmentRequests')}
             </Link>
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              {t('Add position')}
+              {tl('addPosition')}
             </Button>
           </div>
         }
       />
 
       {loading ? (
-        <Panel title={t('Positions')}>
+        <Panel title={tl('positions')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -163,11 +167,11 @@ export function LeadershipClient(): React.ReactElement {
         <EmptyState
           icon="users"
           tone="gold"
-          title={t('Could not load leadership')}
+          title={tl('couldNotLoadLeadership')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              {t('Try again')}
+              {tc('retry')}
             </Button>
           }
         />
@@ -175,25 +179,25 @@ export function LeadershipClient(): React.ReactElement {
         <EmptyState
           icon="users"
           tone="gold"
-          title={t('No leadership positions yet')}
-          description={t('Define titles and reporting lines before appointing people.')}
+          title={tl('noPositionsYet')}
+          description={tl('noPositionsBody')}
           action={
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              {t('Add position')}
+              {tl('addPosition')}
             </Button>
           }
         />
       ) : (
-        <Panel title={t('Positions')}>
+        <Panel title={tl('positions')}>
           <TableWrap>
             <Table>
               <THead>
                 <TR>
-                  <TH>{t('Title')}</TH>
-                  <TH>{t('Code')}</TH>
-                  <TH>{t('Reports to')}</TH>
-                  <TH>{t('Occupancy')}</TH>
-                  <TH>{t('Status')}</TH>
+                  <TH>{tl('title')}</TH>
+                  <TH>{tl('code')}</TH>
+                  <TH>{tl('reportsTo')}</TH>
+                  <TH>{tl('occupancy')}</TH>
+                  <TH>{tl('status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -221,17 +225,17 @@ export function LeadershipClient(): React.ReactElement {
                           href={`/admin/leadership/${p.reportsToPositionId}`}
                           className="underline-offset-2 hover:underline"
                         >
-                          {titleById.get(p.reportsToPositionId) ?? '—'}
+                          {titleById.get(p.reportsToPositionId) ?? tl('emDash')}
                         </Link>
                       ) : (
-                        '—'
+                        tl('emDash')
                       )}
                     </TD>
                     <TD>
                       <StatusPill
                         tone={occupied.has(p.id) ? 'success' : 'warning'}
                       >
-                        {occupied.has(p.id) ? t('Occupied') : t('Vacant')}
+                        {occupied.has(p.id) ? tl('occupied') : tl('vacant')}
                       </StatusPill>
                     </TD>
                     <TD>
@@ -254,8 +258,8 @@ export function LeadershipClient(): React.ReactElement {
         onClose={() => {
           if (!submitting) setCreateOpen(false);
         }}
-        title={t('Add leadership position')}
-        description={t('Create a vacant position. Appoint people later; roles stay separate.')}
+        title={tl('addPositionTitle')}
+        description={tl('addPositionDesc')}
         footer={
           <DialogFooter>
             <Button
@@ -263,10 +267,10 @@ export function LeadershipClient(): React.ReactElement {
               disabled={submitting}
               onClick={() => setCreateOpen(false)}
             >
-              {t('Cancel')}
+              {tc('cancel')}
             </Button>
             <Button type="submit" form={formId} loading={submitting}>
-              {t('Create position')}
+              {tl('createPosition')}
             </Button>
           </DialogFooter>
         }
@@ -278,7 +282,7 @@ export function LeadershipClient(): React.ReactElement {
           }}
           className="flex flex-col gap-4"
         >
-          <Field label={t('Title')} required>
+          <Field label={tl('title')} required>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -286,7 +290,7 @@ export function LeadershipClient(): React.ReactElement {
               required
             />
           </Field>
-          <Field label={t('Description')}>
+          <Field label={tl('description')}>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -294,12 +298,12 @@ export function LeadershipClient(): React.ReactElement {
               maxLength={4000}
             />
           </Field>
-          <Field label={t('Reports to')}>
+          <Field label={tl('reportsTo')}>
             <Select
               value={reportsTo}
               onChange={(e) => setReportsTo(e.target.value)}
             >
-              <option value="">{t('None (top-level)')}</option>
+              <option value="">{tl('noneTopLevel')}</option>
               {positions.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.title}
@@ -307,9 +311,9 @@ export function LeadershipClient(): React.ReactElement {
               ))}
             </Select>
           </Field>
-          <Field label={t('Linked unit (optional)')}>
+          <Field label={tl('linkedUnitOptional')}>
             <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-              <option value="">{t('None')}</option>
+              <option value="">{tl('none')}</option>
               {units.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name} ({u.kind})

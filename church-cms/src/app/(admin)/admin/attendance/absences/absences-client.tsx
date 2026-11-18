@@ -21,7 +21,7 @@ import { ListState } from '../../../_components/kit';
 import { formatDate, titleCase } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { usePeopleNames } from '../../../_lib/use-people-names';
-import { t } from '@/app/_ekklesia/i18n/core';
+import { useTranslations } from 'next-intl';
 
 interface AbsenceNotice {
   id: string;
@@ -34,6 +34,9 @@ interface AbsenceNotice {
 }
 
 export function AbsencesClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const ta = useTranslations('AdminAttendance');
+  const tc = useTranslations('Common');
   const [range, setRange] = useState({ from: '', to: '' });
   const [applied, setApplied] = useState(range);
   const url = useMemo(() => {
@@ -48,9 +51,9 @@ export function AbsencesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/attendance">{t('Attendance')}</Link>}
-        title={t('Absence notices')}
-        lede={t('People who let the church know they\'d be away — so follow-up lists don\'t flag them.')}
+        eyebrow={<Link href="/admin/attendance">{t('attendance')}</Link>}
+        title={t('absences')}
+        lede={t('absencesLede')}
       />
 
       <form
@@ -60,34 +63,34 @@ export function AbsencesClient(): React.ReactElement {
           setApplied(range);
         }}
       >
-        <Field label={t('From')}>
+        <Field label={ta('from')}>
           <Input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} />
         </Field>
-        <Field label={t('To')}>
+        <Field label={ta('to')}>
           <Input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} />
         </Field>
         <Button type="submit" variant="secondary" iconLeft="filter">
-          {t('Filter')}
+          {ta('filter')}
         </Button>
       </form>
 
-      <Panel title={t('Notices')} subtitle={notices.loading ? t('Loading…') : t('{0} shown', notices.items.length)} flush>
+      <Panel title={ta('notices')} subtitle={notices.loading ? tc('loading') : tc('shownCount', { count: notices.items.length })} flush>
         <ListState
           loading={notices.loading}
           error={notices.error}
           forbidden={notices.forbidden}
           isEmpty={notices.items.length === 0}
           onRetry={() => void notices.reload()}
-          empty={{ icon: 'calendar', title: t('No absence notices in this period') }}
+          empty={{ icon: 'calendar', title: ta('noAbsences') }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Person')}</TH>
-                  <TH>{t('Service date')}</TH>
-                  <TH>{t('Reason')}</TH>
-                  <TH>{t('Status')}</TH>
+                  <TH>{ta('personCol')}</TH>
+                  <TH>{ta('serviceDate')}</TH>
+                  <TH>{ta('reason')}</TH>
+                  <TH>{ta('status')}</TH>
                 </TR>
               </THead>
               <TBody>

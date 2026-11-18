@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -12,7 +13,6 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Person } from '../../_lib/api-types';
 import { extractValidationErrors } from './form-errors';
-import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface CreatePersonDialogProps {
   open: boolean;
@@ -20,10 +20,7 @@ interface CreatePersonDialogProps {
   onCreated: (person: Person) => void;
 }
 
-const LOCALES: Array<{ value: string; label: string }> = [
-  { value: 'en', label: tk('English') },
-  { value: 'sw', label: tk('Kiswahili') },
-];
+const LOCALE_VALUES = ['en', 'sw'] as const;
 
 /**
  * Minimal "add a visitor / friend" form.
@@ -37,6 +34,9 @@ export function CreatePersonDialog({
   onClose,
   onCreated,
 }: CreatePersonDialogProps): React.ReactElement {
+  const tp = useTranslations('AdminPeople');
+  const tc = useTranslations('Common');
+  const tLocale = useTranslations('Locale');
   const formId = useId();
   const [displayName, setDisplayName] = useState('');
   const [fullName, setFullName] = useState('');
@@ -98,7 +98,7 @@ export function CreatePersonDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not add this person.'),
+          err instanceof Error ? err.message : tp('couldNotAddPerson'),
         );
       }
       setSubmitting(false);
@@ -109,8 +109,8 @@ export function CreatePersonDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={t('Add a person')}
-      description={t('Create a new entry in your directory. Contact details are optional — you can always add them later.')}
+      title={tp('createTitle')}
+      description={tp('createDesc')}
       size="md"
       footer={
         <DialogFooter>
@@ -119,7 +119,7 @@ export function CreatePersonDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            {t('Cancel')}
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -127,7 +127,7 @@ export function CreatePersonDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'check'}
           >
-            {submitting ? t('Saving…') : t('Save person')}
+            {submitting ? tp('saving') : tp('savePerson')}
           </Button>
         </DialogFooter>
       }
@@ -149,9 +149,9 @@ export function CreatePersonDialog({
         ) : null}
 
         <Field
-          label={t('Display name')}
+          label={tp('displayName')}
           required
-          hint={t('What they\'re called day-to-day (e.g. Ada).')}
+          hint={tp('displayNameHint')}
           error={fieldErrors.displayName}
         >
           <Input
@@ -163,8 +163,8 @@ export function CreatePersonDialog({
         </Field>
 
         <Field
-          label={t('Full name')}
-          hint={t('Optional — used on membership records and documents.')}
+          label={tp('fullName')}
+          hint={tp('fullNameHint')}
           error={fieldErrors.fullName}
         >
           <Input
@@ -175,8 +175,8 @@ export function CreatePersonDialog({
         </Field>
 
         <Field
-          label={t('Date of birth')}
-          hint={t('Optional — YYYY-MM-DD')}
+          label={tp('dateOfBirth')}
+          hint={tp('dateOfBirthHint')}
           error={fieldErrors.dateOfBirth}
         >
           <Input
@@ -188,19 +188,19 @@ export function CreatePersonDialog({
 
         <div className="grid gap-4 md:grid-cols-2">
           <Field
-            label={t('Phone')}
-            hint={t('E.164 format, e.g. +255712345678')}
+            label={tp('phone')}
+            hint={tp('phoneHintE164')}
             error={fieldErrors.phoneE164}
           >
             <Input
               type="tel"
-              placeholder="+255…"
+              placeholder={tp('phonePlaceholder')}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               inputMode="tel"
             />
           </Field>
-          <Field label={t('Email')} error={fieldErrors.email}>
+          <Field label={tp('email')} error={fieldErrors.email}>
             <Input
               type="email"
               value={email}
@@ -211,22 +211,22 @@ export function CreatePersonDialog({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label={t('Preferred language')} error={fieldErrors.preferredLocale}>
+          <Field label={tp('preferredLanguage')} error={fieldErrors.preferredLocale}>
             <Select
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
             >
-              {LOCALES.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {t(l.label)}
+              {LOCALE_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {tLocale(value)}
                 </option>
               ))}
             </Select>
           </Field>
 
           <Field
-            label={t('Visibility')}
-            hint={t('Opt in to appear in the church directory.')}
+            label={tp('visibility')}
+            hint={tp('visibilityHint')}
           >
             <label className="flex items-center gap-2 text-sm text-foreground">
               <input
@@ -235,7 +235,7 @@ export function CreatePersonDialog({
                 onChange={(e) => setDirectoryOptIn(e.target.checked)}
                 className="h-4 w-4 rounded-sm border-border text-foreground focus-ring"
               />
-              {t('Show in church directory')}
+              {tp('showInDirectory')}
             </label>
           </Field>
         </div>

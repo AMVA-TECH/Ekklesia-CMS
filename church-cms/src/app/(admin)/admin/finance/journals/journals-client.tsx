@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -20,7 +21,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Fund } from '../../../_lib/api-types';
 import { ListState, useRowAction } from '../../../_components/kit';
-import { formatDate, formatMoney, titleCase } from '../../../_lib/format';
+import { formatDate, formatMoney } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import {
   accountLabel,
@@ -29,7 +30,6 @@ import {
   type Journal,
 } from '../_lib/finance-types';
 import { CreateJournalDialog } from './create-journal-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const FILTERS = ['all', 'draft', 'posted', 'reversed'] as const;
 type Filter = (typeof FILTERS)[number];
@@ -37,6 +37,8 @@ type Filter = (typeof FILTERS)[number];
 const TONE = { draft: 'pending', posted: 'success', reversed: 'neutral' } as const;
 
 export function JournalsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
   const [filter, setFilter] = useState<Filter>('all');
   const journals = useApiList<Journal>(
     `/api/v1/journals?limit=100${filter === 'all' ? '' : `&status=${filter}`}`,
@@ -55,16 +57,31 @@ export function JournalsClient(): React.ReactElement {
   const fundById = useMemo(() => new Map(funds.items.map((f) => [f.id, f])), [funds.items]);
   const yearById = useMemo(() => new Map(years.items.map((y) => [y.id, y])), [years.items]);
 
+  const statusLabel = (status: string): string => {
+    switch (status) {
+      case 'all':
+        return tf('statusAll');
+      case 'draft':
+        return tf('statusDraft');
+      case 'posted':
+        return tf('statusPosted');
+      case 'reversed':
+        return tf('statusReversed');
+      default:
+        return status;
+    }
+  };
+
   const act = async (j: Journal, action: 'post' | 'reverse'): Promise<void> => {
     const ok = await run(
       `${j.id}:${action}`,
       () => apiFetch(`/api/v1/journals/${j.id}/${action}`, { method: 'POST' }),
       action === 'post'
-        ? { success: t('{0} posted', j.entryNumber), failure: t('Could not post journal') }
+        ? { success: tf('journalPosted', { entry: j.entryNumber }), failure: tf('couldNotPostJournal') }
         : {
-            success: t('{0} reversed', j.entryNumber),
-            detail: t('A reversing entry was created.'),
-            failure: t('Could not reverse journal'),
+            success: tf('journalReversed', { entry: j.entryNumber }),
+            detail: tf('reversingEntryCreated'),
+            failure: tf('couldNotReverseJournal'),
           },
     );
     if (ok) void journals.reload();
@@ -73,28 +90,32 @@ export function JournalsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Journals')}
-        lede={t('Double-entry ledger. Drafts can be edited by finance; posting requires balanced lines in an open year. Posted entries are corrected by reversing, never deleting.')}
+        title={t('journals')}
+        lede={t('journalsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            {t('New journal')}
+            {tf('newJournal')}
           </Button>
         }
       />
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-        <TabList aria-label={t('Journal status')}>
+        <TabList aria-label={tf('journalStatusAria')}>
           {FILTERS.map((f) => (
             <Tab key={f} value={f}>
-              {titleCase(f)}
+              {statusLabel(f)}
             </Tab>
           ))}
         </TabList>
       </Tabs>
 
       <Panel
-        title={t('Entries')}
-        subtitle={journals.loading ? t('Loading…') : t('{0} shown · newest first', journals.items.length)}
+        title={tf('entries')}
+        subtitle={
+          journals.loading
+            ? tf('loading')
+            : tf('shownNewestFirst', { count: journals.items.length })
+        }
         flush
       >
         <ListState
@@ -105,20 +126,20 @@ export function JournalsClient(): React.ReactElement {
           onRetry={() => void journals.reload()}
           empty={{
             icon: 'book',
-            title: t('No journal entries'),
-            description: t('Posted offerings and approved expenses also create journals automatically.'),
+            title: tf('noJournalEntries'),
+            description: tf('noJournalEntriesBody'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Entry')}</TH>
-                  <TH>{t('Date')}</TH>
-                  <TH className="hidden lg:table-cell">{t('Memo')}</TH>
-                  <TH className="text-right">{t('Amount')}</TH>
-                  <TH>{t('Status')}</TH>
-                  <TH className="text-right">{t('Actions')}</TH>
+                  <TH>{tf('entry')}</TH>
+                  <TH>{tf('date')}</TH>
+                  <TH className="hidden lg:table-cell">{tf('memo')}</TH>
+                  <TH className="text-right">{tf('amount')}</TH>
+                  <TH>{tf('status')}</TH>
+                  <TH className="text-right">{tf('actions')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -148,7 +169,7 @@ export function JournalsClient(): React.ReactElement {
                         </TD>
                         <TD className="text-right tabular-nums">{formatMoney(total, currency)}</TD>
                         <TD>
-                          <StatusPill tone={TONE[j.status]}>{titleCase(j.status)}</StatusPill>
+                          <StatusPill tone={TONE[j.status]}>{statusLabel(j.status)}</StatusPill>
                         </TD>
                         <TD className="text-right">
                           {j.status === 'draft' ? (
@@ -158,7 +179,7 @@ export function JournalsClient(): React.ReactElement {
                               disabled={busyKey !== null}
                               onClick={() => void act(j, 'post')}
                             >
-                              {t('Post')}
+                              {tf('post')}
                             </Button>
                           ) : j.status === 'posted' && !j.reversesEntryId ? (
                             <Button
@@ -168,7 +189,7 @@ export function JournalsClient(): React.ReactElement {
                               disabled={busyKey !== null}
                               onClick={() => void act(j, 'reverse')}
                             >
-                              {t('Reverse')}
+                              {tf('reverse')}
                             </Button>
                           ) : null}
                         </TD>
@@ -179,11 +200,11 @@ export function JournalsClient(): React.ReactElement {
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="text-left text-xs text-muted-foreground">
-                                  <th className="py-1 font-medium">{t('Account')}</th>
-                                  <th className="py-1 font-medium">{t('Fund')}</th>
-                                  <th className="py-1 font-medium">{t('Memo')}</th>
-                                  <th className="py-1 text-right font-medium">{t('Debit')}</th>
-                                  <th className="py-1 text-right font-medium">{t('Credit')}</th>
+                                  <th className="py-1 font-medium">{tf('account')}</th>
+                                  <th className="py-1 font-medium">{tf('fund')}</th>
+                                  <th className="py-1 font-medium">{tf('memo')}</th>
+                                  <th className="py-1 text-right font-medium">{tf('debit')}</th>
+                                  <th className="py-1 text-right font-medium">{tf('credit')}</th>
                                 </tr>
                               </thead>
                               <tbody>

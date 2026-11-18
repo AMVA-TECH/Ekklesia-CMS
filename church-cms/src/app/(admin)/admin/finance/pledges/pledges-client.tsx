@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -30,16 +31,13 @@ import { usePeopleNames } from '../../../_lib/use-people-names';
 import { AddFollowUpDialog } from './add-follow-up-dialog';
 import { RecordPaymentDialog } from './record-payment-dialog';
 import { CreatePledgeDialog } from './create-pledge-dialog';
-import { t, tk } from '@/app/_ekklesia/i18n/core';
 
-const FILTERS: Array<{ value: string; label: string }> = [
-  { value: 'all', label: tk('All') },
-  { value: 'open', label: tk('Open') },
-  { value: 'partial', label: tk('Partial') },
-  { value: 'fulfilled', label: tk('Fulfilled') },
-];
+const FILTER_VALUES = ['all', 'open', 'partial', 'fulfilled'] as const;
 
 export function PledgesClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [filter, setFilter] = useState('all');
   const [pledges, setPledges] = useState<Pledge[]>([]);
@@ -71,11 +69,12 @@ export function PledgesClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load pledges.'),
+            : tf('unableLoadPledges'),
       );
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -101,35 +100,64 @@ export function PledgesClient(): React.ReactElement {
     0,
   );
 
+  const filterLabel = (value: string): string => {
+    switch (value) {
+      case 'all':
+        return tf('filterAll');
+      case 'open':
+        return tf('filterOpen');
+      case 'partial':
+        return tf('filterPartial');
+      case 'fulfilled':
+        return tf('filterFulfilled');
+      default:
+        return titleCase(value);
+    }
+  };
+
+  const statusLabel = (status: string): string => {
+    switch (status) {
+      case 'open':
+        return tf('statusOpen');
+      case 'partial':
+        return tf('statusPartial');
+      case 'fulfilled':
+        return tf('statusFulfilled');
+      case 'cancelled':
+        return tf('statusCancelled');
+      default:
+        return titleCase(status);
+    }
+  };
   const pledgers = usePeopleNames(pledges.map((p) => p.personId));
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Pledges')}
-        lede={t('Promises of giving and how much has been received so far. Follow up kindly when things drift.')}
+        title={t('pledges')}
+        lede={t('pledgesLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            {t('New pledge')}
+            {tf('newPledge')}
           </Button>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Metric
-          label={t('Total pledged')}
+          label={tf('totalPledged')}
           value={loading ? '—' : formatMoney(totalPledged, currency)}
           icon="hand"
           tone="sage"
         />
         <Metric
-          label={t('Received')}
+          label={tf('received')}
           value={loading ? '—' : formatMoney(totalApplied, currency)}
           icon="check-circle"
           tone="peach"
         />
         <Metric
-          label={t('Still owed')}
+          label={tf('stillOwed')}
           value={loading ? '—' : formatMoney(totalOutstanding, currency)}
           icon="alert-circle"
           tone="neutral"
@@ -138,16 +166,20 @@ export function PledgesClient(): React.ReactElement {
 
       <Tabs value={filter} onValueChange={setFilter}>
         <TabList>
-          {FILTERS.map((f) => (
-            <Tab key={f.value} value={f.value}>
-              {t(f.label)}
+          {FILTER_VALUES.map((value) => (
+            <Tab key={value} value={value}>
+              {filterLabel(value)}
             </Tab>
           ))}
         </TabList>
       </Tabs>
 
       <Panel
-        title={filter === 'all' ? t('All pledges') : t('{0} pledges', titleCase(filter))}
+        title={
+          filter === 'all'
+            ? tf('allPledges')
+            : tf('filteredPledges', { status: filterLabel(filter) })
+        }
         subtitle={error ?? undefined}
         flush
       >
@@ -156,7 +188,7 @@ export function PledgesClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                {t('Try again')}
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -169,15 +201,15 @@ export function PledgesClient(): React.ReactElement {
           <EmptyState
             icon="hand"
             tone="sage"
-            title={t('No pledges to show')}
-            description={t('Pledges appear here once members commit to giving a specific amount.')}
+            title={tf('noPledgesToShow')}
+            description={tf('noPledgesBody')}
             action={
               <Button
                 iconLeft="plus"
                 size="sm"
                 onClick={() => setCreateOpen(true)}
               >
-                {t('New pledge')}
+                {tf('newPledge')}
               </Button>
             }
           />
@@ -186,15 +218,15 @@ export function PledgesClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Pledged by')}</TH>
-                  <TH>{t('Amount')}</TH>
-                  <TH>{t('Received')}</TH>
-                  <TH>{t('Outstanding')}</TH>
-                  <TH>{t('Fund')}</TH>
-                  <TH>{t('Due')}</TH>
-                  <TH>{t('Status')}</TH>
+                  <TH>{tf('pledgedBy')}</TH>
+                  <TH>{tf('amount')}</TH>
+                  <TH>{tf('received')}</TH>
+                  <TH>{tf('outstanding')}</TH>
+                  <TH>{tf('fund')}</TH>
+                  <TH>{tf('due')}</TH>
+                  <TH>{tf('status')}</TH>
                   <TH className="text-right">
-                    <span className="sr-only">{t('Actions')}</span>
+                    <span className="sr-only">{tf('actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -212,7 +244,7 @@ export function PledgesClient(): React.ReactElement {
                             {pledgers[p.personId] ?? '…'}
                           </Link>
                         ) : (
-                          'Household pledge'
+                          tf('householdPledge')
                         )}
                       </TD>
                       <TD className="font-medium tabular-nums">
@@ -232,7 +264,7 @@ export function PledgesClient(): React.ReactElement {
                       </TD>
                       <TD>
                         <StatusPill tone={statusTone(p.status)}>
-                          {titleCase(p.status)}
+                          {statusLabel(p.status)}
                         </StatusPill>
                       </TD>
                       <TD className="text-right">
@@ -240,14 +272,14 @@ export function PledgesClient(): React.ReactElement {
                         p.status !== 'fulfilled' ? (
                           <div className="inline-flex gap-2">
                             <Button size="sm" iconLeft="coin" onClick={() => setPaying(p)}>
-                              {t('Record payment')}
+                              {tf('recordPayment')}
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => setFollowUpPledgeId(p.id)}
                             >
-                              {t('Follow up')}
+                              {tf('followUp')}
                             </Button>
                           </div>
                         ) : null}
@@ -268,7 +300,7 @@ export function PledgesClient(): React.ReactElement {
         onCreated={(pledge) => {
           push({
             tone: 'success',
-            title: t('Pledge created'),
+            title: tf('pledgeCreated'),
             message: formatMoney(pledge.amountMinor, pledge.currency),
           });
           setCreateOpen(false);
@@ -279,13 +311,15 @@ export function PledgesClient(): React.ReactElement {
       {paying ? (
         <RecordPaymentDialog
           pledge={paying}
-          pledgerName={paying.personId ? (pledgers[paying.personId] ?? t('This member')) : t('This household')}
+          pledgerName={paying.personId ? (pledgers[paying.personId] ?? tf('thisMember')) : tf('thisHousehold')}
           onClose={() => setPaying(null)}
           onRecorded={(amountMinor) => {
             push({
               tone: 'success',
-              title: t('Payment recorded'),
-              message: t('{0} applied to the pledge.', formatMoney(amountMinor, paying.currency)),
+              title: tf('paymentRecorded'),
+              message: tf('paymentRecordedBody', {
+                amount: formatMoney(amountMinor, paying.currency),
+              }),
             });
             setPaying(null);
             void load();
@@ -300,8 +334,8 @@ export function PledgesClient(): React.ReactElement {
         onSaved={() => {
           push({
             tone: 'success',
-            title: t('Follow-up saved'),
-            message: t('The note was recorded against this pledge.'),
+            title: tf('followUpSaved'),
+            message: tf('followUpSavedBody'),
           });
         }}
       />

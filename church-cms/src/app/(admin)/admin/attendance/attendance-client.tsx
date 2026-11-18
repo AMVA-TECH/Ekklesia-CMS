@@ -28,7 +28,7 @@ import { asList } from '../../_lib/list';
 import type { AttendanceSession } from './attendance-types';
 import { ManageSessionDialog } from './manage-session-dialog';
 import { OpenSessionDialog } from './open-session-dialog';
-import { t, tk } from '@/app/_ekklesia/i18n/core';
+import { useTranslations } from 'next-intl';
 
 interface LeadershipStatsEnvelope {
   people: Array<{
@@ -49,6 +49,8 @@ interface LeadershipStatsEnvelope {
  * calm write path: open a session, record people or headcount, then finalize.
  */
 export function AttendanceClient(): React.ReactElement {
+  const ta = useTranslations('AdminAttendance');
+  const t = useTranslations('AdminPages');
   const [events, setEvents] = useState<EventRow[]>([]);
   const [sessionsByEvent, setSessionsByEvent] = useState<
     Record<string, AttendanceSession[]>
@@ -98,7 +100,7 @@ export function AttendanceClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load attendance.'),
+            : ta('unableLoad'),
       );
     } finally {
       setLoading(false);
@@ -113,13 +115,13 @@ export function AttendanceClient(): React.ReactElement {
       setStats(null);
       setStatsError(
         err instanceof ApiError && err.status === 403
-          ? t('Leadership attendance insights require a leadership role.')
+          ? ta('leadershipRequireRole')
           : err instanceof Error
             ? err.message
-            : t('Leadership attendance unavailable.'),
+            : ta('leadershipUnavailable'),
       );
     }
-  }, []);
+  }, [ta]);
 
   useLoadEffect(load);
 
@@ -155,21 +157,21 @@ export function AttendanceClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Attendance')}
-        lede={t('How many showed up to recent services, and who among your leaders might need a nudge.')}
+        title={t('attendance')}
+        lede={t('attendanceLede')}
         actions={
           <>
             <Link
               href="/admin/attendance/absences"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Absence notices')}
+              {ta('absenceNotices')}
             </Link>
             <Link
               href="/admin/attendance/corrections"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Corrections')}
+              {ta('corrections')}
             </Link>
             <Button
               variant="primary"
@@ -177,14 +179,14 @@ export function AttendanceClient(): React.ReactElement {
               onClick={() => startOpenSession()}
               disabled={events.length === 0}
             >
-              {t('Record attendance')}
+              {ta('recordAttendance')}
             </Button>
             <Link
               href="/admin/events"
               className={buttonClassName({ variant: 'secondary' })}
             >
               <Icon name="calendar" size={14} />
-              {t('Open events')}
+              {ta('openEvents')}
             </Link>
           </>
         }
@@ -201,41 +203,41 @@ export function AttendanceClient(): React.ReactElement {
 
       <section aria-labelledby="attendance-totals">
         <h2 id="attendance-totals" className="sr-only">
-          {t('Recent attendance totals')}
+          {ta('recentTotalsAria')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric
-            label={t('Recent total')}
+            label={ta('recentTotal')}
             value={formatCount(totals.total)}
             icon="users"
             tone="sage"
-            hint={t('All sessions in view')}
+            hint={ta('allSessionsInView')}
           />
           <Metric
-            label={t('Adults')}
+            label={ta('adults')}
             value={formatCount(totals.adults)}
             icon="user"
             tone="sky"
           />
           <Metric
-            label={t('Children')}
+            label={ta('children')}
             value={formatCount(totals.children)}
             icon="users"
             tone="lavender"
           />
           <Metric
-            label={t('Visitors')}
+            label={ta('visitors')}
             value={formatCount(totals.visitors)}
             icon="user-plus"
             tone="peach"
-            hint={t('Not yet members')}
+            hint={ta('notYetMembers')}
           />
         </div>
       </section>
 
       <Panel
-        title={t('Recent services')}
-        subtitle={t('Open a session to show an attendance QR, record people, then finalize when done.')}
+        title={ta('recentServices')}
+        subtitle={ta('recentServicesSubtitle')}
         linkHref="/admin/events"
       >
         {loading && events.length === 0 ? (
@@ -247,23 +249,23 @@ export function AttendanceClient(): React.ReactElement {
           <EmptyState
             icon="calendar-check"
             tone="sky"
-            title={t('No recent attendance')}
-            description={t('Create an event first, then open an attendance session from here.')}
+            title={ta('noRecent')}
+            description={ta('noRecentBody')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Event')}</TH>
-                  <TH>{t('Date')}</TH>
-                  <TH>{t('Sessions')}</TH>
-                  <TH>{t('Men')}</TH>
-                  <TH>{t('Women')}</TH>
-                  <TH>{t('Children')}</TH>
-                  <TH>{t('Visitors')}</TH>
-                  <TH>{t('Total')}</TH>
-                  <TH>{t('Action')}</TH>
+                  <TH>{ta('event')}</TH>
+                  <TH>{ta('date')}</TH>
+                  <TH>{ta('sessions')}</TH>
+                  <TH>{ta('men')}</TH>
+                  <TH>{ta('women')}</TH>
+                  <TH>{ta('children')}</TH>
+                  <TH>{ta('visitors')}</TH>
+                  <TH>{ta('total')}</TH>
+                  <TH>{ta('action')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -278,7 +280,7 @@ export function AttendanceClient(): React.ReactElement {
                           href={`/admin/events/${ev.id}`}
                           className="font-medium text-foreground hover:text-[color:var(--brand-gold-ink)] focus-ring rounded-sm"
                         >
-                          {t(ev.title)}
+                          {ev.title}
                         </Link>
                       </TD>
                       <TD className="text-sm text-muted-foreground">
@@ -308,7 +310,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="primary"
                               onClick={() => openManage(openSession, ev.title)}
                             >
-                              {t('Show QR')}
+                              {ta('showQr')}
                             </Button>
                           ) : openSession ? (
                             <Button
@@ -316,7 +318,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="secondary"
                               onClick={() => openManage(openSession, ev.title)}
                             >
-                              {t('Continue')}
+                              {ta('continue')}
                             </Button>
                           ) : (
                             <Button
@@ -324,7 +326,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="ghost"
                               onClick={() => startOpenSession(ev.id)}
                             >
-                              {t('Open + QR')}
+                              {ta('openPlusQr')}
                             </Button>
                           )}
                         </div>
@@ -339,8 +341,8 @@ export function AttendanceClient(): React.ReactElement {
       </Panel>
 
       <Panel
-        title={t('Leadership attendance')}
-        subtitle={t('How consistently each leader is showing up, and a suggested next step.')}
+        title={ta('leadershipAttendance')}
+        subtitle={ta('leadershipSubtitleNudge')}
         actions={
           stats && stats.people.length > 0 ? (
             <Button
@@ -349,7 +351,7 @@ export function AttendanceClient(): React.ReactElement {
               aria-pressed={followUpOnly}
               onClick={() => setFollowUpOnly((v) => !v)}
             >
-              {followUpOnly ? t('Showing follow-ups') : t('Needs follow-up only')}
+              {followUpOnly ? ta('showingFollowUps') : ta('needsFollowUpOnly')}
             </Button>
           ) : null
         }
@@ -364,19 +366,19 @@ export function AttendanceClient(): React.ReactElement {
           <EmptyState
             icon="chart"
             tone="sage"
-            title={t('No leaders to compare')}
-            description={t('Leadership attendance insights appear once leaders have assignments and attendance history.')}
+            title={ta('noLeaders')}
+            description={ta('noLeadersBody')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Leader')}</TH>
-                  <TH>{t('Sessions attended')}</TH>
-                  <TH>{t('Rate')}</TH>
-                  <TH>{t('Band')}</TH>
-                  <TH>{t('Suggested follow-up')}</TH>
+                  <TH>{ta('leader')}</TH>
+                  <TH>{ta('sessionsAttended')}</TH>
+                  <TH>{ta('rate')}</TH>
+                  <TH>{ta('band')}</TH>
+                  <TH>{ta('suggestedFollowUp')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -408,14 +410,14 @@ export function AttendanceClient(): React.ReactElement {
                       {p.suggestedNudge ? (
                         <>
                           <span className="font-medium text-foreground">
-                            {t(NUDGE_COPY[p.suggestedNudge].label)}
+                            {ta(`nudge.${p.suggestedNudge}.label`)}
                           </span>
                           <div className="text-xs text-muted-foreground">
-                            {t(NUDGE_COPY[p.suggestedNudge].hint)}
+                            {ta(`nudge.${p.suggestedNudge}.hint`)}
                           </div>
                         </>
                       ) : (
-                        <span className="text-muted-foreground">{t('Too early to tell')}</span>
+                        <span className="text-muted-foreground">{ta('tooEarlyToTell')}</span>
                       )}
                     </TD>
                   </TR>
@@ -498,13 +500,6 @@ function aggregateTotals(
   }
   return { total, adults, children, visitors };
 }
-
-/** Leader-facing wording for the API's suggested nudge. */
-const NUDGE_COPY = {
-  congratulate: { label: tk('Say thank you'), hint: tk('Consistently present — a word of thanks goes a long way.') },
-  encourage: { label: tk('Encourage'), hint: tk('Coming some weeks — check in warmly.') },
-  remind: { label: tk('Reach out'), hint: tk('Missing recently — a call or visit may help.') },
-} as const;
 
 function bandTone(
   band: string,

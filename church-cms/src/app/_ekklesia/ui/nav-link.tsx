@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import type { ComponentProps, ReactNode } from 'react';
 import { Icon, type IconName } from '../icons';
 import { cn } from './utils';
-import { tn } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<NavLink>`. */
 export interface NavLinkProps extends Omit<ComponentProps<typeof Link>, 'className'> {
@@ -165,7 +164,7 @@ export function NavLink({
                 : 'text-[color:var(--sidebar-muted)]',
             )}
           >
-            {tn(hint)}
+            {hint}
           </span>
         ) : null}
       </span>

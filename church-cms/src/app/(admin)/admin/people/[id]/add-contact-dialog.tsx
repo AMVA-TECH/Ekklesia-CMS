@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, normalizePhoneE164 } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -12,7 +13,6 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Person } from '../../../_lib/api-types';
 import { extractValidationErrors } from '../form-errors';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AddContactDialogProps {
   open: boolean;
@@ -30,6 +30,8 @@ export function AddContactDialog({
   onClose,
   onSaved,
 }: AddContactDialogProps): React.ReactElement {
+  const tp = useTranslations('AdminPeople');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [channel, setChannel] = useState<'phone' | 'email'>('phone');
   const [value, setValue] = useState('');
@@ -67,12 +69,12 @@ export function AddContactDialog({
     const normalized =
       channel === 'phone' ? normalizePhoneE164(value) : value.trim();
     if (!normalized) {
-      setFieldErrors({ value: 'Please enter a contact value.' });
+      setFieldErrors({ value: tp('enterContactValue') });
       return;
     }
     if (channel === 'phone' && !/^\+[1-9]\d{6,14}$/.test(normalized)) {
       setFieldErrors({
-        value: 'Use international format, e.g. +255712345678.',
+        value: tp('phoneFormatError'),
       });
       return;
     }
@@ -99,7 +101,7 @@ export function AddContactDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not add this contact.'),
+          err instanceof Error ? err.message : tp('couldNotAddContact'),
         );
       }
     } finally {
@@ -111,13 +113,13 @@ export function AddContactDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={t('Add contact')}
-      description={t('Add a phone number or email for this person.')}
+      title={tp('addContactTitle')}
+      description={tp('addContactDesc')}
       size="sm"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            {t('Cancel')}
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -125,7 +127,7 @@ export function AddContactDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? t('Saving…') : t('Add contact')}
+            {submitting ? tp('saving') : tp('addContact')}
           </Button>
         </DialogFooter>
       }
@@ -146,23 +148,23 @@ export function AddContactDialog({
           </div>
         ) : null}
 
-        <Field label={t('Channel')} error={fieldErrors.channel}>
+        <Field label={tp('channel')} error={fieldErrors.channel}>
           <Select
             data-autofocus
             value={channel}
             onChange={(e) => setChannel(e.target.value as 'phone' | 'email')}
           >
-            <option value="phone">{t('Phone')}</option>
-            <option value="email">{t('Email')}</option>
+            <option value="phone">{tp('channelPhone')}</option>
+            <option value="email">{tp('channelEmail')}</option>
           </Select>
         </Field>
 
         <Field
-          label={channel === 'phone' ? t('Phone number') : t('Email address')}
+          label={channel === 'phone' ? tp('phoneNumber') : tp('emailAddress')}
           required
           hint={
             channel === 'phone'
-              ? t('E.164 format, e.g. +255712345678')
+              ? tp('phoneHintE164')
               : undefined
           }
           error={fieldErrors.value}
@@ -172,7 +174,7 @@ export function AddContactDialog({
             inputMode={channel === 'phone' ? 'tel' : 'email'}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={channel === 'phone' ? '+255…' : 'name@example.com'}
+            placeholder={channel === 'phone' ? tp('phonePlaceholder') : tp('emailPlaceholder')}
           />
         </Field>
 
@@ -183,7 +185,7 @@ export function AddContactDialog({
             onChange={(e) => setIsPrimary(e.target.checked)}
             className="h-4 w-4 rounded-sm border-border text-foreground focus-ring"
           />
-          {t('Set as primary contact')}
+          {tp('setAsPrimary')}
         </label>
       </form>
     </Dialog>

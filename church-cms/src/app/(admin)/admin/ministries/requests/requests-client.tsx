@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -24,10 +25,9 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { OrganisationalUnit } from '../../../_lib/api-types';
 import { FormDialog, ListState, useRowAction } from '../../../_components/kit';
-import { formatDate, titleCase } from '../../../_lib/format';
+import { formatDate } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { usePeopleNames } from '../../../_lib/use-people-names';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface ParticipationRequest {
   id: string;
@@ -43,6 +43,7 @@ type Status = (typeof STATUSES)[number];
 const TONE = { pending: 'pending', approved: 'success', rejected: 'danger' } as const;
 
 export function MinistryRequestsClient(): React.ReactElement {
+  const t = useTranslations('AdminMinistryRequests');
   const [status, setStatus] = useState<Status>('pending');
   const [unitId, setUnitId] = useState('');
   const requests = useApiList<ParticipationRequest>(
@@ -52,8 +53,8 @@ export function MinistryRequestsClient(): React.ReactElement {
   const names = usePeopleNames(requests.items.map((r) => r.personId));
   const unitName = useMemo(() => {
     const map = new Map(units.items.map((u) => [u.id, u.name]));
-    return (id: string): string => map.get(id) ?? t('Ministry');
-  }, [units.items]);
+    return (id: string): string => map.get(id) ?? t('ministry');
+  }, [units.items, t]);
   const { busyKey, run } = useRowAction();
   const [approving, setApproving] = useState<ParticipationRequest | null>(null);
 
@@ -72,24 +73,24 @@ export function MinistryRequestsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/ministries">{t('Ministries')}</Link>}
-        title={t('Ministry join requests')}
-        lede={t('Members asking to join a team. Approving adds them to the ministry straight away. Ministry leaders see requests for their own ministries.')}
+        eyebrow={<Link href="/admin/ministries">{t('ministries')}</Link>}
+        title={t('title')}
+        lede={t('lede')}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <Tabs value={status} onValueChange={(v) => setStatus(v as Status)}>
-          <TabList aria-label={t('Request status')}>
+          <TabList aria-label={t('requestStatus')}>
             {STATUSES.map((s) => (
               <Tab key={s} value={s}>
-                {titleCase(s)}
+                {t('status', { status: s })}
               </Tab>
             ))}
           </TabList>
         </Tabs>
-        <Field label={t('Ministry')} className="sm:w-64">
+        <Field label={t('ministry')} className="sm:w-64">
           <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-            <option value="">{t('All my ministries')}</option>
+            <option value="">{t('allMyMinistries')}</option>
             {units.items.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}
@@ -100,8 +101,8 @@ export function MinistryRequestsClient(): React.ReactElement {
       </div>
 
       <Panel
-        title={t('{0} requests', titleCase(status))}
-        subtitle={requests.loading ? t('Loading…') : t('{0} shown', requests.items.length)}
+        title={t('panelTitle', { status })}
+        subtitle={requests.loading ? t('loading') : t('shown', { count: requests.items.length })}
         flush
       >
         <ListState
@@ -112,22 +113,19 @@ export function MinistryRequestsClient(): React.ReactElement {
           onRetry={() => void requests.reload()}
           empty={{
             icon: 'hand',
-            title: status === 'pending' ? t('No one is waiting to join') : t('No {0} requests', titleCase(status).toLowerCase()),
-            description:
-              status === 'pending'
-                ? t('When members ask to join a ministry from the app, their requests appear here.')
-                : undefined,
+            title: status === 'pending' ? t('emptyPending') : t('emptyOther', { status }),
+            description: status === 'pending' ? t('emptyPendingBody') : undefined,
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Member')}</TH>
-                  <TH>{t('Ministry')}</TH>
-                  <TH>{t('Requested')}</TH>
-                  <TH>{t('Status')}</TH>
-                  {status === 'pending' ? <TH className="text-right">{t('Decision')}</TH> : null}
+                  <TH>{t('member')}</TH>
+                  <TH>{t('ministry')}</TH>
+                  <TH>{t('requested')}</TH>
+                  <TH>{t('statusHeader')}</TH>
+                  {status === 'pending' ? <TH className="text-right">{t('decision')}</TH> : null}
                 </TR>
               </THead>
               <TBody>
@@ -141,7 +139,7 @@ export function MinistryRequestsClient(): React.ReactElement {
                     <TD className="text-sm">{unitName(r.organisationalUnitId)}</TD>
                     <TD className="text-sm text-muted-foreground">{formatDate(r.createdAt)}</TD>
                     <TD>
-                      <StatusPill tone={TONE[r.status]}>{titleCase(r.status)}</StatusPill>
+                      <StatusPill tone={TONE[r.status]}>{t('status', { status: r.status })}</StatusPill>
                     </TD>
                     {status === 'pending' ? (
                       <TD className="text-right">
@@ -152,7 +150,7 @@ export function MinistryRequestsClient(): React.ReactElement {
                             disabled={busyKey !== null}
                             onClick={() => setApproving(r)}
                           >
-                            {t('Approve')}
+                            {t('approve')}
                           </Button>
                           <Button
                             size="sm"
@@ -161,13 +159,13 @@ export function MinistryRequestsClient(): React.ReactElement {
                             disabled={busyKey !== null}
                             onClick={() =>
                               void run(r.id, () => decide(r, 'rejected'), {
-                                success: t('Request declined'),
-                                detail: t('The member will see it was not approved.'),
-                                failure: t('Could not decline'),
+                                success: t('declined'),
+                                detail: t('declinedBody'),
+                                failure: t('declineFailed'),
                               })
                             }
                           >
-                            {t('Decline')}
+                            {t('decline')}
                           </Button>
                         </div>
                       </TD>
@@ -182,7 +180,7 @@ export function MinistryRequestsClient(): React.ReactElement {
 
       {approving ? (
         <ApproveDialog
-          memberName={names[approving.personId] ?? 'this member'}
+          memberName={names[approving.personId] ?? t('thisMember')}
           ministryName={unitName(approving.organisationalUnitId)}
           onClose={() => setApproving(null)}
           onApprove={async (role) => {
@@ -206,18 +204,19 @@ function ApproveDialog({
   onClose: () => void;
   onApprove: (role: string | undefined) => Promise<void>;
 }): React.ReactElement {
+  const t = useTranslations('AdminMinistryRequests');
   const [role, setRole] = useState('');
   return (
     <FormDialog
-      title={t('Approve join request')}
-      description={t('{0} will join {1} from today.', memberName, ministryName)}
-      submitLabel={t('Approve')}
+      title={t('approveTitle')}
+      description={t('approveDesc', { member: memberName, ministry: ministryName })}
+      submitLabel={t('approve')}
       size="sm"
       onClose={onClose}
       onSubmit={() => onApprove(role.trim() || undefined)}
     >
       {(errors) => (
-        <Field label={t('Role in ministry')} hint={t('Optional, e.g. Singer or Usher.')} error={errors.roleInUnit}>
+        <Field label={t('roleInMinistry')} hint={t('roleInMinistryHint')} error={errors.roleInUnit}>
           <Input data-autofocus value={role} onChange={(e) => setRole(e.target.value)} maxLength={100} />
         </Field>
       )}

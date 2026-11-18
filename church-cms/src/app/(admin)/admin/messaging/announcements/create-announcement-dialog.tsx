@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -10,7 +11,6 @@ import {
   Input,
   Textarea,
 } from '@/app/_ekklesia/ui';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export interface AnnouncementRow {
   id: string;
@@ -39,6 +39,8 @@ export function CreateAnnouncementDialog({
   announcement = null,
   onUpdated,
 }: CreateAnnouncementDialogProps): React.ReactElement {
+  const tm = useTranslations('AdminMessaging');
+  const tc = useTranslations('Common');
   const formId = useId();
   const editing = Boolean(announcement);
   const readOnly =
@@ -131,8 +133,8 @@ export function CreateAnnouncementDialog({
           err instanceof Error
             ? err.message
             : editing
-              ? t('Could not save announcement.')
-              : t('Could not create announcement.'),
+              ? tm('couldNotSaveAnnouncement')
+              : tm('couldNotCreateAnnouncement'),
         );
       }
       setSubmitting(false);
@@ -146,16 +148,16 @@ export function CreateAnnouncementDialog({
       title={
         editing
           ? readOnly
-            ? t('Announcement')
-            : t('Edit announcement')
-          : t('New announcement')
+            ? tm('announcementTitle')
+            : tm('editAnnouncement')
+          : tm('newAnnouncementTitle')
       }
       description={
         editing
           ? readOnly
-            ? t('This notice is locked while it awaits approval or after publishing.')
-            : t('Update the draft, then submit for approval or publish when ready.')
-          : t('Write a notice for your church family. Save as a draft first.')
+            ? tm('viewLockedDesc')
+            : tm('editAnnouncementDesc')
+          : tm('newAnnouncementDesc')
       }
       size="md"
       footer={
@@ -165,15 +167,15 @@ export function CreateAnnouncementDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            {readOnly ? t('Close') : t('Cancel')}
+            {readOnly ? tc('close') : tc('cancel')}
           </Button>
           {readOnly ? null : (
             <Button type="submit" form={formId} loading={submitting}>
               {submitting
-                ? t('Saving…')
+                ? tm('saving')
                 : editing
-                  ? t('Save changes')
-                  : t('Save draft')}
+                  ? tm('saveChanges')
+                  : tm('saveDraft')}
             </Button>
           )}
         </DialogFooter>
@@ -195,12 +197,12 @@ export function CreateAnnouncementDialog({
           </div>
         ) : null}
 
-        <Field label={t('Title')} required error={fieldErrors.title}>
+        <Field label={tm('title')} required error={fieldErrors.title}>
           <Input
             data-autofocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={t('Sunday reminder')}
+            placeholder={tm('titlePlaceholder')}
             maxLength={200}
             readOnly={readOnly}
             disabled={readOnly}
@@ -208,15 +210,15 @@ export function CreateAnnouncementDialog({
         </Field>
 
         <Field
-          label={t('Message')}
+          label={tm('message')}
           required
-          hint={t('What your church family needs to know.')}
+          hint={tm('messageHint')}
           error={fieldErrors.body}
         >
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder={t('Share what your church family needs to know…')}
+            placeholder={tm('messagePlaceholder')}
             rows={6}
             maxLength={5000}
             readOnly={readOnly}

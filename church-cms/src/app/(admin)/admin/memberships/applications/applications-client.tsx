@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -22,10 +23,9 @@ import {
   Textarea,
 } from '@/app/_ekklesia/ui';
 import { FormDialog, ListState, useRowAction } from '../../../_components/kit';
-import { formatDate, titleCase } from '../../../_lib/format';
+import { formatDate } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { usePeopleNames } from '../../../_lib/use-people-names';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface MembershipApplication {
   id: string;
@@ -45,6 +45,8 @@ const TONE = {
 } as const;
 
 export function ApplicationsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tm = useTranslations('AdminMemberships');
   const [status, setStatus] = useState<(typeof STATUSES)[number]>('pending');
   const list = useApiList<MembershipApplication>(
     `/api/v1/membership-applications?status=${status}&limit=100`,
@@ -52,6 +54,21 @@ export function ApplicationsClient(): React.ReactElement {
   const names = usePeopleNames(list.items.map((a) => a.personId));
   const { busyKey, run } = useRowAction();
   const [rejecting, setRejecting] = useState<MembershipApplication | null>(null);
+
+  const statusLabel = (value: (typeof STATUSES)[number]): string => {
+    switch (value) {
+      case 'pending':
+        return tm('statusPending');
+      case 'approved':
+        return tm('statusApproved');
+      case 'rejected':
+        return tm('statusRejected');
+      case 'withdrawn':
+        return tm('statusWithdrawn');
+      default:
+        return value;
+    }
+  };
 
   const decide = async (
     app: MembershipApplication,
@@ -67,27 +84,31 @@ export function ApplicationsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/memberships">{t('Memberships')}</Link>}
-        title={t('Membership applications')}
-        lede={t('People asking to become members. Approving activates their membership; rejecting keeps them as a visitor.')}
+        eyebrow={<Link href="/admin/memberships">{t('memberships')}</Link>}
+        title={t('membershipApplications')}
+        lede={t('membershipApplicationsLede')}
       />
 
       <Tabs
         value={status}
         onValueChange={(v) => setStatus(v as (typeof STATUSES)[number])}
       >
-        <TabList aria-label={t('Application status')}>
+        <TabList aria-label={tm('applicationStatusAria')}>
           {STATUSES.map((s) => (
             <Tab key={s} value={s}>
-              {titleCase(s)}
+              {statusLabel(s)}
             </Tab>
           ))}
         </TabList>
       </Tabs>
 
       <Panel
-        title={t('{0} applications', titleCase(status))}
-        subtitle={list.loading ? t('Loading…') : t('{0} shown', list.items.length)}
+        title={tm('applicationsTitle', { status: statusLabel(status) })}
+        subtitle={
+          list.loading
+            ? tm('loadingEllipsis')
+            : tm('shownCount', { count: list.items.length })
+        }
         flush
       >
         <ListState
@@ -100,11 +121,11 @@ export function ApplicationsClient(): React.ReactElement {
             icon: 'user-plus',
             title:
               status === 'pending'
-                ? t('No applications waiting')
-                : t('No {0} applications', titleCase(status).toLowerCase()),
+                ? tm('noAppsWaiting')
+                : tm('noAppsStatus', { status: statusLabel(status).toLowerCase() }),
             description:
               status === 'pending'
-                ? t('New requests to join will appear here for pastoral and admin review.')
+                ? tm('noAppsWaitingDesc')
                 : undefined,
           }}
         >
@@ -112,10 +133,10 @@ export function ApplicationsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Applicant')}</TH>
-                  <TH>{t('Submitted')}</TH>
-                  <TH>{t('Status')}</TH>
-                  {status === 'pending' ? <TH className="text-right">{t('Decision')}</TH> : null}
+                  <TH>{tm('colApplicant')}</TH>
+                  <TH>{tm('colSubmitted')}</TH>
+                  <TH>{tm('colStatus')}</TH>
+                  {status === 'pending' ? <TH className="text-right">{tm('colDecision')}</TH> : null}
                 </TR>
               </THead>
               <TBody>
@@ -126,7 +147,7 @@ export function ApplicationsClient(): React.ReactElement {
                         href={`/admin/people/${app.personId}`}
                         className="hover:underline"
                       >
-                        {names[app.personId] ?? t('Loading…')}
+                        {names[app.personId] ?? tm('loadingEllipsis')}
                       </Link>
                     </TD>
                     <TD className="text-sm text-muted-foreground">
@@ -134,7 +155,7 @@ export function ApplicationsClient(): React.ReactElement {
                     </TD>
                     <TD>
                       <StatusPill tone={TONE[app.status]}>
-                        {titleCase(app.status)}
+                        {statusLabel(app.status)}
                       </StatusPill>
                     </TD>
                     {status === 'pending' ? (
@@ -146,19 +167,22 @@ export function ApplicationsClient(): React.ReactElement {
                             loading={busyKey === app.id}
                             disabled={busyKey !== null}
                             onClick={async () => {
+                              const name = names[app.personId];
                               const ok = await run(
                                 app.id,
                                 () => decide(app, 'approved'),
                                 {
-                                  success: t('Application approved'),
-                                  detail: t('{0} are now an active member.', names[app.personId] ?? 'They'),
-                                  failure: t('Could not approve'),
+                                  success: tm('applicationApproved'),
+                                  detail: name
+                                    ? tm('applicationApprovedDetail', { name })
+                                    : tm('applicationApprovedDetailFallback'),
+                                  failure: tm('couldNotApprove'),
                                 },
                               );
                               if (ok) void list.reload();
                             }}
                           >
-                            {t('Approve')}
+                            {tm('approve')}
                           </Button>
                           <Button
                             size="sm"
@@ -166,7 +190,7 @@ export function ApplicationsClient(): React.ReactElement {
                             disabled={busyKey !== null}
                             onClick={() => setRejecting(app)}
                           >
-                            {t('Reject')}
+                            {tm('reject')}
                           </Button>
                         </div>
                       </TD>
@@ -181,7 +205,7 @@ export function ApplicationsClient(): React.ReactElement {
 
       {rejecting ? (
         <RejectDialog
-          applicantName={names[rejecting.personId] ?? 'this applicant'}
+          applicantName={names[rejecting.personId] ?? tm('thisApplicant')}
           onClose={() => setRejecting(null)}
           onReject={async (reason) => {
             await decide(rejecting, 'rejected', reason);
@@ -203,12 +227,13 @@ function RejectDialog({
   onClose: () => void;
   onReject: (reason: string | undefined) => Promise<void>;
 }): React.ReactElement {
+  const tm = useTranslations('AdminMemberships');
   const [reason, setReason] = useState('');
   return (
     <FormDialog
-      title={t('Reject application')}
-      description={t('{0} will stay on record as a visitor.', applicantName)}
-      submitLabel={t('Reject application')}
+      title={tm('rejectTitle')}
+      description={tm('rejectDesc', { name: applicantName })}
+      submitLabel={tm('rejectSubmit')}
       submitVariant="destructive"
       size="sm"
       onClose={onClose}
@@ -216,8 +241,8 @@ function RejectDialog({
     >
       {(errors) => (
         <Field
-          label={t('Reason')}
-          hint={t('Optional. Kept in the audit log, not sent to the applicant.')}
+          label={tm('reason')}
+          hint={tm('reasonHint')}
           error={errors.reason}
         >
           <Textarea

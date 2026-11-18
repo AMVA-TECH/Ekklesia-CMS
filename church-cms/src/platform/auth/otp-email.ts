@@ -3,6 +3,8 @@
  * Configure AUTH_SMTP_* in `.env.local` (never commit secrets).
  */
 
+import { fillOutbound, outboundMessages } from '@/i18n/outbound-messages';
+
 export type OtpEmailSendResult =
   | { ok: true }
   | { ok: false; error: string };
@@ -12,6 +14,8 @@ export async function sendOtpEmail(input: {
   otp: string;
   /** Member-facing product name from church branding (DEC-033). */
   productName?: string;
+  /** Recipient preferred locale (`en` | `sw`). */
+  locale?: string | null;
 }): Promise<OtpEmailSendResult> {
   const host = process.env.AUTH_SMTP_HOST?.trim();
   const user = process.env.AUTH_SMTP_USER?.trim();
@@ -41,12 +45,14 @@ export async function sendOtpEmail(input: {
     });
 
     const productName = input.productName?.trim() || 'Ekklesia';
+    const copy = outboundMessages(input.locale);
+    const vars = { product: productName, otp: input.otp };
     await transporter.sendMail({
       from,
       to: input.to,
-      subject: `Your ${productName} verification code`,
-      text: `Your ${productName} verification code is ${input.otp}. It expires in a few minutes.\n\nIf you did not request this, ignore this email.`,
-      html: `<p>Your ${productName} verification code is <strong style="font-size:1.25rem;letter-spacing:0.15em">${input.otp}</strong>.</p><p>It expires in a few minutes.</p><p>If you did not request this, ignore this email.</p>`,
+      subject: fillOutbound(copy.otpEmailSubject, vars),
+      text: fillOutbound(copy.otpEmailText, vars),
+      html: fillOutbound(copy.otpEmailHtml, vars),
     });
     return { ok: true };
   } catch (error) {

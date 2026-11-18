@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -28,7 +29,6 @@ import { Icon } from '@/app/_ekklesia/icons';
 import type { ListEnvelope, ListMeta, Person } from '../../_lib/api-types';
 import { formatDate } from '../../_lib/format';
 import { CreatePersonDialog } from './create-person-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const PAGE_SIZE = 25;
 
@@ -41,6 +41,9 @@ const PAGE_SIZE = 25;
  * POST endpoint.
  */
 export function PeopleClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tp = useTranslations('AdminPeople');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -89,12 +92,12 @@ export function PeopleClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load people'),
+            : tp('unableLoadPeople'),
       );
     } finally {
       setLoading(false);
     }
-  }, [cursor, debouncedSearch]);
+  }, [cursor, debouncedSearch, tp]);
 
   useLoadEffect(load);
 
@@ -119,18 +122,18 @@ export function PeopleClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('People')}
-        lede={t('Everyone known to your church. Add a visitor, update a contact, or tap a name for the full profile.')}
+        title={t('people')}
+        lede={t('peopleLede')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/people/import"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Import')}
+              {t('import')}
             </Link>
             <Button iconLeft="user-plus" onClick={() => setCreateOpen(true)}>
-              {t('Add a person')}
+              {t('addPerson')}
             </Button>
           </div>
         }
@@ -139,8 +142,8 @@ export function PeopleClient(): React.ReactElement {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="max-w-md flex-1">
           <SearchField
-            label={t('Search people')}
-            placeholder={t('Search by name')}
+            label={t('searchPeople')}
+            placeholder={t('searchByName')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onClear={() => setSearch('')}
@@ -149,20 +152,22 @@ export function PeopleClient(): React.ReactElement {
         <p className="text-xs text-muted-foreground">
           {loading ? (
             <span className="inline-flex items-center gap-2">
-              <Spinner size="xs" label={t('Loading people')} /> {t('Loading…')}
+              <Spinner size="xs" label={tp('loadingPeople')} /> {tp('loadingEllipsis')}
             </span>
           ) : (
-            `${people.length} of this page`
+            tp('pageCount', { count: people.length })
           )}
         </p>
       </div>
 
       <Panel
-        title={debouncedSearch ? t('Results for "{0}"', debouncedSearch) : t('Directory')}
+        title={
+          debouncedSearch
+            ? tp('resultsFor', { query: debouncedSearch })
+            : tp('directory')
+        }
         subtitle={
-          error
-            ? t('We couldn\'t load everyone — try again below.')
-            : t('Sorted alphabetically.')
+          error ? tp('loadErrorSubtitle') : tp('sortedAlphabetically')
         }
         flush
       >
@@ -171,7 +176,7 @@ export function PeopleClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                {t('Try again')}
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -184,11 +189,11 @@ export function PeopleClient(): React.ReactElement {
           <EmptyState
             icon="users"
             tone="sage"
-            title={debouncedSearch ? t('Nobody matched') : t('No people yet')}
+            title={debouncedSearch ? tp('nobodyMatched') : tp('noPeopleYet')}
             description={
               debouncedSearch
-                ? t('Try a shorter query or clear the search to see everyone.')
-                : t('Add a first person to start building your directory.')
+                ? tp('nobodyMatchedDesc')
+                : tp('noPeopleYetDesc')
             }
             action={
               debouncedSearch ? (
@@ -197,7 +202,7 @@ export function PeopleClient(): React.ReactElement {
                   size="sm"
                   onClick={() => setSearch('')}
                 >
-                  {t('Clear search')}
+                  {tp('clearSearch')}
                 </Button>
               ) : (
                 <Button
@@ -205,7 +210,7 @@ export function PeopleClient(): React.ReactElement {
                   size="sm"
                   onClick={() => setCreateOpen(true)}
                 >
-                  {t('Add a person')}
+                  {tp('addAPerson')}
                 </Button>
               )
             }
@@ -215,10 +220,10 @@ export function PeopleClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Name')}</TH>
-                  <TH>{t('Primary contact')}</TH>
-                  <TH>{t('Directory')}</TH>
-                  <TH>{t('Added')}</TH>
+                  <TH>{tp('colName')}</TH>
+                  <TH>{tp('colPrimaryContact')}</TH>
+                  <TH>{tp('colDirectory')}</TH>
+                  <TH>{tp('colAdded')}</TH>
                   <TH className="w-12" />
                 </TR>
               </THead>
@@ -247,8 +252,8 @@ export function PeopleClient(): React.ReactElement {
         onCreated={(person) => {
           push({
             tone: 'success',
-            title: t('Person added'),
-            message: t('{0} is now in your directory.', person.displayName),
+            title: tp('personAdded'),
+            message: tp('personAddedMessage', { name: person.displayName }),
           });
           setCreateOpen(false);
           void load();
@@ -259,6 +264,7 @@ export function PeopleClient(): React.ReactElement {
 }
 
 function PersonRow({ person }: { person: Person }): React.ReactElement {
+  const tp = useTranslations('AdminPeople');
   const primary =
     person.contacts.find((c) => c.isPrimary) ?? person.contacts[0] ?? null;
   return (
@@ -288,16 +294,16 @@ function PersonRow({ person }: { person: Person }): React.ReactElement {
             {primary.value}
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground">{t('No contact')}</span>
+          <span className="text-xs text-muted-foreground">{tp('noContact')}</span>
         )}
       </TD>
       <TD>
         {person.directoryOptIn ? (
           <StatusPill tone="success" hideDot>
-            {t('Opted in')}
+            {tp('optedIn')}
           </StatusPill>
         ) : (
-          <span className="text-xs text-muted-foreground">{t('Private')}</span>
+          <span className="text-xs text-muted-foreground">{tp('private')}</span>
         )}
       </TD>
       <TD className="text-sm text-muted-foreground">
@@ -306,7 +312,7 @@ function PersonRow({ person }: { person: Person }): React.ReactElement {
       <TD className="text-right">
         <Link
           href={`/admin/people/${person.id}`}
-          aria-label={t('Open {0}', person.displayName)}
+          aria-label={tp('openPersonAria', { name: person.displayName })}
           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
         >
           <Icon name="chevron-right" size={16} />

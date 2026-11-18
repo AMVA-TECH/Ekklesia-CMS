@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
 import { ApiError, apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -15,7 +16,6 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MemberPreferences } from '../_shared/api-types';
-import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 type Channel = 'smsOptIn' | 'whatsappOptIn' | 'emailOptIn';
 
@@ -26,29 +26,29 @@ interface ChannelMeta {
   icon: Parameters<typeof Icon>[0]['name'];
 }
 
-const CHANNELS: readonly ChannelMeta[] = [
-  {
-    key: 'smsOptIn',
-    label: tk('Text messages (SMS)'),
-    description: tk('Service times, prayer requests, and reminders.'),
-    icon: 'phone',
-  },
-  {
-    key: 'whatsappOptIn',
-    label: tk('WhatsApp'),
-    description: tk('Group updates and quick notices from ministry leaders.'),
-    icon: 'chat',
-  },
-  {
-    key: 'emailOptIn',
-    label: tk('Email'),
-    description: tk('Longer newsletters, event summaries, and invitations.'),
-    icon: 'mail',
-  },
-];
-
 export function NotificationsClient(): React.ReactElement {
+  const t = useTranslations('MemberNotifications');
   const { push } = useToast();
+  const channels: readonly ChannelMeta[] = [
+    {
+      key: 'smsOptIn',
+      label: t('sms'),
+      description: t('smsDesc'),
+      icon: 'phone',
+    },
+    {
+      key: 'whatsappOptIn',
+      label: t('whatsapp'),
+      description: t('whatsappDesc'),
+      icon: 'chat',
+    },
+    {
+      key: 'emailOptIn',
+      label: t('email'),
+      description: t('emailDesc'),
+      icon: 'mail',
+    },
+  ];
   const [prefs, setPrefs] = useState<MemberPreferences | null>(null);
   const [original, setOriginal] = useState<MemberPreferences | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,7 +78,7 @@ export function NotificationsClient(): React.ReactElement {
         } else if (e instanceof ApiError) {
           setLoadError(e.message);
         } else {
-          setLoadError(t('Check your connection and try again.'));
+          setLoadError(t('connection'));
         }
       })
       .finally(() => {
@@ -87,7 +87,7 @@ export function NotificationsClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const dirty = useMemo(() => {
     if (!prefs || !original) return false;
@@ -117,18 +117,18 @@ export function NotificationsClient(): React.ReactElement {
       setOriginal(updated);
       push({
         tone: 'success',
-        title: t('Preferences saved'),
-        message: t('We’ll follow your choices from now on.'),
+        title: t('saved'),
+        message: t('followChoices'),
       });
     } catch (e) {
       if (e instanceof ApiError) {
         push({
           tone: 'danger',
-          title: t('We couldn’t save'),
-          message: e.message || t('Try again in a moment.'),
+          title: t('saveFail'),
+          message: e.message || t('tryAgainMoment'),
         });
       } else {
-        push({ tone: 'danger', message: t('Check your connection and try again.') });
+        push({ tone: 'danger', message: t('connection') });
       }
     } finally {
       setSaving(false);
@@ -140,10 +140,7 @@ export function NotificationsClient(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t('Notifications')}
-        lede={t('Choose how your church talks to you. You can change this any time.')}
-      />
+      <PageHeader title={t('title')} lede={t('lede')} />
 
       {loading ? (
         <Skeleton size="block" className="h-72 w-full" radius="md" />
@@ -151,14 +148,14 @@ export function NotificationsClient(): React.ReactElement {
         <EmptyState
           icon="bell"
           tone="peach"
-          title={t('We couldn’t load your preferences')}
+          title={t('loadFail')}
           description={loadError}
         />
       ) : prefs ? (
         <>
-          <Panel title={t('Channels')} subtitle={t('Turn these on or off to fit your week.')}>
+          <Panel title={t('channels')} subtitle={t('channelsSubtitle')}>
             <div className="flex flex-col gap-3">
-              {CHANNELS.map((ch) => (
+              {channels.map((ch) => (
                 <ChannelToggle
                   key={ch.key}
                   meta={ch}
@@ -166,34 +163,43 @@ export function NotificationsClient(): React.ReactElement {
                   onChange={(event) =>
                     setPrefs({ ...prefs, [ch.key]: event.target.checked })
                   }
+                  ariaLabel={t('channelState', {
+                    label: ch.label,
+                    state: prefs[ch.key] ? t('on') : t('off'),
+                  })}
                 />
               ))}
             </div>
           </Panel>
 
           {noChannels ? (
-            <Card padding="md" className="flex items-start gap-3 bg-[color:var(--warning-soft)]">
+            <Card
+              padding="md"
+              className="flex items-start gap-3 bg-[color:var(--warning-soft)]"
+            >
               <Icon
                 name="alert"
                 size={20}
                 className="mt-0.5 text-[color:var(--warning-ink)]"
               />
               <div>
-                <CardTitle>{t('You’ll miss church messages')}</CardTitle>
-                <CardSubtitle>
-                  {t('With all channels off we can’t reach you for service changes, prayer requests, or event reminders. Consider keeping at least one on.')}
-                </CardSubtitle>
+                <CardTitle>{t('missTitle')}</CardTitle>
+                <CardSubtitle>{t('missBody')}</CardSubtitle>
               </div>
             </Card>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={() => void handleSave()} loading={saving} disabled={!dirty || saving}>
-              {dirty ? t('Save preferences') : t('All saved')}
+            <Button
+              onClick={() => void handleSave()}
+              loading={saving}
+              disabled={!dirty || saving}
+            >
+              {dirty ? t('savePreferences') : t('allSaved')}
             </Button>
             {dirty && original ? (
               <Button variant="ghost" onClick={() => setPrefs(original)}>
-                {t('Discard')}
+                {t('discard')}
               </Button>
             ) : null}
           </div>
@@ -206,10 +212,8 @@ export function NotificationsClient(): React.ReactElement {
               <Icon name="shield" size={18} />
             </span>
             <div>
-              <CardTitle>{t('Safety notices still reach you')}</CardTitle>
-              <CardSubtitle>
-                {t('A few important messages — like account safety or sign-in alerts — are always sent, even with channels turned off.')}
-              </CardSubtitle>
+              <CardTitle>{t('safetyTitle')}</CardTitle>
+              <CardSubtitle>{t('safetyBody')}</CardSubtitle>
             </div>
           </Card>
         </>
@@ -222,10 +226,12 @@ function ChannelToggle({
   meta,
   value,
   onChange,
+  ariaLabel,
 }: {
   meta: ChannelMeta;
   value: boolean;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  ariaLabel: string;
 }): ReactNode {
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border bg-surface p-4 hover:bg-surface-muted/60 focus-within:ring-2 focus-within:ring-[color:var(--ring)] focus-within:ring-offset-2">
@@ -237,10 +243,10 @@ function ChannelToggle({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="font-medium text-foreground">{t(meta.label)}</span>
+          <span className="font-medium text-foreground">{meta.label}</span>
         </span>
         <span className="mt-0.5 block text-xs text-muted-foreground">
-          {t(meta.description)}
+          {meta.description}
         </span>
       </span>
       <input
@@ -248,7 +254,7 @@ function ChannelToggle({
         checked={value}
         onChange={onChange}
         className="mt-1 h-5 w-5 shrink-0 rounded-sm border-border accent-[color:var(--brand-gold-ink)] focus:outline-none"
-        aria-label={t(value ? '{0} on' : '{0} off', t(meta.label))}
+        aria-label={ariaLabel}
       />
     </label>
   );

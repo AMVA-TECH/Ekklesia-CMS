@@ -1,6 +1,8 @@
+'use client';
+
 import type { AnchorHTMLAttributes } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from './utils';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<SkipLink>`. */
 export interface SkipLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
@@ -20,6 +22,7 @@ export function SkipLink({
   children,
   ...rest
 }: SkipLinkProps): React.ReactElement {
+  const t = useTranslations('Common');
   return (
     <a
       href={`#${targetId}`}
@@ -31,7 +34,7 @@ export function SkipLink({
       )}
       {...rest}
     >
-      {children ?? t('Skip to main content')}
+      {children ?? t('skipToContent')}
     </a>
   );
 }

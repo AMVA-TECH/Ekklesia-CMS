@@ -2,7 +2,6 @@ import { useId, type HTMLAttributes, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Icon } from '../icons';
 import { cn } from './utils';
-import { t } from '../i18n/core';
 
 /** Props for `<Panel>`. */
 export interface PanelProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
@@ -76,7 +75,7 @@ export function Panel({
             href={linkHref}
             className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-[color:var(--brand-gold-ink)] focus-ring rounded-sm"
           >
-            {t(linkLabel)}
+            {linkLabel}
             <Icon name="chevron-right" size={16} />
           </Link>
         ) : null}

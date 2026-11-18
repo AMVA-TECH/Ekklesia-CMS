@@ -1,6 +1,5 @@
 import type { SVGProps } from 'react';
 import { iconPaths, type IconName } from './icon-paths';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props accepted by the `<Icon>` wrapper. */
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name' | 'children'> {
@@ -53,7 +52,7 @@ export function Icon({
       className={className}
       aria-hidden={decorative || undefined}
       role={decorative ? undefined : 'img'}
-      aria-label={t(label)}
+      aria-label={label}
       focusable="false"
       {...rest}
     >

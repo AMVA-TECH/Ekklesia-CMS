@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -30,11 +31,13 @@ import { toMinorUnits } from '../../_lib/errors';
 import { formatDate, formatMoney, titleCase } from '../../_lib/format';
 import { useApiList } from '../../_lib/use-api-list';
 import type { Project } from './project-types';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const FILTERS = ['active', 'closed'] as const;
 
 export function ProjectsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tp = useTranslations('AdminProjects');
+  const tc = useTranslations('Common');
   const router = useRouter();
   const [status, setStatus] = useState<(typeof FILTERS)[number]>('active');
   const projects = useApiList<Project>(`/api/v1/projects?status=${status}&limit=100`);
@@ -45,17 +48,17 @@ export function ProjectsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Projects')}
-        lede={t('Time-bound efforts with an optional fundraising goal — building works, outreach, missions. Members can express interest to volunteer.')}
+        title={t('projects')}
+        lede={t('projectsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            {t('New project')}
+            {tp('newProject')}
           </Button>
         }
       />
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as (typeof FILTERS)[number])}>
-        <TabList aria-label={t('Project status')}>
+        <TabList aria-label={tp('projectStatusAria')}>
           {FILTERS.map((f) => (
             <Tab key={f} value={f}>
               {titleCase(f)}
@@ -65,8 +68,12 @@ export function ProjectsClient(): React.ReactElement {
       </Tabs>
 
       <Panel
-        title={t('{0} projects', titleCase(status))}
-        subtitle={projects.loading ? t('Loading…') : t('{0} shown', projects.items.length)}
+        title={tp('statusProjects', { status: titleCase(status) })}
+        subtitle={
+          projects.loading
+            ? tc('loading')
+            : tc('shownCount', { count: projects.items.length })
+        }
         flush
       >
         <ListState
@@ -77,18 +84,19 @@ export function ProjectsClient(): React.ReactElement {
           onRetry={() => void projects.reload()}
           empty={{
             icon: 'briefcase',
-            title: t('No {0} projects', titleCase(status).toLowerCase()),
-            description: status === 'active' ? t('Start a project to track its goal and volunteers.') : undefined,
+            title: tp('noStatusProjects', { status }),
+            description:
+              status === 'active' ? tp('startProjectBody') : undefined,
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Project')}</TH>
-                  <TH>{t('Runs')}</TH>
-                  <TH className="text-right">{t('Goal')}</TH>
-                  <TH>{t('Status')}</TH>
+                  <TH>{tp('project')}</TH>
+                  <TH>{tp('runs')}</TH>
+                  <TH className="text-right">{tp('goal')}</TH>
+                  <TH>{tp('status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -108,12 +116,14 @@ export function ProjectsClient(): React.ReactElement {
                       ) : null}
                     </TD>
                     <TD className="text-sm text-muted-foreground">
-                      {p.startsOn ? formatDate(p.startsOn) : t('Open start')}
+                      {p.startsOn ? formatDate(p.startsOn) : tp('openStart')}
                       {' – '}
-                      {p.endsOn ? formatDate(p.endsOn) : t('ongoing')}
+                      {p.endsOn ? formatDate(p.endsOn) : tp('ongoing')}
                     </TD>
                     <TD className="text-right tabular-nums">
-                      {p.targetAmountMinor ? formatMoney(p.targetAmountMinor, p.currency) : '—'}
+                      {p.targetAmountMinor
+                        ? formatMoney(p.targetAmountMinor, p.currency)
+                        : tp('emDash')}
                     </TD>
                     <TD>
                       <StatusPill tone={p.status === 'active' ? 'success' : 'neutral'}>
@@ -151,6 +161,7 @@ function CreateProjectDialog({
   onClose: () => void;
   onCreated: (p: Project) => void;
 }): React.ReactElement {
+  const tp = useTranslations('AdminProjects');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [target, setTarget] = useState('');
@@ -161,15 +172,15 @@ function CreateProjectDialog({
 
   return (
     <FormDialog
-      title={t('New project')}
-      submitLabel={t('Create project')}
+      title={tp('newProjectTitle')}
+      submitLabel={tp('createProject')}
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!name.trim()) e.name = t('Enter a name.');
+        if (!name.trim()) e.name = tp('enterName');
         if (target.trim() && toMinorUnits(target) === null)
-          e.targetAmountMinor = t('Enter a goal greater than zero, or leave it empty.');
-        if (startsOn && endsOn && endsOn < startsOn) e.endsOn = t('End must be on or after the start.');
+          e.targetAmountMinor = tp('enterGoal');
+        if (startsOn && endsOn && endsOn < startsOn) e.endsOn = tp('endAfterStart');
         return e;
       }}
       onSubmit={async () => {
@@ -190,16 +201,16 @@ function CreateProjectDialog({
     >
       {(errors) => (
         <>
-          <Field label={t('Name')} required error={errors.name}>
+          <Field label={tp('name')} required error={errors.name}>
             <Input
               data-autofocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t('New sanctuary roof')}
+              placeholder={tp('namePlaceholder')}
               maxLength={200}
             />
           </Field>
-          <Field label={t('Description')} error={errors.description}>
+          <Field label={tp('description')} error={errors.description}>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -208,20 +219,20 @@ function CreateProjectDialog({
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label={t('Goal (TZS)')} hint="Optional." error={errors.targetAmountMinor}>
+            <Field label={tp('goalTzs')} hint={tp('optional')} error={errors.targetAmountMinor}>
               <Input inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} />
             </Field>
-            <Field label={t('Starts')} error={errors.startsOn}>
+            <Field label={tp('starts')} error={errors.startsOn}>
               <Input type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
             </Field>
-            <Field label={t('Ends')} error={errors.endsOn}>
+            <Field label={tp('ends')} error={errors.endsOn}>
               <Input type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('Fund')} hint={t('Where contributions are recorded.')} error={errors.fundId}>
+            <Field label={tp('fund')} hint={tp('fundHint')} error={errors.fundId}>
               <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-                <option value="">{t('None')}</option>
+                <option value="">{tp('none')}</option>
                 {funds.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -229,9 +240,9 @@ function CreateProjectDialog({
                 ))}
               </Select>
             </Field>
-            <Field label={t('Ministry / unit')} error={errors.organisationalUnitId}>
+            <Field label={tp('ministryUnit')} error={errors.organisationalUnitId}>
               <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-                <option value="">{t('Church-wide')}</option>
+                <option value="">{tp('churchWide')}</option>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}

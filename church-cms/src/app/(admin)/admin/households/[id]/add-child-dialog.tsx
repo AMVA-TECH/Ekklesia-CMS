@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -11,7 +12,6 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Household } from '../../../_lib/api-types';
 import { extractValidationErrors } from '../../people/form-errors';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AddChildDialogProps {
   open: boolean;
@@ -29,6 +29,8 @@ export function AddChildDialog({
   onClose,
   onSaved,
 }: AddChildDialogProps): React.ReactElement {
+  const th = useTranslations('AdminHouseholds');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [name, setName] = useState('');
   const [age, setAge] = useState('5');
@@ -60,11 +62,11 @@ export function AddChildDialog({
     if (submitting) return;
     const ageNum = Number.parseInt(age, 10);
     if (!name.trim()) {
-      setFieldErrors({ name: t('Please enter a name.') });
+      setFieldErrors({ name: th('enterName') });
       return;
     }
     if (!Number.isFinite(ageNum) || ageNum < 0 || ageNum > 17) {
-      setFieldErrors({ age: t('Age must be between 0 and 17.') });
+      setFieldErrors({ age: th('ageRangeError') });
       return;
     }
     setFieldErrors({});
@@ -87,7 +89,7 @@ export function AddChildDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not add this child.'),
+          err instanceof Error ? err.message : th('couldNotAddChild'),
         );
       }
     } finally {
@@ -99,13 +101,13 @@ export function AddChildDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={t('Add a child')}
-      description={t('Record a child under 18 who does not yet have their own person record.')}
+      title={th('addChildTitle')}
+      description={th('addChildDesc')}
       size="sm"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            {t('Cancel')}
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -113,7 +115,7 @@ export function AddChildDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? t('Saving…') : t('Add child')}
+            {submitting ? th('saving') : th('addChild')}
           </Button>
         </DialogFooter>
       }
@@ -134,7 +136,7 @@ export function AddChildDialog({
           </div>
         ) : null}
 
-        <Field label={t('Name')} required error={fieldErrors.name}>
+        <Field label={th('name')} required error={fieldErrors.name}>
           <Input
             data-autofocus
             value={name}
@@ -143,7 +145,7 @@ export function AddChildDialog({
           />
         </Field>
 
-        <Field label={t('Age')} required hint="0–17" error={fieldErrors.age}>
+        <Field label={th('age')} required hint={th('ageHint')} error={fieldErrors.age}>
           <Input
             type="number"
             min={0}

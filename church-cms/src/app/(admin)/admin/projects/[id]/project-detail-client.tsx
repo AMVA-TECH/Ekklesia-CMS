@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import { apiFetch, useLoadEffect } from '@/app/_ekklesia/session';
@@ -26,9 +28,9 @@ import { errorMessage, todayLocalIso, toMinorUnits } from '../../../_lib/errors'
 import { formatDate, formatMoney, titleCase } from '../../../_lib/format';
 import { usePeopleNames } from '../../../_lib/use-people-names';
 import type { Project } from '../project-types';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export function ProjectDetailClient({ projectId }: { projectId: string }): React.ReactElement {
+  const tp = useTranslations('AdminProjects');
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<'assign' | 'contribute' | null>(null);
@@ -39,9 +41,9 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
       setProject(await apiFetch<Project>(`/api/v1/projects/${projectId}`));
       setError(null);
     } catch (err) {
-      setError(errorMessage(err, t('Unable to load this project.')));
+      setError(errorMessage(err, tp('unableLoad')));
     }
-  }, [projectId]);
+  }, [projectId, tp]);
   useLoadEffect(load);
 
   const names = usePeopleNames([
@@ -55,7 +57,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
       <div className="flex flex-col gap-4">
         <InlineAlert>{error}</InlineAlert>
         <Link href="/admin/projects" className="text-sm underline">
-          {t('Back to projects')}
+          {tp('backToProjects')}
         </Link>
       </div>
     );
@@ -82,8 +84,8 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
           json: { action },
         }),
       action === 'accept'
-        ? { success: t('Volunteer added'), detail: t('They are now assigned to the project.'), failure: t('Could not accept') }
-        : { success: t('Interest declined'), failure: t('Could not decline') },
+        ? { success: tp('volunteerAdded'), detail: tp('volunteerAddedDetail'), failure: tp('couldNotAccept') }
+        : { success: tp('interestDeclined'), failure: tp('couldNotDecline') },
     ).then((ok) => {
       if (ok) void load();
     });
@@ -92,29 +94,29 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/projects">{t('Projects')}</Link>}
+        eyebrow={<Link href="/admin/projects">{tp('projects')}</Link>}
         title={project.name}
         lede={project.description ?? undefined}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" iconLeft="user-plus" onClick={() => setDialog('assign')}>
-              {t('Assign person')}
+              {tp('assignPerson')}
             </Button>
             <Button iconLeft="coin" onClick={() => setDialog('contribute')}>
-              {t('Record contribution')}
+              {tp('recordContribution')}
             </Button>
           </div>
         }
       />
 
-      <Panel title={t('Progress')}>
+      <Panel title={tp('progress')}>
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-2xl font-semibold tabular-nums">
               {formatMoney(raised, project.currency)}
             </span>
             <span className="text-sm text-muted-foreground">
-              {target > 0 ? t('of {0} goal', formatMoney(target, project.currency)) : t('No goal set')}
+              {target > 0 ? tp('ofGoal', { amount: formatMoney(target, project.currency) }) : tp('noGoalSet')}
             </span>
           </div>
           {pct !== null ? (
@@ -124,7 +126,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
               aria-valuenow={pct}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={t('Raised against goal')}
+              aria-label={tp('raisedAria')}
             >
               <div className="h-full bg-brand-gold" style={{ width: `${pct}%` }} />
             </div>
@@ -134,20 +136,20 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
               {titleCase(project.status)}
             </StatusPill>
             <span>
-              {project.startsOn ? formatDate(project.startsOn) : t('Open start')} –{' '}
-              {project.endsOn ? formatDate(project.endsOn) : t('ongoing')}
+              {project.startsOn ? formatDate(project.startsOn) : tp('openStart')} –{' '}
+              {project.endsOn ? formatDate(project.endsOn) : tp('ongoing')}
             </span>
           </div>
         </div>
       </Panel>
 
       <Panel
-        title={t('Volunteer interest')}
-        subtitle={t('Members who asked to help. Accepting assigns them to the project.')}
+        title={tp('volunteerInterest')}
+        subtitle={tp('volunteerInterestSubtitle')}
         flush
       >
         {(project.interestRequests ?? []).length === 0 ? (
-          <EmptyState icon="hand" tone="neutral" title={t('No pending interest')} />
+          <EmptyState icon="hand" tone="neutral" title={tp('noPendingInterest')} />
         ) : (
           <TableWrap>
             <Table>
@@ -165,7 +167,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
                           disabled={busyKey !== null}
                           onClick={() => decide(r.id, 'accept')}
                         >
-                          {t('Accept')}
+                          {tp('accept')}
                         </Button>
                         <Button
                           size="sm"
@@ -174,7 +176,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
                           disabled={busyKey !== null}
                           onClick={() => decide(r.id, 'decline')}
                         >
-                          {t('Decline')}
+                          {tp('decline')}
                         </Button>
                       </div>
                     </TD>
@@ -187,9 +189,9 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
       </Panel>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title={t('Team')} subtitle={t('{0} people', project.assignments?.length ?? 0)} flush>
+        <Panel title={tp('team')} subtitle={tp('peopleCount', { count: project.assignments?.length ?? 0 })} flush>
           {(project.assignments ?? []).length === 0 ? (
-            <EmptyState icon="users" tone="neutral" title={t('Nobody assigned yet')} />
+            <EmptyState icon="users" tone="neutral" title={tp('nobodyAssigned')} />
           ) : (
             <TableWrap>
               <Table>
@@ -201,7 +203,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
                           {names[a.personId] ?? '…'}
                         </Link>
                       </TD>
-                      <TD className="text-sm text-muted-foreground">{a.role ?? t('Volunteer')}</TD>
+                      <TD className="text-sm text-muted-foreground">{a.role ?? tp('volunteer')}</TD>
                       <TD>
                         <StatusPill tone={a.status === 'active' ? 'success' : 'neutral'}>
                           {titleCase(a.status)}
@@ -215,24 +217,24 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
           )}
         </Panel>
 
-        <Panel title={t('Contributions')} subtitle={t('{0} recorded', project.contributions?.length ?? 0)} flush>
+        <Panel title={tp('contributions')} subtitle={tp('recordedCount', { count: project.contributions?.length ?? 0 })} flush>
           {(project.contributions ?? []).length === 0 ? (
-            <EmptyState icon="coin" tone="neutral" title={t('No contributions yet')} />
+            <EmptyState icon="coin" tone="neutral" title={tp('noContributions')} />
           ) : (
             <TableWrap>
               <Table>
                 <THead>
                   <TR noHover>
-                    <TH>{t('Date')}</TH>
-                    <TH>{t('From')}</TH>
-                    <TH className="text-right">{t('Amount')}</TH>
+                    <TH>{tp('date')}</TH>
+                    <TH>{tp('from')}</TH>
+                    <TH className="text-right">{tp('amount')}</TH>
                   </TR>
                 </THead>
                 <TBody>
                   {project.contributions!.map((c) => (
                     <TR key={c.id}>
                       <TD className="text-sm">{formatDate(c.contributedOn)}</TD>
-                      <TD className="text-sm">{c.personId ? (names[c.personId] ?? '…') : t('Anonymous')}</TD>
+                      <TD className="text-sm">{c.personId ? (names[c.personId] ?? '…') : tp('anonymous')}</TD>
                       <TD className="text-right tabular-nums">{formatMoney(c.amountMinor, c.currency)}</TD>
                     </TR>
                   ))}
@@ -276,15 +278,16 @@ function AssignDialog({
   onClose: () => void;
   onDone: () => void;
 }): React.ReactElement {
+  const tp = useTranslations('AdminProjects');
   const [person, setPerson] = useState<Person | null>(null);
   const [role, setRole] = useState('');
   return (
     <FormDialog
-      title={t('Assign person')}
-      submitLabel={t('Assign')}
+      title={tp('assignPerson')}
+      submitLabel={tp('assign')}
       size="sm"
       onClose={onClose}
-      validate={(): Record<string, string> => (person ? {} : { personId: 'Pick a person.' })}
+      validate={(): Record<string, string> => (person ? {} : { personId: tp('pickPerson') })}
       onSubmit={async () => {
         await apiFetch(`/api/v1/projects/${projectId}/assignments`, {
           method: 'POST',
@@ -296,7 +299,7 @@ function AssignDialog({
       {(errors) => (
         <>
           <PersonPicker required value={person} onChange={setPerson} error={errors.personId} />
-          <Field label={t('Role')} hint={t('Optional, e.g. Coordinator.')} error={errors.role}>
+          <Field label={tp('role')} hint={tp('roleHint')} error={errors.role}>
             <Input value={role} onChange={(e) => setRole(e.target.value)} maxLength={100} />
           </Field>
         </>
@@ -314,19 +317,20 @@ function ContributionDialog({
   onClose: () => void;
   onDone: () => void;
 }): React.ReactElement {
+  const tp = useTranslations('AdminProjects');
   const [amount, setAmount] = useState('');
   const [contributedOn, setContributedOn] = useState(todayLocalIso);
   const [person, setPerson] = useState<Person | null>(null);
   return (
     <FormDialog
-      title={t('Record contribution')}
-      submitLabel={t('Record')}
+      title={tp('recordContribution')}
+      submitLabel={tp('record')}
       size="sm"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (toMinorUnits(amount) === null) e.amountMinor = t('Enter an amount greater than zero.');
-        if (!contributedOn) e.contributedOn = t('Choose a date.');
+        if (toMinorUnits(amount) === null) e.amountMinor = tp('amountGtZero');
+        if (!contributedOn) e.contributedOn = tp('chooseDate');
         return e;
       }}
       onSubmit={async () => {
@@ -344,7 +348,7 @@ function ContributionDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('Amount (TZS)')} required error={errors.amountMinor}>
+            <Field label={tp('amountTzs')} required error={errors.amountMinor}>
               <Input
                 data-autofocus
                 inputMode="decimal"
@@ -352,7 +356,7 @@ function ContributionDialog({
                 onChange={(e) => setAmount(e.target.value)}
               />
             </Field>
-            <Field label={t('Date')} required error={errors.contributedOn}>
+            <Field label={tp('date')} required error={errors.contributedOn}>
               <Input
                 type="date"
                 value={contributedOn}
@@ -360,7 +364,7 @@ function ContributionDialog({
               />
             </Field>
           </div>
-          <PersonPicker label={t('Contributor (optional)')} value={person} onChange={setPerson} error={errors.personId} />
+          <PersonPicker label={tp('contributorOptional')} value={person} onChange={setPerson} error={errors.personId} />
         </>
       )}
     </FormDialog>

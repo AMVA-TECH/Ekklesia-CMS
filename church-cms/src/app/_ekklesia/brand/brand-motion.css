@@ -1,0 +1,378 @@
+/**
+ * Ekklesia brand motion — intro + loader.
+ * Uses official symbol geometry; CSS only (no animation libraries).
+ */
+
+/* ── Shared ─────────────────────────────────────────────────────────────── */
+
+.ek-brand-mark--predraw path[data-ek-stroke] {
+  /* Hidden until dash lengths are measured and draw is armed. */
+  opacity: 0.001;
+}
+
+.ek-brand-mark--draw path[data-ek-stroke] {
+  opacity: 1;
+  animation: ek-stroke-draw 1500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: var(--ek-delay, 0ms);
+}
+
+.ek-brand-mark--complete path[data-ek-stroke] {
+  stroke-dasharray: none !important;
+  stroke-dashoffset: 0 !important;
+  opacity: 1;
+}
+
+@keyframes ek-stroke-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── Cinematic intro ─────────────────────────────────────────────────────── */
+
+.ek-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #0a0b10;
+  color: var(--ek-ivory);
+  animation: ek-intro-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ek-intro--exit {
+  animation: ek-intro-leave 520ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.ek-intro-veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 42%,
+    color-mix(in srgb, var(--ek-charcoal) 35%, #0a0b10) 0%,
+    #0a0b10 72%
+  );
+}
+
+.ek-intro-light {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: min(28rem, 80vw);
+  height: min(28rem, 80vw);
+  translate: -50% -50%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ek-gold) 28%, transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(22px);
+  opacity: 0;
+  animation: ek-intro-light 900ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+
+.ek-intro-stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.35rem;
+}
+
+.ek-intro-mark-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(11.5rem, 42vw);
+  height: min(11.5rem, 42vw);
+}
+
+.ek-intro-mark {
+  position: relative;
+  z-index: 1;
+  width: min(10.5rem, 38vw) !important;
+  height: auto !important;
+  opacity: 0;
+  transform: scale(0.94);
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45));
+  animation: ek-intro-mark 1200ms cubic-bezier(0.16, 1, 0.3, 1) 480ms both;
+}
+
+@keyframes ek-intro-mark {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+    filter: blur(6px) drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0) drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45));
+  }
+}
+
+.ek-intro-bloom {
+  pointer-events: none;
+  position: absolute;
+  inset: 8%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ek-gold) 32%, transparent) 0%,
+    transparent 70%
+  );
+  filter: blur(18px);
+  opacity: 0;
+  animation: ek-intro-bloom 1200ms ease-out 1100ms both;
+}
+
+.ek-intro-sweep {
+  pointer-events: none;
+  position: absolute;
+  inset: -8%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    color-mix(in srgb, var(--ek-gold-warm) 45%, transparent) 48%,
+    transparent 62%
+  );
+  opacity: 0;
+  mix-blend-mode: soft-light;
+  animation: ek-intro-sweep 1100ms cubic-bezier(0.4, 0, 0.2, 1) 1700ms both;
+}
+
+.ek-intro-wordmark {
+  margin: 0;
+  font-family: var(--font-landing-display), Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.15rem, 3.6vw, 1.65rem);
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--ek-ivory);
+  opacity: 0;
+  animation: ek-intro-word 700ms cubic-bezier(0.16, 1, 0.3, 1) 2100ms both;
+}
+
+.ek-intro-skip {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 2;
+  border: 1px solid color-mix(in srgb, var(--ek-ivory) 22%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #0a0b10 55%, transparent);
+  color: color-mix(in srgb, var(--ek-ivory) 78%, transparent);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 0.45rem 0.9rem;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.ek-intro-skip:hover,
+.ek-intro-skip:focus-visible {
+  color: var(--ek-ivory);
+  border-color: color-mix(in srgb, var(--ek-gold) 55%, transparent);
+  background: color-mix(in srgb, var(--ek-gold) 12%, transparent);
+  outline: none;
+}
+
+.ek-intro-skip:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ek-gold) 45%, transparent);
+}
+
+@keyframes ek-intro-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ek-intro-leave {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes ek-intro-light {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+@keyframes ek-intro-bloom {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.85;
+  }
+}
+
+@keyframes ek-intro-sweep {
+  from {
+    opacity: 0;
+    transform: translateX(-28%) skewX(-8deg);
+  }
+  30% {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(28%) skewX(-8deg);
+  }
+}
+
+@keyframes ek-intro-word {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.ek-intro--reduced .ek-intro-light,
+.ek-intro--reduced .ek-intro-bloom,
+.ek-intro--reduced .ek-intro-sweep,
+.ek-intro--reduced .ek-intro-mark {
+  animation: none;
+}
+
+.ek-intro--reduced .ek-intro-light,
+.ek-intro--reduced .ek-intro-bloom {
+  opacity: 0.55;
+}
+
+.ek-intro--reduced .ek-intro-mark,
+.ek-intro--reduced .ek-intro-wordmark {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+/* ── Loader ──────────────────────────────────────────────────────────────── */
+
+.ek-loader-stage {
+  width: max-content;
+  height: max-content;
+}
+
+.ek-loader-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -18%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ek-gold) 34%, transparent) 0%,
+    transparent 70%
+  );
+  filter: blur(10px);
+  opacity: 0.35;
+  animation: ek-loader-pulse 2.4s ease-in-out infinite;
+}
+
+.ek-loader-sweep {
+  pointer-events: none;
+  position: absolute;
+  inset: -6%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    color-mix(in srgb, var(--ek-gold-warm) 40%, transparent) 50%,
+    transparent 60%
+  );
+  opacity: 0;
+  mix-blend-mode: soft-light;
+  animation: ek-loader-sweep 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.ek-loader-mark {
+  opacity: 0.92;
+}
+
+.ek-loader--reduced .ek-loader-glow,
+.ek-loader--reduced .ek-loader-sweep {
+  animation: none;
+  opacity: 0.25;
+}
+
+@keyframes ek-loader-pulse {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes ek-loader-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-35%);
+  }
+  35% {
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: translateX(35%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ek-brand-mark--draw path[data-ek-stroke] {
+    animation: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+
+  .ek-intro-light,
+  .ek-intro-bloom,
+  .ek-intro-sweep,
+  .ek-intro-wordmark,
+  .ek-loader-glow,
+  .ek-loader-sweep {
+    animation: none !important;
+  }
+
+  .ek-intro-wordmark {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .ek-loader-glow {
+    opacity: 0.3;
+  }
+}

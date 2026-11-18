@@ -1,5 +1,7 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { formatMoney, titleCase } from '../../_lib/format';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /**
  * Generic renderer for report payloads, whose shapes differ per report:
@@ -7,7 +9,8 @@ import { t } from '@/app/_ekklesia/i18n/core';
  * Keys ending in `Minor` are formatted as money.
  */
 export function ReportData({ data }: { data: unknown }): React.ReactElement {
-  return <Value value={data} depth={0} />;
+  const tr = useTranslations('AdminReports');
+  return <Value value={data} depth={0} tr={tr} />;
 }
 
 function label(key: string): string {
@@ -19,11 +22,15 @@ function label(key: string): string {
   );
 }
 
-function scalar(key: string, value: unknown): string {
-  if (value === null || value === undefined || value === '') return '—';
+function scalar(
+  key: string,
+  value: unknown,
+  tr: ReturnType<typeof useTranslations<'AdminReports'>>,
+): string {
+  if (value === null || value === undefined || value === '') return tr('emDash');
   if (typeof value === 'number' && key.endsWith('Minor')) return formatMoney(value);
   if (typeof value === 'number') return value.toLocaleString();
-  if (typeof value === 'boolean') return value ? t('Yes') : t('No');
+  if (typeof value === 'boolean') return value ? tr('yes') : tr('no');
   return String(value);
 }
 
@@ -35,13 +42,15 @@ function Value({
   value,
   depth,
   name = '',
+  tr,
 }: {
   value: unknown;
   depth: number;
   name?: string;
+  tr: ReturnType<typeof useTranslations<'AdminReports'>>;
 }): React.ReactElement {
   if (Array.isArray(value)) {
-    if (value.length === 0) return <p className="text-sm text-muted-foreground">{t('No rows.')}</p>;
+    if (value.length === 0) return <p className="text-sm text-muted-foreground">{tr('noRows')}</p>;
     if (value.every(isRow)) {
       const cols = Array.from(new Set(value.flatMap((r) => Object.keys(r)))).filter(
         (c) => !value.some((r) => typeof r[c] === 'object' && r[c] !== null),
@@ -68,7 +77,7 @@ function Value({
                         typeof row[c] === 'number' ? 'px-3 py-2 text-right tabular-nums' : 'px-3 py-2'
                       }
                     >
-                      {scalar(c, row[c])}
+                      {scalar(c, row[c], tr)}
                     </td>
                   ))}
                 </tr>
@@ -78,7 +87,7 @@ function Value({
         </div>
       );
     }
-    return <p className="text-sm">{value.map((v) => scalar(name, v)).join(', ')}</p>;
+    return <p className="text-sm">{value.map((v) => scalar(name, v, tr)).join(', ')}</p>;
   }
   if (isRow(value)) {
     const entries = Object.entries(value);
@@ -92,7 +101,7 @@ function Value({
               <div key={k} className="rounded-md bg-surface-muted px-3 py-2">
                 <dt className="text-xs text-muted-foreground">{label(k)}</dt>
                 <dd className="text-base font-semibold tabular-nums text-foreground">
-                  {scalar(k, v)}
+                  {scalar(k, v, tr)}
                 </dd>
               </div>
             ))}
@@ -103,11 +112,11 @@ function Value({
             {depth < 3 ? (
               <h3 className="text-sm font-semibold text-foreground">{label(k)}</h3>
             ) : null}
-            <Value value={v} depth={depth + 1} name={k} />
+            <Value value={v} depth={depth + 1} name={k} tr={tr} />
           </section>
         ))}
       </div>
     );
   }
-  return <p className="text-sm">{scalar(name, value)}</p>;
+  return <p className="text-sm">{scalar(name, value, tr)}</p>;
 }

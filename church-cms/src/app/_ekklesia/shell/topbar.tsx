@@ -1,10 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
 import { cn } from '../ui/utils';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<Topbar>`. */
 export interface TopbarProps {
@@ -39,6 +39,7 @@ export function Topbar({
   variant = 'admin',
   className,
 }: TopbarProps): React.ReactElement {
+  const t = useTranslations('Common');
   return (
     <header
       className={cn(
@@ -52,7 +53,7 @@ export function Topbar({
           type="button"
           onClick={onOpenDrawer}
           className="inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring lg:hidden"
-          aria-label={t('Open navigation')}
+          aria-label={t('openNav')}
         >
           <Icon name="menu" size={20} />
         </button>

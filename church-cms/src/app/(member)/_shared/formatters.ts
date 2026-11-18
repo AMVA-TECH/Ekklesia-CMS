@@ -1,5 +1,3 @@
-import { intlLocale, t } from '@/app/_ekklesia/i18n/core';
-
 /**
  * Light formatting helpers for member screens.
  *
@@ -12,7 +10,7 @@ export function formatServiceDate(iso: string): string {
   const [y, m, d] = iso.split('-').map((v) => Number(v));
   if (!y || !m || !d) return iso;
   const date = new Date(y, m - 1, d, 12);
-  return new Intl.DateTimeFormat(intlLocale(), {
+  return new Intl.DateTimeFormat('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -24,7 +22,7 @@ export function formatLongDate(iso: string): string {
   const [y, m, d] = iso.split('-').map((v) => Number(v));
   if (!y || !m || !d) return iso;
   const date = new Date(y, m - 1, d, 12);
-  return new Intl.DateTimeFormat(intlLocale(), {
+  return new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -36,7 +34,7 @@ export function formatEventTime(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(intlLocale(), {
+  return new Intl.DateTimeFormat('en-GB', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -52,11 +50,11 @@ export function formatRelativeToToday(iso: string): string {
   today.setHours(12, 0, 0, 0);
   const diffMs = date.getTime() - today.getTime();
   const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
-  if (diffDays === 0) return t('Today');
-  if (diffDays === 1) return t('Tomorrow');
-  if (diffDays === -1) return t('Yesterday');
-  if (diffDays > 1 && diffDays < 7) return t('In {0} days', diffDays);
-  if (diffDays < -1 && diffDays > -7) return t('{0} days ago', Math.abs(diffDays));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays === -1) return 'Yesterday';
+  if (diffDays > 1 && diffDays < 7) return `In ${diffDays} days`;
+  if (diffDays < -1 && diffDays > -7) return `${Math.abs(diffDays)} days ago`;
   return formatServiceDate(iso);
 }
 
@@ -64,7 +62,7 @@ export function formatRelativeToToday(iso: string): string {
 export function formatMoney(amountMinor: number, currency: string): string {
   const amount = amountMinor / 100;
   try {
-    return new Intl.NumberFormat(intlLocale(), {
+    return new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency,
       maximumFractionDigits: currency === 'TZS' ? 0 : 2,
@@ -77,18 +75,21 @@ export function formatMoney(amountMinor: number, currency: string): string {
 /** A gentle, locale-free part-of-day greeting. */
 export function timeOfDayGreeting(now = new Date()): string {
   const h = now.getHours();
-  if (h < 5) return t('Blessings');
-  if (h < 12) return t('Good morning');
-  if (h < 17) return t('Good afternoon');
-  if (h < 21) return t('Good evening');
-  return t('Blessings');
+  if (h < 5) return 'Blessings';
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  if (h < 21) return 'Good evening';
+  return 'Blessings';
 }
 
 /** Take the first word of a display name (for a warm, non-awkward salute). */
-export function firstName(displayName: string | null | undefined): string {
-  if (!displayName) return t('friend');
+export function firstName(
+  displayName: string | null | undefined,
+  fallback = 'friend',
+): string {
+  if (!displayName) return fallback;
   const first = displayName.trim().split(/\s+/u)[0];
-  if (!first || first.length < 2) return t('friend');
+  if (!first || first.length < 2) return fallback;
   return first;
 }
 

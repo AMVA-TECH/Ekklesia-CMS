@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState, type FormEvent } from 'react';
 import {
   ApiError,
@@ -18,7 +19,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import { cn } from '@/app/_ekklesia/ui/utils';
-import { t } from '@/app/_ekklesia/i18n/core';
+import { TANZANIA_PHONE_EXAMPLE_LOCAL } from '@/platform/phone';
 
 type IdentifierKind = 'phone' | 'email';
 
@@ -27,6 +28,8 @@ type IdentifierKind = 'phone' | 'email';
  * Phone-first; PIN reveal on request. Auth API unchanged.
  */
 export function SignInClient(): React.ReactElement {
+  const t = useTranslations('SignIn');
+  const tCommon = useTranslations('Common');
   const router = useRouter();
   const params = useSearchParams();
   const showHelp = params?.get('help') === '1';
@@ -41,8 +44,8 @@ export function SignInClient(): React.ReactElement {
   const [submitting, setSubmitting] = useState(false);
 
   const identifierLabel = useMemo(
-    () => (identifierKind === 'phone' ? t('Phone number') : t('Email address')),
-    [identifierKind],
+    () => (identifierKind === 'phone' ? t('phoneLabel') : t('emailLabel')),
+    [identifierKind, t],
   );
 
   function validate(): boolean {
@@ -53,22 +56,19 @@ export function SignInClient(): React.ReactElement {
         : identifier.trim();
     if (trimmed === '') {
       nextFieldErrors.identifier =
-        identifierKind === 'phone'
-          ? 'Please enter your phone number.'
-          : 'Please enter your email.';
+        identifierKind === 'phone' ? t('phoneRequired') : t('emailRequired');
     } else if (
       identifierKind === 'phone' &&
       !/^\+255[67]\d{8}$/.test(trimmed)
     ) {
-      nextFieldErrors.identifier =
-        t('Enter a Tanzania mobile number, e.g. 0712 345 678.');
+      nextFieldErrors.identifier = t('phoneInvalid');
     } else if (identifierKind === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      nextFieldErrors.identifier = t('That email does not look right.');
+      nextFieldErrors.identifier = t('emailInvalid');
     }
     if (pin.trim() === '') {
-      nextFieldErrors.pin = t('Please enter your PIN.');
+      nextFieldErrors.pin = t('pinRequired');
     } else if (!/^\d{4,8}$/.test(pin.trim())) {
-      nextFieldErrors.pin = t('Your PIN is 4 to 8 digits.');
+      nextFieldErrors.pin = t('pinInvalid');
     }
     setFieldErrors(nextFieldErrors);
     return Object.keys(nextFieldErrors).length === 0;
@@ -103,14 +103,14 @@ export function SignInClient(): React.ReactElement {
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 401 || e.status === 403) {
-          setError(t('That phone, email, or PIN did not match. Please try again.'));
+          setError(t('errorMismatch'));
         } else if (e.status === 429) {
-          setError(t('Too many attempts. Please wait a minute and try again.'));
+          setError(t('errorRateLimit'));
         } else {
-          setError(e.message || t('We could not sign you in just now.'));
+          setError(e.message || t('errorGeneric'));
         }
       } else {
-        setError(t('We could not reach the server. Check your connection and try again.'));
+        setError(t('errorNetwork'));
       }
     } finally {
       setSubmitting(false);
@@ -121,33 +121,32 @@ export function SignInClient(): React.ReactElement {
     <div className="flex flex-col">
       <div className="mb-8 text-center lg:text-left">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-          {t('Welcome back')}
+          {t('title')}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {t('Sign in with the phone or email your church has on file.')}
+          {t('subtitle')}
         </p>
       </div>
 
       {showHelp ? (
         <div className="mb-6 rounded-xl border border-[color:var(--brand-gold-soft)] bg-[color:var(--brand-gold-tint)] px-4 py-3 text-sm text-foreground">
-          <p className="font-medium">{t('Need a hand?')}</p>
+          <p className="font-medium">{t('helpTitle')}</p>
           <p className="mt-1 text-muted-foreground">
-            {t('If you have forgotten your PIN or your details changed, your church office can reset them for you.')}
+            {t('helpBody')}
           </p>
         </div>
       ) : null}
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-        {/* Segmented control — FundFlow-style switcher */}
         <div
           role="tablist"
-          aria-label={t('Sign-in method')}
+          aria-label={t('methodLabel')}
           className="flex rounded-xl border border-border bg-[color:var(--peach-soft)]/50 p-1"
         >
           {(
             [
-              { id: 'phone', label: t('Phone') },
-              { id: 'email', label: t('Email') },
+              { id: 'phone', label: t('phone') },
+              { id: 'email', label: t('email') },
             ] as const
           ).map((tab) => {
             const active = identifierKind === tab.id;
@@ -169,7 +168,7 @@ export function SignInClient(): React.ReactElement {
                     : 'text-muted-foreground hover:text-[color:var(--brand-gold-ink)]',
                 )}
               >
-                {t(tab.label)}
+                {tab.label}
               </button>
             );
           })}
@@ -179,9 +178,7 @@ export function SignInClient(): React.ReactElement {
           label={identifierLabel}
           required
           hint={
-            identifierKind === 'phone'
-              ? t('Tanzania mobile — type 0712 345 678 or +255…')
-              : t('The email your church office has for you')
+            identifierKind === 'phone' ? t('phoneHint') : t('emailHint')
           }
           error={fieldErrors.identifier}
         >
@@ -190,7 +187,9 @@ export function SignInClient(): React.ReactElement {
             inputMode={identifierKind === 'phone' ? 'tel' : 'email'}
             autoComplete={identifierKind === 'phone' ? 'tel' : 'email'}
             placeholder={
-              identifierKind === 'phone' ? '0712 345 678' : 'you@example.com'
+              identifierKind === 'phone'
+                ? TANZANIA_PHONE_EXAMPLE_LOCAL
+                : tCommon('emailPlaceholder')
             }
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
@@ -201,9 +200,9 @@ export function SignInClient(): React.ReactElement {
         </Field>
 
         <Field
-          label={t('PIN')}
+          label={t('pinLabel')}
           required
-          hint={t('4 to 8 digits — the one your church gave you.')}
+          hint={t('pinHint')}
           error={fieldErrors.pin}
           labelAccessory={
             <button
@@ -213,7 +212,7 @@ export function SignInClient(): React.ReactElement {
               aria-pressed={showPin}
             >
               <Icon name={showPin ? 'eye-off' : 'eye'} size={14} />
-              {showPin ? t('Hide') : t('Show')}
+              {showPin ? tCommon('hide') : tCommon('show')}
             </button>
           }
         >
@@ -239,21 +238,21 @@ export function SignInClient(): React.ReactElement {
         ) : null}
 
         <Button type="submit" size="lg" block loading={submitting} className="mt-1">
-          {submitting ? t('Signing you in…') : t('Sign in')}
+          {submitting ? t('submitting') : t('submit')}
         </Button>
 
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
-          {t('By signing in you agree to your church’s handling of your information, kept private and never shared with other churches.')}
+          {t('privacy')}
         </p>
       </form>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        {t('New to this church?')}{' '}
+        {t('newHere')}{' '}
         <Link
           href="/register"
           className="link-ink font-medium underline-offset-2 hover:underline focus-ring rounded-sm"
         >
-          {t('Request to join')}
+          {t('requestJoin')}
         </Link>
       </p>
     </div>

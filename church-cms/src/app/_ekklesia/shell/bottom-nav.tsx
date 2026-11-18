@@ -1,10 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import type { IconName } from '../icons';
 import { NavLink } from '../ui/nav-link';
 import { cn } from '../ui/utils';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** A single bottom-nav destination. */
 export interface BottomNavItem {
@@ -30,9 +30,10 @@ export interface BottomNavProps {
  * desktop widths; member screens typically use a top sticky header there.
  */
 export function BottomNav({ items, className }: BottomNavProps): React.ReactElement {
+  const t = useTranslations('Common');
   return (
     <nav
-      aria-label={t('Primary')}
+      aria-label={t('primary')}
       className={cn(
         'sticky bottom-0 z-30 flex items-stretch border-t border-border bg-surface md:hidden',
         'pb-[env(safe-area-inset-bottom)]',
@@ -48,7 +49,7 @@ export function BottomNav({ items, className }: BottomNavProps): React.ReactElem
           variant="bottom"
           endSlot={item.endSlot}
         >
-          {t(item.label)}
+          {item.label}
         </NavLink>
       ))}
     </nav>

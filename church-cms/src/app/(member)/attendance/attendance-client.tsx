@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError, apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -26,9 +27,9 @@ import {
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MyAttendance } from '../_shared/api-types';
 import { formatServiceDate } from '../_shared/formatters';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export function AttendanceClient(): React.ReactElement {
+  const t = useTranslations('MemberAttendance');
   const [data, setData] = useState<MyAttendance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export function AttendanceClient(): React.ReactElement {
         } else if (e instanceof ApiError) {
           setError(e.message);
         } else {
-          setError(t('Check your connection and try again.'));
+          setError(t('connection'));
         }
       })
       .finally(() => {
@@ -59,21 +60,24 @@ export function AttendanceClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const bandCopy = useMemo(
-    () => bandNarrative(data?.suggestedNudge ?? null, data?.band),
-    [data?.suggestedNudge, data?.band],
+    () => bandNarrative(data?.suggestedNudge ?? null, data?.band, t),
+    [data?.suggestedNudge, data?.band, t],
   );
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('My attendance')}
-        lede={t('A gentle record of your Sundays and services — only visible to you.')}
+        title={t('title')}
+        lede={t('lede')}
         actions={
-          <Link href="/attendance/family" className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
-            {t('Family & away notices')}
+          <Link
+            href="/attendance/family"
+            className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+          >
+            {t('familyAwayLink')}
           </Link>
         }
       />
@@ -84,8 +88,8 @@ export function AttendanceClient(): React.ReactElement {
         <EmptyState
           icon="calendar-check"
           tone="sky"
-          title={t('Attendance isn’t tracked for you yet')}
-          description={t('When your church starts recording attendance for your services, your record will show here.')}
+          title={t('notTracked')}
+          description={t('notTrackedBody')}
         />
       ) : error ? (
         <ErrorCard message={error} />
@@ -93,20 +97,20 @@ export function AttendanceClient(): React.ReactElement {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <Metric
-              label={t('Services held')}
+              label={t('servicesHeld')}
               value={data.sessionsHeld.toString()}
               icon="calendar"
               tone="sky"
               hint={`${formatServiceDate(data.from)} – ${formatServiceDate(data.to)}`}
             />
             <Metric
-              label={t('Present')}
+              label={t('present')}
               value={data.presentCount.toString()}
               icon="check-circle"
               tone="sage"
             />
             <Metric
-              label={t('Attendance rate')}
+              label={t('attendanceRate')}
               value={data.rate !== null ? `${Math.round(data.rate * 100)}%` : '—'}
               icon="chart"
               tone="gold"
@@ -121,13 +125,14 @@ export function AttendanceClient(): React.ReactElement {
               <Icon name={bandCopy.icon} size={20} />
             </span>
             <div>
-              <CardTitle>{t(bandCopy.title)}</CardTitle>
-              <CardSubtitle>{t(bandCopy.message)}</CardSubtitle>
+              <CardTitle>{bandCopy.title}</CardTitle>
+              <CardSubtitle>{bandCopy.message}</CardSubtitle>
               {data.noticeCount > 0 ? (
                 <p className="mt-2 inline-flex">
                   <Badge tone="lavender">
-                    {data.noticeCount} {t('absence')}{' '}
-                    {data.noticeCount === 1 ? t('note') : t('notes')} {t('sent')}
+                    {data.noticeCount === 1
+                      ? t('absenceNote', { count: data.noticeCount })
+                      : t('absenceNotes', { count: data.noticeCount })}
                   </Badge>
                 </p>
               ) : null}
@@ -135,15 +140,15 @@ export function AttendanceClient(): React.ReactElement {
           </Card>
 
           <Panel
-            title={t('Service history')}
-            subtitle={t('The last few services on your record.')}
+            title={t('serviceHistory')}
+            subtitle={t('serviceHistorySubtitle')}
           >
             {data.calendar.length === 0 ? (
               <EmptyState
                 icon="calendar-check"
                 tone="sky"
-                title={t('No services recorded yet')}
-                description={t('Your attendance will fill in here once services start being recorded.')}
+                title={t('noServices')}
+                description={t('noServicesBody')}
               />
             ) : (
               <ul className="flex flex-col divide-y divide-border">
@@ -168,14 +173,14 @@ export function AttendanceClient(): React.ReactElement {
                             {formatServiceDate(entry.serviceDate)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {statusLabel(entry.status)}
+                            {statusLabel(entry.status, t)}
                           </p>
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         {entry.status === 'absent' && entry.sessionId ? (
                           requested.has(entry.serviceDate) ? (
-                            <span className="text-xs text-muted-foreground">{t('Correction sent')}</span>
+                            <span className="text-xs text-muted-foreground">{t('correctionSent')}</span>
                           ) : (
                             <Button
                               size="sm"
@@ -187,13 +192,21 @@ export function AttendanceClient(): React.ReactElement {
                                 })
                               }
                             >
-                              {t('I was there')}
+                              {t('iWasThere')}
                             </Button>
                           )
                         ) : null}
-                        <StatusPill tone={statusPillTone(entry.status)}>
-                          {statusLabel(entry.status)}
-                        </StatusPill>
+                        {/* The status is also under the date; drop the pill on phones
+                            when the row has an action, so both fit. */}
+                        <span
+                          className={
+                            entry.status === 'absent' && entry.sessionId ? 'hidden sm:inline-flex' : 'inline-flex'
+                          }
+                        >
+                          <StatusPill tone={statusPillTone(entry.status)}>
+                            {statusLabel(entry.status, t)}
+                          </StatusPill>
+                        </span>
                       </div>
                     </li>
                   ))}
@@ -232,6 +245,7 @@ function CorrectionDialog({
   onClose: () => void;
   onSent: () => void;
 }): React.ReactElement {
+  const t = useTranslations('MemberAttendance');
   const { push } = useToast();
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
@@ -252,12 +266,12 @@ function CorrectionDialog({
       });
       push({
         tone: 'success',
-        title: t('Correction sent'),
-        message: t('Your church team will review it and update your record.'),
+        title: t('correctionSent'),
+        message: t('correctionSentBody'),
       });
       onSent();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : t('Could not send. Try again.'));
+      setError(e instanceof ApiError ? e.message : t('sendFail'));
       setSending(false);
     }
   };
@@ -268,17 +282,17 @@ function CorrectionDialog({
       onClose={() => {
         if (!sending) onClose();
       }}
-      title={t('Fix my attendance')}
-      description={t('Tell the church you were at the service on {0}.', formatServiceDate(serviceDate))}
+      title={t('fixMyAttendance')}
+      description={t('fixMyAttendanceDesc', { date: formatServiceDate(serviceDate) })}
       size="sm"
       sheetOnMobile
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={sending}>
-            {t('Cancel')}
+            {t('cancel')}
           </Button>
           <Button loading={sending} onClick={() => void submit()}>
-            {t('Send')}
+            {t('send')}
           </Button>
         </DialogFooter>
       }
@@ -289,7 +303,7 @@ function CorrectionDialog({
             {error}
           </p>
         ) : null}
-        <Field label={t('Note')} hint={t('Optional — e.g. I came late and missed the scan.')}>
+        <Field label={t('note')} hint={t('correctionNoteHint')}>
           <Textarea
             data-autofocus
             value={note}
@@ -318,6 +332,7 @@ function AttendanceSkeleton(): React.ReactElement {
 }
 
 function ErrorCard({ message }: { message: string }): React.ReactElement {
+  const t = useTranslations('MemberAttendance');
   return (
     <Card padding="lg" className="flex items-start gap-3">
       <Icon
@@ -326,12 +341,14 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
         className="mt-0.5 text-[color:var(--danger-ink)]"
       />
       <div>
-        <CardTitle>{t('We couldn’t load your attendance')}</CardTitle>
+        <CardTitle>{t('loadFail')}</CardTitle>
         <CardSubtitle>{message}</CardSubtitle>
       </div>
     </Card>
   );
 }
+
+type AttendanceT = ReturnType<typeof useTranslations<'MemberAttendance'>>;
 
 /**
  * Member-facing encouragement. Driven by the API's suggested nudge, with the
@@ -341,6 +358,7 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
 function bandNarrative(
   nudge: 'congratulate' | 'encourage' | 'remind' | null,
   band: string | undefined,
+  t: AttendanceT,
 ): {
   title: string;
   message: string;
@@ -359,32 +377,29 @@ function bandNarrative(
   switch (kind) {
     case 'congratulate':
       return {
-        title: t('Steady and present'),
-        message:
-          t('You’re showing up — your church family sees it, and it strengthens them too.'),
+        title: t('steady'),
+        message: t('steadyBody'),
         icon: 'heart',
         toneClass: 'tone-sage',
       };
     case 'encourage':
       return {
-        title: t('Keeping in rhythm'),
-        message:
-          t('You’ve been with us some weeks. Keep walking at a pace that fits your life — we’re glad when you’re here.'),
+        title: t('rhythm'),
+        message: t('rhythmBody'),
         icon: 'check-circle',
         toneClass: 'tone-sky',
       };
     case 'remind':
       return {
-        title: t('We’ve missed you'),
-        message:
-          t('It has been a little while between services. We’d love to see you, and your pastor is glad to pray with you about anything.'),
+        title: t('missed'),
+        message: t('missedBody'),
         icon: 'heart',
         toneClass: 'tone-peach',
       };
     default:
       return {
-        title: t('Your attendance'),
-        message: t('Here is a quiet look at your recent services. It fills in after a few Sundays.'),
+        title: t('yourAttendance'),
+        message: t('defaultBody'),
         icon: 'calendar-check',
         toneClass: 'tone-sky',
       };
@@ -405,10 +420,13 @@ function statusIcon(
   return 'minus';
 }
 
-function statusLabel(status: 'present' | 'absent' | 'notice'): string {
-  if (status === 'present') return t('Present');
-  if (status === 'notice') return t('Absence noted');
-  return t('Away');
+function statusLabel(
+  status: 'present' | 'absent' | 'notice',
+  t: AttendanceT,
+): string {
+  if (status === 'present') return t('statusPresent');
+  if (status === 'notice') return t('statusNotice');
+  return t('statusAway');
 }
 
 function statusPillTone(status: 'present' | 'absent' | 'notice'): StatusTone {

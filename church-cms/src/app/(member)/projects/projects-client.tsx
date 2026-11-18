@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import { ApiError, apiFetch, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -17,7 +18,6 @@ import {
   useToast,
 } from '@/app/_ekklesia/ui';
 import { formatMoney } from '../_shared/formatters';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface MemberProject {
   id: string;
@@ -31,6 +31,7 @@ interface MemberProject {
 }
 
 export function MemberProjectsClient(): React.ReactElement {
+  const t = useTranslations('MemberProjects');
   const { push } = useToast();
   const [projects, setProjects] = useState<MemberProject[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,22 +40,21 @@ export function MemberProjectsClient(): React.ReactElement {
 
   const load = useCallback(async (): Promise<void> => {
     try {
-      const data = await apiFetch<MemberProject[]>('/api/v1/projects?status=active&limit=50');
+      const data = await apiFetch<MemberProject[]>(
+        '/api/v1/projects?status=active&limit=50',
+      );
       setProjects(Array.isArray(data) ? data : []);
       setError(null);
     } catch (e) {
       setProjects([]);
-      setError(e instanceof ApiError ? e.message : t('Check your connection and try again.'));
+      setError(e instanceof ApiError ? e.message : t('connection'));
     }
-  }, []);
+  }, [t]);
   useLoadEffect(load);
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t('Projects')}
-        lede={t('What the church is building together. Offer your time and the project team will be in touch.')}
-      />
+      <PageHeader title={t('title')} lede={t('lede')} />
 
       {projects === null ? (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -65,11 +65,11 @@ export function MemberProjectsClient(): React.ReactElement {
         <EmptyState
           icon="alert-circle"
           tone="peach"
-          title={t('Couldn\'t load projects')}
+          title={t('loadFail')}
           description={error}
           action={
             <Button size="sm" variant="secondary" onClick={() => void load()}>
-              {t('Try again')}
+              {t('tryAgain')}
             </Button>
           }
         />
@@ -77,8 +77,8 @@ export function MemberProjectsClient(): React.ReactElement {
         <EmptyState
           icon="briefcase"
           tone="gold"
-          title={t('No active projects right now')}
-          description={t('When your church starts a project you can join, it will appear here.')}
+          title={t('empty')}
+          description={t('emptyBody')}
         />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
@@ -87,7 +87,11 @@ export function MemberProjectsClient(): React.ReactElement {
               <Card className="flex h-full flex-col gap-3 p-5">
                 <CardTitle>{p.name}</CardTitle>
                 {p.targetAmountMinor ? (
-                  <CardSubtitle>{t('Goal')} {formatMoney(p.targetAmountMinor, p.currency)}</CardSubtitle>
+                  <CardSubtitle>
+                    {t('goal', {
+                      amount: formatMoney(p.targetAmountMinor, p.currency),
+                    })}
+                  </CardSubtitle>
                 ) : null}
                 {p.description ? (
                   <p className="text-sm text-muted-foreground">{p.description}</p>
@@ -95,11 +99,15 @@ export function MemberProjectsClient(): React.ReactElement {
                 <div className="mt-auto pt-2">
                   {sent.has(p.id) ? (
                     <p className="text-sm font-medium text-[color:var(--success-ink)]">
-                      {t('Thanks — your interest was sent.')}
+                      {t('thanksSent')}
                     </p>
                   ) : (
-                    <Button size="sm" iconLeft="hand" onClick={() => setHelping(p)}>
-                      {t('I’d like to help')}
+                    <Button
+                      size="sm"
+                      iconLeft="hand"
+                      onClick={() => setHelping(p)}
+                    >
+                      {t('idLikeToHelp')}
                     </Button>
                   )}
                 </div>
@@ -117,8 +125,8 @@ export function MemberProjectsClient(): React.ReactElement {
             setSent((s) => new Set(s).add(helping.id));
             push({
               tone: 'success',
-              title: t('Interest sent'),
-              message: t('The {0} team will review it.', helping.name),
+              title: t('interestSent'),
+              message: t('teamReview', { name: helping.name }),
             });
             setHelping(null);
           }}
@@ -137,6 +145,7 @@ function InterestDialog({
   onClose: () => void;
   onSent: () => void;
 }): React.ReactElement {
+  const t = useTranslations('MemberProjects');
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -151,7 +160,7 @@ function InterestDialog({
       });
       onSent();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : t('Could not send. Try again.'));
+      setError(e instanceof ApiError ? e.message : t('sendFail'));
       setSending(false);
     }
   };
@@ -162,17 +171,17 @@ function InterestDialog({
       onClose={() => {
         if (!sending) onClose();
       }}
-      title={t('Help with {0}', project.name)}
-      description={t('Tell the team how you\'d like to help (optional).')}
+      title={t('helpWith', { name: project.name })}
+      description={t('helpDesc')}
       size="sm"
       sheetOnMobile
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={sending}>
-            {t('Cancel')}
+            {t('cancel')}
           </Button>
           <Button loading={sending} onClick={() => void submit()}>
-            {t('Send')}
+            {t('send')}
           </Button>
         </DialogFooter>
       }
@@ -183,14 +192,14 @@ function InterestDialog({
             {error}
           </p>
         ) : null}
-        <Field label={t('Note')}>
+        <Field label={t('note')}>
           <Textarea
             data-autofocus
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
             maxLength={1000}
-            placeholder={t('I can help on Saturdays with setup.')}
+            placeholder={t('notePlaceholder')}
           />
         </Field>
       </div>

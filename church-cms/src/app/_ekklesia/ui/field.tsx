@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Children,
   cloneElement,
@@ -7,8 +9,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from './utils';
-import { t, tn } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<Field>` form row wrapper. */
 export interface FieldProps extends HTMLAttributes<HTMLDivElement> {
@@ -57,6 +59,7 @@ export function Field({
   children,
   ...rest
 }: FieldProps): React.ReactElement {
+  const t = useTranslations('Common');
   const reactId = useId();
   const controlId = htmlFor ?? idProp ?? `field-${reactId}`;
   const hintId = hint ? `${controlId}-hint` : undefined;
@@ -83,7 +86,7 @@ export function Field({
           htmlFor={controlId}
           className="text-sm font-medium text-foreground"
         >
-          {tn(label)}
+          {label}
           {required ? (
             <span
               aria-hidden="true"
@@ -92,7 +95,9 @@ export function Field({
               *
             </span>
           ) : null}
-          {required ? <span className="sr-only"> {t('(required)')}</span> : null}
+          {required ? (
+            <span className="sr-only"> ({t('required')})</span>
+          ) : null}
         </label>
         {labelAccessory ? (
           <span className="text-xs text-muted-foreground">{labelAccessory}</span>
@@ -101,7 +106,7 @@ export function Field({
       {enriched}
       {hint && !error ? (
         <p id={hintId} className="text-xs text-muted-foreground">
-          {tn(hint)}
+          {hint}
         </p>
       ) : null}
       {error ? (

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState, type ReactNode } from 'react';
 import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
@@ -12,7 +13,6 @@ import { BottomNav, type BottomNavItem } from './bottom-nav';
 import { MobileDrawer } from './mobile-drawer';
 import type { NavGroup } from './role-nav';
 import { Topbar } from './topbar';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<MemberShell>`. */
 export interface MemberShellProps {
@@ -95,11 +95,12 @@ export function MemberShell({
 
 /** lg+ member navigation: brand mark plus a row of primary links. */
 function DesktopNav({ items }: { items: readonly BottomNavItem[] }): React.ReactElement {
+  const t = useTranslations('Common');
   const pathname = usePathname() ?? '';
   return (
     <div className="flex min-w-0 flex-1 items-center gap-6">
       <BrandMark href="/home" size={28} variant="symbol" surface="light" />
-      <nav aria-label={t('Primary')} className="flex min-w-0 items-center gap-1 overflow-x-auto">
+      <nav aria-label={t('primary')} className="flex min-w-0 items-center gap-1 overflow-x-auto">
         {items.map((item) => {
           const active =
             item.href === '/home' ? pathname === '/home' : pathname.startsWith(item.href);
@@ -116,7 +117,7 @@ function DesktopNav({ items }: { items: readonly BottomNavItem[] }): React.React
               )}
             >
               {item.icon ? <Icon name={item.icon} size={16} /> : null}
-              {t(item.label)}
+              {item.label}
             </Link>
           );
         })}

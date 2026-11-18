@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError, apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -18,9 +19,9 @@ import { Icon } from '@/app/_ekklesia/icons';
 import type { MemberPledge } from '../_shared/api-types';
 import { formatMoney, formatRelativeToToday } from '../_shared/formatters';
 import { useNameLookup } from '../_shared/use-name-lookup';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export function GivingClient(): React.ReactElement {
+  const t = useTranslations('MemberGiving');
   const [pledges, setPledges] = useState<MemberPledge[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export function GivingClient(): React.ReactElement {
         } else if (e instanceof ApiError) {
           setError(e.message);
         } else {
-          setError(t('Check your connection and try again.'));
+          setError(t('connection'));
         }
       })
       .finally(() => {
@@ -50,7 +51,7 @@ export function GivingClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const summary = useMemo(() => {
     const list = pledges ?? [];
@@ -67,15 +68,12 @@ export function GivingClient(): React.ReactElement {
   if (forbidden) {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader
-          title={t('Giving')}
-          lede={t('Your pledges and offerings with this church.')}
-        />
+        <PageHeader title={t('title')} lede={t('lede')} />
         <EmptyState
           icon="hand"
           tone="gold"
-          title={t('Giving is private')}
-          description={t('Giving details are shared with members as your church rolls them out. Your church office can tell you when this will be available for your account.')}
+          title={t('privateTitle')}
+          description={t('privateBody')}
         />
       </div>
     );
@@ -83,10 +81,7 @@ export function GivingClient(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t('Giving')}
-        lede={t('Your pledges and offerings with this church.')}
-      />
+      <PageHeader title={t('title')} lede={t('lede')} />
 
       {loading ? (
         <GivingSkeleton />
@@ -96,14 +91,16 @@ export function GivingClient(): React.ReactElement {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <Metric
-              label={t('Open pledges')}
+              label={t('openPledges')}
               value={summary.count.toString()}
               icon="hand"
               tone="gold"
-              hint={summary.count === 0 ? t('Nothing outstanding') : t('Still to pay')}
+              hint={
+                summary.count === 0 ? t('nothingOutstanding') : t('stillToPay')
+              }
             />
             <Metric
-              label={t('Remaining')}
+              label={t('remaining')}
               value={
                 summary.count === 0
                   ? '—'
@@ -113,7 +110,7 @@ export function GivingClient(): React.ReactElement {
               tone="gold"
             />
             <Metric
-              label={t('Pledged so far')}
+              label={t('pledgedSoFar')}
               value={
                 summary.count === 0
                   ? '—'
@@ -124,16 +121,13 @@ export function GivingClient(): React.ReactElement {
             />
           </div>
 
-          <Panel
-            title={t('Open pledges')}
-            subtitle={t('Promises you made to support a fund.')}
-          >
+          <Panel title={t('openPledges')} subtitle={t('openPledgesSubtitle')}>
             {(pledges ?? []).length === 0 ? (
               <EmptyState
                 icon="hand"
                 tone="gold"
-                title={t('You’re all caught up')}
-                description={t('You don’t have any open pledges. When you make a new pledge with your church, it will appear here.')}
+                title={t('allCaughtUp')}
+                description={t('allCaughtUpBody')}
               />
             ) : (
               <ul className="flex flex-col divide-y divide-border">
@@ -151,17 +145,24 @@ export function GivingClient(): React.ReactElement {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground">
-                            {fundNames.get(pledge.fundId) ?? t('Pledge to a church fund')}
+                            {fundNames.get(pledge.fundId) ?? t('pledgeFallback')}
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            {t('Promised')} {formatMoney(pledge.amountMinor, pledge.currency)}
+                            {t('promised', {
+                              amount: formatMoney(
+                                pledge.amountMinor,
+                                pledge.currency,
+                              ),
+                            })}
                             {pledge.dueOn
-                              ? (' ' + t('· Due {0}', formatRelativeToToday(pledge.dueOn)))
+                              ? ` · ${t('due', {
+                                  when: formatRelativeToToday(pledge.dueOn),
+                                })}`
                               : null}
                           </p>
                         </div>
                         <StatusPill tone={overdue ? 'warning' : 'pending'}>
-                          {overdue ? t('Overdue') : t('Open')}
+                          {overdue ? t('overdue') : t('open')}
                         </StatusPill>
                       </div>
                       <div className="mt-3">
@@ -171,7 +172,7 @@ export function GivingClient(): React.ReactElement {
                           aria-valuenow={progress}
                           aria-valuemin={0}
                           aria-valuemax={100}
-                          aria-label={t('{0}% paid', progress)}
+                          aria-label={t('percentPaid', { progress })}
                         >
                           <div
                             className="h-full rounded-full bg-brand-gold motion-reduce:transition-none"
@@ -180,10 +181,14 @@ export function GivingClient(): React.ReactElement {
                         </div>
                         <p className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
                           <span>
-                            {formatMoney(applied, pledge.currency)} {t('paid')}
+                            {t('paid', {
+                              amount: formatMoney(applied, pledge.currency),
+                            })}
                           </span>
                           <span>
-                            {formatMoney(remaining, pledge.currency)} {t('to go')}
+                            {t('toGo', {
+                              amount: formatMoney(remaining, pledge.currency),
+                            })}
                           </span>
                         </p>
                       </div>
@@ -202,14 +207,12 @@ export function GivingClient(): React.ReactElement {
               <Icon name="info" size={18} />
             </span>
             <div>
-              <CardTitle>{t('How to pay')}</CardTitle>
-              <CardSubtitle>
-                {t('Your church will share payment instructions when mobile money or bank options are set up. For now, drop by the church office to make a payment.')}
-              </CardSubtitle>
+              <CardTitle>{t('howToPay')}</CardTitle>
+              <CardSubtitle>{t('howToPayBody')}</CardSubtitle>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Badge tone="neutral">{t('M-Pesa · coming soon')}</Badge>
-                <Badge tone="neutral">{t('Tigo Pesa · coming soon')}</Badge>
-                <Badge tone="neutral">{t('Bank transfer · coming soon')}</Badge>
+                <Badge tone="neutral">{t('mpesaSoon')}</Badge>
+                <Badge tone="neutral">{t('tigoSoon')}</Badge>
+                <Badge tone="neutral">{t('bankSoon')}</Badge>
               </div>
             </div>
           </Card>
@@ -233,6 +236,7 @@ function GivingSkeleton(): React.ReactElement {
 }
 
 function ErrorCard({ message }: { message: string }): React.ReactElement {
+  const t = useTranslations('MemberGiving');
   return (
     <Card padding="lg" className="flex items-start gap-3">
       <Icon
@@ -241,7 +245,7 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
         className="text-[color:var(--danger-ink)] mt-0.5"
       />
       <div>
-        <CardTitle>{t('We couldn’t load your giving')}</CardTitle>
+        <CardTitle>{t('loadFail')}</CardTitle>
         <CardSubtitle>{message}</CardSubtitle>
       </div>
     </Card>

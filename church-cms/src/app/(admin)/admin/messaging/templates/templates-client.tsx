@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -24,23 +25,26 @@ import {
   CreateTemplateDialog,
   type MessageTemplateRow,
 } from './create-template-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
-
-const LOCALE_LABELS: Record<string, string> = {
-  en: 'English',
-  sw: 'Kiswahili',
-};
 
 /**
  * Message templates list + create/edit for non-technical church staff.
  */
 export function TemplatesClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tm = useTranslations('AdminMessaging');
+  const tc = useTranslations('Common');
+  const tLocale = useTranslations('Locale');
   const { push } = useToast();
   const [rows, setRows] = useState<MessageTemplateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<MessageTemplateRow | null>(null);
+
+  const localeLabel = (locale: string): string => {
+    if (locale === 'en' || locale === 'sw') return tLocale(locale);
+    return locale.toUpperCase();
+  };
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -62,20 +66,20 @@ export function TemplatesClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load templates'),
+            : tm('unableLoadTemplates'),
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tm]);
 
   useLoadEffect(load);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Message templates')}
-        lede={t('Saved messages you can reuse when texting the church.')}
+        title={t('templates')}
+        lede={t('templatesLede')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -84,25 +88,25 @@ export function TemplatesClient(): React.ReactElement {
               iconLeft="refresh"
               onClick={() => {
                 void load().then(() =>
-                  push({ tone: 'success', message: t('Templates refreshed.') }),
+                  push({ tone: 'success', message: tm('templatesRefreshed') }),
                 );
               }}
             >
-              {t('Refresh')}
+              {tm('refresh')}
             </Button>
             <Button
               size="sm"
               iconLeft="plus"
               onClick={() => setCreateOpen(true)}
             >
-              {t('New template')}
+              {tm('newTemplate')}
             </Button>
           </div>
         }
       />
 
       {loading ? (
-        <Panel title={t('Templates')}>
+        <Panel title={tm('templates')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -113,11 +117,11 @@ export function TemplatesClient(): React.ReactElement {
         <EmptyState
           icon="alert"
           tone="sky"
-          title={t('Could not load templates')}
+          title={tm('couldNotLoadTemplates')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              {t('Try again')}
+              {tc('retry')}
             </Button>
           }
         />
@@ -125,24 +129,24 @@ export function TemplatesClient(): React.ReactElement {
         <EmptyState
           icon="mail"
           tone="sky"
-          title={t('No saved messages yet')}
-          description={t('Create a welcome or reminder once, then pick it when you send a message.')}
+          title={tm('noTemplatesYet')}
+          description={tm('noTemplatesDesc')}
           action={
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-              {t('New template')}
+              {tm('newTemplate')}
             </Button>
           }
         />
       ) : (
-        <Panel title={t('All templates')} flush>
+        <Panel title={tm('allTemplates')} flush>
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Name')}</TH>
-                  <TH>{t('Send as')}</TH>
-                  <TH>{t('Language')}</TH>
-                  <TH>{t('Message')}</TH>
+                  <TH>{tm('colName')}</TH>
+                  <TH>{tm('colSendAs')}</TH>
+                  <TH>{tm('colLanguage')}</TH>
+                  <TH>{tm('colMessage')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -158,7 +162,7 @@ export function TemplatesClient(): React.ReactElement {
                       }
                     }}
                     tabIndex={0}
-                    aria-label={t('Edit template {0}', row.name)}
+                    aria-label={tm('editTemplateAria', { name: row.name })}
                   >
                     <TD>
                       <span className="font-medium text-foreground">
@@ -171,7 +175,7 @@ export function TemplatesClient(): React.ReactElement {
                       </Badge>
                     </TD>
                     <TD className="text-muted-foreground">
-                      {LOCALE_LABELS[row.locale] ?? row.locale.toUpperCase()}
+                      {localeLabel(row.locale)}
                     </TD>
                     <TD>
                       <span className="line-clamp-2 text-sm text-muted-foreground">
@@ -192,7 +196,7 @@ export function TemplatesClient(): React.ReactElement {
         onCreated={(row) => {
           setRows((prev) => [row, ...prev]);
           setCreateOpen(false);
-          push({ tone: 'success', message: t('Template created.') });
+          push({ tone: 'success', message: tm('templateCreated') });
         }}
       />
 
@@ -204,7 +208,7 @@ export function TemplatesClient(): React.ReactElement {
         onUpdated={(row) => {
           setRows((prev) => prev.map((r) => (r.id === row.id ? row : r)));
           setEditing(null);
-          push({ tone: 'success', message: t('Template saved.') });
+          push({ tone: 'success', message: tm('templateSaved') });
         }}
       />
     </div>

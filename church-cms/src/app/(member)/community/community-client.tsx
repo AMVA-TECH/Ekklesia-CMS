@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError, apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -25,14 +26,18 @@ import type {
   MemberParticipationRequest,
 } from '../_shared/api-types';
 import { useNameLookup } from '../_shared/use-name-lookup';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export function CommunityClient(): React.ReactElement {
+  const t = useTranslations('MemberCommunity');
   const [participations, setParticipations] = useState<
     MemberParticipationRequest[] | null
   >(null);
-  const [directory, setDirectory] = useState<MemberDirectoryEntry[] | null>(null);
-  const [participationError, setParticipationError] = useState<string | null>(null);
+  const [directory, setDirectory] = useState<MemberDirectoryEntry[] | null>(
+    null,
+  );
+  const [participationError, setParticipationError] = useState<string | null>(
+    null,
+  );
   const [directoryError, setDirectoryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -48,18 +53,19 @@ export function CommunityClient(): React.ReactElement {
       ]);
       if (cancelled) return;
       if (pResult.status === 'fulfilled') setParticipations(pResult.value);
-      else setParticipationError(messageFor(pResult.reason));
+      else setParticipationError(messageFor(pResult.reason, t));
       if (dResult.status === 'fulfilled') setDirectory(dResult.value);
-      else setDirectoryError(messageFor(dResult.reason));
+      else setDirectoryError(messageFor(dResult.reason, t));
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const ministryNames = useNameLookup('/api/v1/organisational-units?limit=100');
-  const ministryName = (unitId: string): string => ministryNames.get(unitId) ?? t('Ministry');
+  const ministryName = (unitId: string): string =>
+    ministryNames.get(unitId) ?? t('ministryFallback');
 
   const approved = useMemo(
     () => (participations ?? []).filter((p) => p.status === 'approved'),
@@ -83,22 +89,16 @@ export function CommunityClient(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t('Community')}
-        lede={t('Your ministries, groups, and the people you walk with.')}
-      />
+      <PageHeader title={t('title')} lede={t('lede')} />
 
       <Tabs defaultValue="mine">
-        <TabList aria-label={t('Community view')}>
-          <Tab value="mine">{t('My ministries')}</Tab>
-          <Tab value="directory">{t('Directory')}</Tab>
+        <TabList aria-label={t('viewAria')}>
+          <Tab value="mine">{t('mine')}</Tab>
+          <Tab value="directory">{t('directory')}</Tab>
         </TabList>
 
         <TabPanel value="mine" className="mt-4 flex flex-col gap-5">
-          <Panel
-            title={t('Where you serve')}
-            subtitle={t('Groups and ministries you belong to.')}
-          >
+          <Panel title={t('whereServe')} subtitle={t('whereServeSubtitle')}>
             {loading ? (
               <RowSkeleton count={2} />
             ) : participationError ? (
@@ -107,8 +107,8 @@ export function CommunityClient(): React.ReactElement {
               <EmptyState
                 icon="users"
                 tone="sage"
-                title={t('You haven’t joined a ministry yet')}
-                description={t('Ministries are small teams where you can serve, grow, and build friendships. Ask your pastor or ministry leader about joining one.')}
+                title={t('notJoined')}
+                description={t('notJoinedBody')}
               />
             ) : (
               <ul className="flex flex-col gap-2">
@@ -116,7 +116,7 @@ export function CommunityClient(): React.ReactElement {
                   <MinistryRow
                     key={p.id}
                     label={ministryName(p.organisationalUnitId)}
-                    status="Active"
+                    status={t('active')}
                   />
                 ))}
               </ul>
@@ -125,8 +125,8 @@ export function CommunityClient(): React.ReactElement {
 
           {pending.length > 0 ? (
             <Panel
-              title={t('Pending requests')}
-              subtitle={t('We’ll let you know when your ministry leader responds.')}
+              title={t('pendingTitle')}
+              subtitle={t('pendingSubtitle')}
             >
               <ul className="flex flex-col gap-2">
                 {pending.map((p) => (
@@ -143,14 +143,17 @@ export function CommunityClient(): React.ReactElement {
                       </span>
                       <span>{ministryName(p.organisationalUnitId)}</span>
                     </span>
-                    <StatusPill tone="pending">{t('Awaiting approval')}</StatusPill>
+                    <StatusPill tone="pending">{t('awaiting')}</StatusPill>
                   </li>
                 ))}
               </ul>
             </Panel>
           ) : null}
 
-          <Card padding="md" className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Card
+            padding="md"
+            className="flex flex-col gap-3 sm:flex-row sm:items-center"
+          >
             <span
               aria-hidden="true"
               className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md tone-sage"
@@ -158,21 +161,19 @@ export function CommunityClient(): React.ReactElement {
               <Icon name="hand" size={20} />
             </span>
             <div className="min-w-0 flex-1">
-              <CardTitle>{t('Want to join a new ministry?')}</CardTitle>
-              <CardSubtitle>
-                {t('Talk to your ministry leader or your pastor — they can add you to the team.')}
-              </CardSubtitle>
+              <CardTitle>{t('joinNew')}</CardTitle>
+              <CardSubtitle>{t('joinNewBody')}</CardSubtitle>
             </div>
           </Card>
         </TabPanel>
 
         <TabPanel value="directory" className="mt-4 flex flex-col gap-4">
           <SearchField
-            label={t('Search the directory')}
+            label={t('searchLabel')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onClear={() => setSearch('')}
-            placeholder={t('Name or ministry')}
+            placeholder={t('searchPlaceholder')}
           />
 
           {loading ? (
@@ -185,13 +186,13 @@ export function CommunityClient(): React.ReactElement {
               tone="sage"
               title={
                 (directory?.length ?? 0) === 0
-                  ? t('The directory is empty for now')
-                  : t('No one matches that search')
+                  ? t('directoryEmpty')
+                  : t('noMatch')
               }
               description={
                 (directory?.length ?? 0) === 0
-                  ? t('As more members opt in, you’ll see them here. You can opt in on your profile.')
-                  : t('Try a different name or ministry.')
+                  ? t('directoryEmptyBody')
+                  : t('noMatchBody')
               }
             />
           ) : (
@@ -216,7 +217,9 @@ export function CommunityClient(): React.ReactElement {
                           </span>
                         ))}
                         {entry.ministries.length > 2 ? (
-                          <Badge tone="neutral">+{entry.ministries.length - 2}</Badge>
+                          <Badge tone="neutral">
+                            +{entry.ministries.length - 2}
+                          </Badge>
                         ) : null}
                       </p>
                     ) : null}
@@ -247,7 +250,7 @@ function MinistryRow({
         >
           <Icon name="users" size={16} />
         </span>
-        <span>{t(label)}</span>
+        <span>{label}</span>
       </span>
       <StatusPill tone="success">{status}</StatusPill>
     </li>
@@ -273,11 +276,13 @@ function ErrorRow({ message }: { message: string }): React.ReactElement {
   );
 }
 
-function messageFor(reason: unknown): string {
+function messageFor(
+  reason: unknown,
+  t: ReturnType<typeof useTranslations<'MemberCommunity'>>,
+): string {
   if (reason instanceof ApiError) {
-    return reason.message || t('We could not load this list.');
+    return reason.message || t('loadListFail');
   }
   if (reason instanceof Error) return reason.message;
-  return t('Something went wrong.');
+  return t('somethingWrong');
 }
-

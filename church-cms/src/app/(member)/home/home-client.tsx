@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { ApiError, apiFetch, useSession } from '@/app/_ekklesia/session';
 import {
@@ -22,10 +23,8 @@ import {
   firstName,
   formatEventTime,
   formatServiceDate,
-  timeOfDayGreeting,
   todayIso,
 } from '../_shared/formatters';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface HomeData {
   events: MemberEvent[];
@@ -43,17 +42,26 @@ const EMPTY_DATA: HomeData = {
   errors: {},
 };
 
+function greetingKey(now = new Date()): 'greetingBlessings' | 'greetingMorning' | 'greetingAfternoon' | 'greetingEvening' {
+  const h = now.getHours();
+  if (h < 5) return 'greetingBlessings';
+  if (h < 12) return 'greetingMorning';
+  if (h < 17) return 'greetingAfternoon';
+  if (h < 21) return 'greetingEvening';
+  return 'greetingBlessings';
+}
+
 /**
  * Member home — mockup composition: greeting, featured worship card,
  * pastel quick actions, daily verse. Live API only.
  */
 export function HomeClient(): React.ReactElement {
+  const t = useTranslations('Home');
+  const tCommon = useTranslations('Common');
+  const tShell = useTranslations('MemberShell');
   const { user, church, loading: sessionLoading } = useSession();
   const [data, setData] = useState<HomeData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
-  // Reading the clock during render breaks Cache Components prerendering, so
-  // the date-based verse appears once hydrated and the fetch reads the date
-  // inside its effect.
   const isClient = useIsClient();
   const devotional = isClient ? pickDevotionalFor(todayIso()) : null;
 
@@ -73,16 +81,18 @@ export function HomeClient(): React.ReactElement {
       if (cancelled) return;
 
       const nextErrors: HomeData['errors'] = {};
-      const events = extract(eventsRes, (e) => (nextErrors.events = e));
+      const events = extract(eventsRes, (e) => (nextErrors.events = e), t('somethingWrong'));
       const announcements = extract(
         announcementsRes,
         (e) => (nextErrors.announcements = e),
+        t('somethingWrong'),
       );
       const participations = extract(
         participationsRes,
         (e) => (nextErrors.participations = e),
+        t('somethingWrong'),
       );
-      const pledges = extract(pledgesRes, (e) => (nextErrors.pledges = e));
+      const pledges = extract(pledgesRes, (e) => (nextErrors.pledges = e), t('somethingWrong'));
 
       setData({
         events: events ?? [],
@@ -96,21 +106,19 @@ export function HomeClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
-  const greetingName = firstName(user?.displayName);
-  // Time-of-day text is client-only (clock read; see isClient above).
-  const greeting = isClient ? timeOfDayGreeting() : t('Welcome');
-  const churchName = church?.name ?? 'your church';
+  const greetingName = firstName(user?.displayName, t('friend'));
+  const greeting = isClient ? t(greetingKey()) : t('welcome');
+  const churchName = church?.name ?? tShell('yourChurch');
   const featured = data.events[0] ?? null;
   const unpaidPledgeCount = data.pledges.length;
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Greeting — mockup mobile first */}
       <section aria-labelledby="home-greeting" className="flex flex-col gap-1">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {sessionLoading ? t('Loading…') : churchName}
+          {sessionLoading ? tCommon('loading') : churchName}
         </p>
         <h1
           id="home-greeting"
@@ -121,11 +129,10 @@ export function HomeClient(): React.ReactElement {
           !
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {t('Stay connected, grow, and serve.')}
+          {t('tagline')}
         </p>
       </section>
 
-      {/* Featured worship / next event — dark photo card */}
       {loading ? (
         <FeaturedSkeleton />
       ) : featured ? (
@@ -134,59 +141,57 @@ export function HomeClient(): React.ReactElement {
         <EmptyState
           icon="calendar"
           tone="sky"
-          title={t('Nothing featured yet')}
-          description={t('When your church posts the next service, it will appear here.')}
+          title={t('nothingFeatured')}
+          description={t('nothingFeaturedBody')}
           action={
             <Link href="/events" className={buttonClassName({ size: 'sm' })}>
-              {t('Browse events')}
+              {t('browseEvents')}
             </Link>
           }
         />
       )}
 
-      {/* Quick actions — Groups / Events / Giving / Sermons (devotionals) */}
       <section aria-labelledby="home-quick-actions">
         <h2 id="home-quick-actions" className="sr-only">
-          {t('Quick actions')}
+          {t('quickActions')}
         </h2>
         <div className="grid grid-cols-4 gap-3">
-          <QuickAction href="/community" icon="users" label={t('Groups')} tone="peach" />
-          <QuickAction href="/events" icon="calendar" label={t('Events')} tone="sky" />
+          <QuickAction href="/community" icon="users" label={t('groups')} tone="peach" />
+          <QuickAction href="/events" icon="calendar" label={t('events')} tone="sky" />
           <QuickAction
             href="/giving"
             icon="hand"
-            label={t('Giving')}
+            label={t('giving')}
             tone="sage"
             badge={unpaidPledgeCount > 0 ? String(unpaidPledgeCount) : undefined}
           />
-          <QuickAction href="/home#devotional" icon="book" label={t('Sermons')} tone="lavender" />
+          <QuickAction href="/home#devotional" icon="book" label={t('sermons')} tone="lavender" />
         </div>
       </section>
 
-      {/* Daily verse — champagne tint + Fraunces */}
       <section aria-labelledby="home-devotional" id="devotional">
         <article className="rounded-2xl border border-[color:var(--brand-gold-soft)] bg-[color:var(--brand-gold-tint)] p-6 sm:p-7">
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[color:var(--brand-gold-ink)]">
             <Icon name="book" size={14} />
-            <span>{t('Daily verse')}</span>
+            <span>{t('dailyVerse')}</span>
           </div>
           <h2 id="home-devotional" className="sr-only">
-            {t('Daily verse')}
+            {t('dailyVerse')}
           </h2>
           {devotional ? (
             <blockquote className="scripture mt-3 text-lg text-foreground sm:text-xl">
-              &ldquo;{t(devotional.quote)}&rdquo;
+              &ldquo;{devotional.quote}&rdquo;
             </blockquote>
           ) : (
             <div aria-hidden className="mt-3 h-14" />
           )}
           {devotional?.attribution ? (
             <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {t(devotional.attribution)}
+              {devotional.attribution}
             </p>
           ) : null}
           {devotional?.thought ? (
-            <p className="mt-4 text-sm text-foreground/90">{t(devotional.thought)}</p>
+            <p className="mt-4 text-sm text-foreground/90">{devotional.thought}</p>
           ) : null}
         </article>
       </section>
@@ -195,6 +200,7 @@ export function HomeClient(): React.ReactElement {
 }
 
 function FeaturedEventCard({ event }: { event: MemberEvent }): React.ReactElement {
+  const t = useTranslations('Home');
   const time = formatEventTime(event.startsAt);
   const imageSrc = event.posterUrl || '/brand/imagery/worship-cross.jpg';
   return (
@@ -205,11 +211,10 @@ function FeaturedEventCard({ event }: { event: MemberEvent }): React.ReactElemen
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
       />
-      {/* Scrim strong enough that the caption stays legible over busy photos. */}
       <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--surface-inverse)] via-[color:var(--surface-inverse)]/75 to-[color:var(--surface-inverse)]/25" />
       <div className="relative flex min-h-[14rem] flex-col justify-end gap-3 p-5 sm:min-h-[16rem] sm:p-6">
         <p className="text-xs font-medium uppercase tracking-wide text-white/85">
-          {t('Up next ·')} {formatServiceDate(event.serviceDate)}
+          {t('upNext')} · {formatServiceDate(event.serviceDate)}
           {time ? ` · ${time}` : null}
         </p>
         <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
@@ -223,11 +228,11 @@ function FeaturedEventCard({ event }: { event: MemberEvent }): React.ReactElemen
             href={`/events/${event.id}`}
             className={buttonClassName({ variant: 'secondary', size: 'sm' })}
           >
-            {t('View details')}
+            {t('viewDetails')}
           </Link>
           <Link
             href={`/events/${event.id}`}
-            aria-label={t('Open event')}
+            aria-label={t('openEvent')}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold-gradient text-[color:var(--sidebar-active-foreground)] shadow-card focus-ring"
           >
             <Icon name="arrow-right" size={18} />
@@ -283,7 +288,7 @@ function QuickAction({
           </Badge>
         ) : null}
       </span>
-      <span className="text-xs font-semibold text-foreground">{t(label)}</span>
+      <span className="text-xs font-semibold text-foreground">{label}</span>
     </Link>
   );
 }
@@ -291,6 +296,7 @@ function QuickAction({
 function extract<T>(
   res: PromiseSettledResult<T>,
   onError: (message: string) => void,
+  fallback: string,
 ): T | undefined {
   if (res.status === 'fulfilled') return res.value;
   const reason = res.reason;
@@ -300,7 +306,7 @@ function extract<T>(
   } else if (reason instanceof Error) {
     onError(reason.message);
   } else {
-    onError('Something went wrong.');
+    onError(fallback);
   }
   return undefined;
 }

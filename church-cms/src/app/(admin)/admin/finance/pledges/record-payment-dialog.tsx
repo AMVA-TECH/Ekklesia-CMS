@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import { Field, Input, Select } from '@/app/_ekklesia/ui';
 import type { Pledge } from '../../../_lib/api-types';
@@ -10,7 +11,6 @@ import { toMinorUnits } from '../../../_lib/errors';
 import { formatDate, formatMoney } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import type { Journal } from '../_lib/finance-types';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /**
  * Link money already received (a posted journal — e.g. a posted offering or
@@ -28,6 +28,7 @@ export function RecordPaymentDialog({
   onClose: () => void;
   onRecorded: (amountMinor: number) => void;
 }): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
   const outstanding = Math.max(0, pledge.amountMinor - (pledge.appliedMinor ?? 0));
   const journals = useApiList<Journal>('/api/v1/journals?status=posted&limit=100');
   const [journalId, setJournalId] = useState('');
@@ -47,15 +48,19 @@ export function RecordPaymentDialog({
 
   return (
     <FormDialog
-      title={t('Record pledge payment')}
-      description={t('{0} pledged {1}; {2} is still owed.', pledgerName, formatMoney(pledge.amountMinor, pledge.currency), formatMoney(outstanding, pledge.currency))}
-      submitLabel={t('Record payment')}
+      title={tf('recordPaymentTitle')}
+      description={tf('recordPaymentDesc', {
+        name: pledgerName,
+        pledged: formatMoney(pledge.amountMinor, pledge.currency),
+        owed: formatMoney(outstanding, pledge.currency),
+      })}
+      submitLabel={tf('recordPayment')}
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!journalId) e.journalId = t('Choose the posted entry where this money was recorded.');
+        if (!journalId) e.journalId = tf('recordPaymentJournalRequired');
         const minor = toMinorUnits(amount);
-        if (minor === null) e.amountMinor = t('Enter an amount greater than zero.');
+        if (minor === null) e.amountMinor = tf('recordPaymentAmountRequired');
         return e;
       }}
       onSubmit={async () => {
@@ -70,40 +75,43 @@ export function RecordPaymentDialog({
       {(errors) => (
         <>
           <Field
-            label={t('Received in')}
+            label={tf('receivedIn')}
             required
-            hint={t('Record the money as an offering or journal and post it first, then link it here.')}
+            hint={tf('receivedInHint')}
             error={errors.journalId}
           >
             <Select data-autofocus value={journalId} onChange={(e) => setJournalId(e.target.value)}>
               <option value="">
                 {journals.loading
-                  ? t('Loading posted entries…')
+                  ? tf('loadingPostedEntries')
                   : options.length === 0
-                    ? t('No posted entries yet')
-                    : t('Choose a posted entry…')}
+                    ? tf('noPostedEntries')
+                    : tf('choosePostedEntry')}
               </option>
               {options.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {t(o.label)}
+                  {o.label}
                 </option>
               ))}
             </Select>
           </Field>
           {!journals.loading && options.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {t('Nothing posted yet.')}{' '}
-              <Link href="/admin/finance/offerings" className="underline">
-                {t('Record an offering')}
-              </Link>{' '}
-              {t('or')}{' '}
-              <Link href="/admin/finance/journals" className="underline">
-                {t('post a journal')}
-              </Link>
-              .
+              {tf.rich('nothingPostedYet', {
+                offering: (chunks) => (
+                  <Link href="/admin/finance/offerings" className="underline">
+                    {chunks}
+                  </Link>
+                ),
+                journal: (chunks) => (
+                  <Link href="/admin/finance/journals" className="underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           ) : null}
-          <Field label={t('Amount ({0})', pledge.currency)} required error={errors.amountMinor}>
+          <Field label={tf('amountInCurrency', { currency: pledge.currency })} required error={errors.amountMinor}>
             <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </Field>
         </>

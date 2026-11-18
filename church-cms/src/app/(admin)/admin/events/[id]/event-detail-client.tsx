@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
@@ -25,7 +27,6 @@ import { OpenSessionDialog } from '../../attendance/open-session-dialog';
 import { EditEventDialog } from '../edit-event-dialog';
 import { PosterImage } from '../poster-image';
 import { RegistrationsPanel } from './registrations-panel';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface EventDetailClientProps {
   eventId: string;
@@ -34,6 +35,7 @@ interface EventDetailClientProps {
 export function EventDetailClient({
   eventId,
 }: EventDetailClientProps): React.ReactElement {
+  const te = useTranslations('AdminEvents');
   const [event, setEvent] = useState<EventRow | null>(null);
   const [types, setTypes] = useState<EventType[]>([]);
   const [sessions, setSessions] = useState<AttendanceSession[]>([]);
@@ -63,10 +65,10 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load attendance sessions.'),
+            : te('unableLoadSessions'),
       );
     }
-  }, [eventId]);
+  }, [eventId, te]);
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -85,13 +87,13 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load this event.'),
+            : te('unableLoadEvent'),
       );
       setEvent(null);
     } finally {
       setLoading(false);
     }
-  }, [eventId, loadSessions]);
+  }, [eventId, loadSessions, te]);
 
   useLoadEffect(load);
 
@@ -120,7 +122,7 @@ export function EventDetailClient({
       const openAny = sessions.find((s) => s.status === 'open');
       if (openAny) {
         setQrError(
-          t('An open headcount session already exists. Finalize it first, or continue that session.'),
+          te('headcountExists'),
         );
         openManage(openAny);
         return;
@@ -140,7 +142,7 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Could not open attendance QR.'),
+            : te('couldNotOpenQr'),
       );
     } finally {
       setQrBusy(false);
@@ -173,17 +175,17 @@ export function EventDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              {t('Back to events')}
+              {te('backToEvents')}
             </Link>
           }
-          title={t('Event not found')}
-          lede={error ?? t('This event may have been removed.')}
+          title={te('eventNotFound')}
+          lede={error ?? te('eventNotFoundBody')}
           actions={
             <Link
               href="/admin/events"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Back to list')}
+              {te('backToList')}
             </Link>
           }
         />
@@ -200,7 +202,7 @@ export function EventDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            {t('Back to events')}
+            {te('backToEvents')}
           </Link>
         }
         title={event.title}
@@ -225,14 +227,14 @@ export function EventDetailClient({
                 void ensureAttendanceQr();
               }}
             >
-              {qrBusy ? t('Opening…') : t('Attendance QR')}
+              {qrBusy ? te('opening') : te('attendanceQr')}
             </Button>
             <Button
               variant="secondary"
               iconLeft="edit"
               onClick={() => setEditOpen(true)}
             >
-              {t('Edit')}
+              {te('edit')}
             </Button>
             <StatusPill tone={statusTone(event.status)}>
               {titleCase(event.status)}
@@ -246,7 +248,7 @@ export function EventDetailClient({
           <div className="aspect-[3/4] w-full">
             <PosterImage
               url={event.posterUrl}
-              alt={t('{0} poster', event.title)}
+              alt={te('posterAlt', { title: event.title })}
               className="h-full w-full object-cover"
             />
           </div>
@@ -255,41 +257,41 @@ export function EventDetailClient({
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('Details')}</CardTitle>
+              <CardTitle>{te('details')}</CardTitle>
               <Badge tone="neutral">{titleCase(event.status)}</Badge>
             </CardHeader>
             <dl className="space-y-3 text-sm">
-              <Row label={t('Service date')} value={formatDate(event.serviceDate)} />
+              <Row label={te('serviceDate')} value={formatDate(event.serviceDate)} />
               <Row
-                label={t('Starts at')}
-                value={event.startsAt ? formatDateTime(event.startsAt) : '—'}
+                label={te('startsAt')}
+                value={event.startsAt ? formatDateTime(event.startsAt) : te('emDash')}
               />
               <Row
-                label={t('Ends at')}
-                value={event.endsAt ? formatDateTime(event.endsAt) : '—'}
+                label={te('endsAt')}
+                value={event.endsAt ? formatDateTime(event.endsAt) : te('emDash')}
               />
               <Row
-                label={t('Type')}
-                value={event.eventTypeName ?? event.eventTypeCode ?? '—'}
+                label={te('type')}
+                value={event.eventTypeName ?? event.eventTypeCode ?? te('emDash')}
               />
             </dl>
           </Card>
 
-          <Panel title={t('Description')}>
+          <Panel title={te('description')}>
             {event.description ? (
               <p className="text-sm text-foreground whitespace-pre-wrap">
                 {event.description}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {t('No description provided.')}
+                {te('noDescription')}
               </p>
             )}
           </Panel>
 
           <Panel
-            title={t('Attendance')}
-            subtitle={t('Generate a QR for guests to scan, record people, then finalize.')}
+            title={te('attendance')}
+            subtitle={te('attendanceSubtitle')}
           >
             {sessionsError ? (
               <div
@@ -309,7 +311,7 @@ export function EventDetailClient({
             ) : null}
             {sessions.length === 0 ? (
               <p className="mb-3 text-sm text-muted-foreground">
-                {t('No attendance sessions yet for this event.')}
+                {te('noSessionsYet')}
               </p>
             ) : (
               <ul className="mb-3 divide-y divide-border rounded-md border border-border">
@@ -329,7 +331,9 @@ export function EventDetailClient({
                       </span>
                       <span className="tabular-nums text-muted-foreground">
                         {s.recordCount ?? 0}{' '}
-                        {(s.recordCount ?? 0) === 1 ? t('record') : t('records')}
+                        {(s.recordCount ?? 0) === 1
+                          ? te('recordOne')
+                          : te('recordMany')}
                       </span>
                     </div>
                     <Button
@@ -340,7 +344,7 @@ export function EventDetailClient({
                         setManageOpen(true);
                       }}
                     >
-                      {s.status === 'open' ? t('Continue') : t('View')}
+                      {s.status === 'open' ? te('continueSession') : te('viewSession')}
                     </Button>
                   </li>
                 ))}
@@ -355,20 +359,20 @@ export function EventDetailClient({
                   void ensureAttendanceQr();
                 }}
               >
-                {qrBusy ? t('Opening…') : t('Attendance QR')}
+                {qrBusy ? te('opening') : te('attendanceQr')}
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={() => setOpenSessionOpen(true)}
               >
-                {t('Open session')}
+                {te('openSession')}
               </Button>
               <Link
                 href="/admin/attendance"
                 className={buttonClassName({ variant: 'secondary', size: 'sm' })}
               >
-                {t('Attendance overview')}
+                {te('attendanceOverview')}
               </Link>
             </div>
           </Panel>
@@ -429,7 +433,7 @@ function Row({
   return (
     <div className="flex items-start justify-between gap-3">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {t(label)}
+        {label}
       </dt>
       <dd className="text-right text-sm text-foreground">{value}</dd>
     </div>

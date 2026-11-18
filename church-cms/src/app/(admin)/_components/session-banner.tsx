@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ApiError } from '@/app/_ekklesia/session';
 import { Button } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
-import { t } from '@/app/_ekklesia/i18n/core';
+import {
+  formatApiErrorMessage,
+  formatApiErrorTitle,
+} from '@/i18n/api-error-message';
 
 interface SessionBannerProps {
   error: ApiError | Error;
@@ -19,20 +23,14 @@ interface SessionBannerProps {
  * of trapping the page in a loading state.
  */
 export function SessionBanner({ error }: SessionBannerProps): React.ReactElement {
+  const t = useTranslations('ApiErrors');
+  const tCommon = useTranslations('Common');
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return <></>;
 
-  const status = error instanceof ApiError ? error.status : undefined;
-  const title =
-    status === 401
-      ? t('Signed out')
-      : status === 403
-        ? t('Session needs attention')
-        : t('Could not load your session');
-  const message =
-    status === 401
-      ? t('Please sign in again to continue using the admin console.')
-      : error.message;
+  const code = error instanceof ApiError ? error.code : undefined;
+  const title = formatApiErrorTitle(code, t);
+  const message = formatApiErrorMessage(error, t);
 
   return (
     <div
@@ -53,7 +51,7 @@ export function SessionBanner({ error }: SessionBannerProps): React.ReactElement
         variant="ghost"
         size="sm"
         onClick={() => setDismissed(true)}
-        aria-label={t('Dismiss')}
+        aria-label={tCommon('close')}
       >
         <Icon name="close" size={14} />
       </Button>

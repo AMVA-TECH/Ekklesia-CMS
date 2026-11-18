@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -26,7 +27,6 @@ import { FormDialog, ListState, useRowAction } from '../../_components/kit';
 import { formatDate, formatMoney, titleCase } from '../../_lib/format';
 import { useApiList } from '../../_lib/use-api-list';
 import type { Expense } from '../finance/expenses/expense-types';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface ApprovalRequest {
   id: string;
@@ -51,6 +51,9 @@ const TONE = {
 type Decision = { approval: ApprovalRequest; action: 'approve' | 'reject' };
 
 export function ApprovalsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const ta = useTranslations('AdminApprovals');
+  const tc = useTranslations('Common');
   const [status, setStatus] = useState<Status>('pending');
   const approvals = useApiList<ApprovalRequest>(
     `/api/v1/approval-requests?status=${status}&limit=100`,
@@ -91,13 +94,10 @@ export function ApprovalsClient(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t('Approvals')}
-        lede={t('Second-person sign-off for spending and church-wide announcements. You can\'t decide a request you submitted yourself.')}
-      />
+      <PageHeader title={t('approvals')} lede={t('approvalsLede')} />
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as Status)}>
-        <TabList aria-label={t('Approval status')}>
+        <TabList aria-label={ta('statusAria')}>
           {STATUSES.map((s) => (
             <Tab key={s} value={s}>
               {titleCase(s)}
@@ -107,8 +107,12 @@ export function ApprovalsClient(): React.ReactElement {
       </Tabs>
 
       <Panel
-        title={t('{0} requests', titleCase(status))}
-        subtitle={approvals.loading ? t('Loading…') : t('{0} shown', approvals.items.length)}
+        title={ta('statusRequests', { status: titleCase(status) })}
+        subtitle={
+          approvals.loading
+            ? tc('loading')
+            : tc('shownCount', { count: approvals.items.length })
+        }
         flush
       >
         <ListState
@@ -119,22 +123,25 @@ export function ApprovalsClient(): React.ReactElement {
           onRetry={() => void approvals.reload()}
           empty={{
             icon: 'check-circle',
-            title: status === 'pending' ? t('Nothing waiting for approval') : t('No {0} requests', titleCase(status).toLowerCase()),
-            description:
+            title:
               status === 'pending'
-                ? t('Submitted expenses and church-wide announcements will queue here.')
-                : undefined,
+                ? ta('nothingWaiting')
+                : ta('noStatusRequests', { status }),
+            description:
+              status === 'pending' ? ta('nothingWaitingBody') : undefined,
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Request')}</TH>
-                  <TH>{t('Type')}</TH>
-                  <TH>{t('Submitted')}</TH>
-                  <TH>{t('Status')}</TH>
-                  {status === 'pending' ? <TH className="text-right">{t('Decision')}</TH> : null}
+                  <TH>{ta('request')}</TH>
+                  <TH>{ta('type')}</TH>
+                  <TH>{ta('submitted')}</TH>
+                  <TH>{ta('status')}</TH>
+                  {status === 'pending' ? (
+                    <TH className="text-right">{ta('decision')}</TH>
+                  ) : null}
                 </TR>
               </THead>
               <TBody>
@@ -149,7 +156,10 @@ export function ApprovalsClient(): React.ReactElement {
                               {subject.title}
                             </Link>
                           ) : (
-                            (subject?.title ?? t('{0} request', titleCase(a.subjectType)))
+                            (subject?.title ??
+                              ta('subjectRequest', {
+                                type: titleCase(a.subjectType),
+                              }))
                           )}
                         </div>
                         {subject?.detail ? (
@@ -165,7 +175,9 @@ export function ApprovalsClient(): React.ReactElement {
                         {formatDate(a.createdAt)}
                       </TD>
                       <TD>
-                        <StatusPill tone={TONE[a.status]}>{titleCase(a.status)}</StatusPill>
+                        <StatusPill tone={TONE[a.status]}>
+                          {titleCase(a.status)}
+                        </StatusPill>
                       </TD>
                       {status === 'pending' ? (
                         <TD className="text-right">
@@ -176,25 +188,31 @@ export function ApprovalsClient(): React.ReactElement {
                               loading={busyKey === a.id}
                               disabled={busyKey !== null}
                               onClick={() =>
-                                void run(a.id, () => decide({ approval: a, action: 'approve' }), {
-                                  success: t('Approved'),
-                                  detail:
-                                    a.subjectType === 'expense'
-                                      ? t('The expense is approved and posted to the ledger when its accounts are set.')
-                                      : t('The announcement is published.'),
-                                  failure: t('Could not approve'),
-                                })
+                                void run(
+                                  a.id,
+                                  () => decide({ approval: a, action: 'approve' }),
+                                  {
+                                    success: ta('approved'),
+                                    detail:
+                                      a.subjectType === 'expense'
+                                        ? ta('expenseApprovedDetail')
+                                        : ta('announcementPublished'),
+                                    failure: ta('couldNotApprove'),
+                                  },
+                                )
                               }
                             >
-                              {t('Approve')}
+                              {ta('approve')}
                             </Button>
                             <Button
                               size="sm"
                               variant="secondary"
                               disabled={busyKey !== null}
-                              onClick={() => setDeciding({ approval: a, action: 'reject' })}
+                              onClick={() =>
+                                setDeciding({ approval: a, action: 'reject' })
+                              }
                             >
-                              {t('Reject')}
+                              {ta('reject')}
                             </Button>
                           </div>
                         </TD>
@@ -228,19 +246,20 @@ function RejectDialog({
   onClose: () => void;
   onReject: (note: string | undefined) => Promise<void>;
 }): React.ReactElement {
+  const ta = useTranslations('AdminApprovals');
   const [note, setNote] = useState('');
   return (
     <FormDialog
-      title={t('Reject request')}
-      description={t('The requester can correct it and submit again.')}
-      submitLabel={t('Reject')}
+      title={ta('rejectTitle')}
+      description={ta('rejectDesc')}
+      submitLabel={ta('reject')}
       submitVariant="destructive"
       size="sm"
       onClose={onClose}
       onSubmit={() => onReject(note.trim() || undefined)}
     >
       {(errors) => (
-        <Field label={t('Note')} hint={t('Optional — explain what needs to change.')} error={errors.note}>
+        <Field label={ta('note')} hint={ta('noteHint')} error={errors.note}>
           <Textarea
             data-autofocus
             value={note}

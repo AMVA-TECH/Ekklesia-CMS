@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -30,16 +31,8 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { ListEnvelope, Membership, Person } from '../../_lib/api-types';
-import { formatDate, titleCase } from '../../_lib/format';
+import { formatDate } from '../../_lib/format';
 import { CreateMembershipDialog } from './create-membership-dialog';
-import { t, tk } from '@/app/_ekklesia/i18n/core';
-
-const STATUS_FILTERS: Array<{ value: string; label: string }> = [
-  { value: 'all', label: tk('All') },
-  { value: 'visitor', label: tk('Visitors') },
-  { value: 'active', label: tk('Active') },
-  { value: 'inactive', label: tk('Inactive') },
-];
 
 /** Matches `MEMBERSHIP_STATUSES` in modules/membership. */
 const STATUS_CHOICES = [
@@ -55,6 +48,9 @@ const STATUS_CHOICES = [
  * Status changes call `POST /api/v1/memberships/:id/status`.
  */
 export function MembershipsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tm = useTranslations('AdminMemberships');
+  const tc = useTranslations('Common');
   const router = useRouter();
   const { push } = useToast();
   const [status, setStatus] = useState<string>('all');
@@ -63,6 +59,26 @@ export function MembershipsClient(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+
+  const statusLabel = (value: string): string => {
+    switch (value) {
+      case 'visitor':
+        return tm('statusVisitor');
+      case 'active':
+        return tm('statusActive');
+      case 'inactive':
+        return tm('statusInactive');
+      default:
+        return value;
+    }
+  };
+
+  const statusFilters = [
+    { value: 'all', label: tm('filterAll') },
+    { value: 'visitor', label: tm('filterVisitors') },
+    { value: 'active', label: tm('filterActive') },
+    { value: 'inactive', label: tm('filterInactive') },
+  ];
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -96,12 +112,12 @@ export function MembershipsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load memberships'),
+            : tm('unableLoad'),
       );
     } finally {
       setLoading(false);
     }
-  }, [status]);
+  }, [status, tm]);
 
   useLoadEffect(load);
 
@@ -130,14 +146,14 @@ export function MembershipsClient(): React.ReactElement {
       );
       push({
         tone: 'success',
-        title: t('Status updated'),
-        message: t('Now {0}.', titleCase(nextStatus)),
+        title: tm('statusUpdated'),
+        message: tm('statusUpdatedMessage', { status: statusLabel(nextStatus) }),
       });
     } catch (err) {
       push({
         tone: 'danger',
-        title: t('Could not update status'),
-        message: err instanceof ApiError ? err.message : t('Please try again.'),
+        title: tm('couldNotUpdateStatus'),
+        message: err instanceof ApiError ? err.message : tm('pleaseTryAgain'),
       });
     }
   };
@@ -145,18 +161,18 @@ export function MembershipsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Memberships')}
-        lede={t('A snapshot of the people you serve — visitors becoming active members, and anyone paused.')}
+        title={t('memberships')}
+        lede={t('membershipsLede')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/memberships/applications"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Applications')}
+              {tm('applications')}
             </Link>
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-              {t('Add membership')}
+              {tm('addMembership')}
             </Button>
           </div>
         }
@@ -164,9 +180,9 @@ export function MembershipsClient(): React.ReactElement {
 
       <Tabs value={status} onValueChange={setStatus}>
         <TabList>
-          {STATUS_FILTERS.map((f) => (
+          {statusFilters.map((f) => (
             <Tab key={f.value} value={f.value}>
-              {t(f.label)}
+              {f.label}
               <span className="ml-1 text-xs text-muted-foreground">
                 {status === 'all' && f.value !== 'all'
                   ? ''
@@ -183,12 +199,14 @@ export function MembershipsClient(): React.ReactElement {
 
       <Panel
         title={
-          status === 'all' ? t('All memberships') : `${titleCase(status)}s`
+          status === 'all'
+            ? tm('allMemberships')
+            : tm('filteredMemberships', { status: statusLabel(status) })
         }
         subtitle={
           error
-            ? t('We couldn\'t load memberships.')
-            : (memberships.length === 1 ? t('{0} record.', memberships.length) : t('{0} records.', memberships.length))
+            ? tm('loadErrorSubtitle')
+            : tm('recordsCount', { count: memberships.length })
         }
         flush
       >
@@ -197,7 +215,7 @@ export function MembershipsClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                {t('Try again')}
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -212,13 +230,13 @@ export function MembershipsClient(): React.ReactElement {
             tone="sky"
             title={
               status === 'all'
-                ? t('No memberships yet')
-                : t('No {0}s yet', titleCase(status).toLowerCase())
+                ? tm('noMembershipsYet')
+                : tm('noStatusYet', { status: statusLabel(status).toLowerCase() })
             }
             description={
               status === 'all'
-                ? t('Memberships appear when a person starts their journey with your church.')
-                : t('Switch tabs to see other statuses, or update a visitor to make them a member.')
+                ? tm('noMembershipsDesc')
+                : tm('noStatusDesc')
             }
           />
         ) : (
@@ -226,11 +244,11 @@ export function MembershipsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Person')}</TH>
-                  <TH>{t('Type')}</TH>
-                  <TH>{t('Status')}</TH>
-                  <TH>{t('Since')}</TH>
-                  <TH>{t('Ended')}</TH>
+                  <TH>{tm('colPerson')}</TH>
+                  <TH>{tm('colType')}</TH>
+                  <TH>{tm('colStatus')}</TH>
+                  <TH>{tm('colSince')}</TH>
+                  <TH>{tm('colEnded')}</TH>
                   <TH className="w-12" />
                 </TR>
               </THead>
@@ -249,39 +267,39 @@ export function MembershipsClient(): React.ReactElement {
                           </Link>
                         ) : (
                           <span className="text-sm text-muted-foreground">
-                            {t('Unknown person')}
+                            {tm('unknownPerson')}
                           </span>
                         )}
                       </TD>
                       <TD className="text-sm text-muted-foreground">
-                        {titleCase(m.membershipType)}
+                        {typeLabel(m.membershipType, tm)}
                       </TD>
                       <TD>
                         <StatusPill tone={statusTone(m.status)}>
-                          {titleCase(m.status)}
+                          {statusLabel(m.status)}
                         </StatusPill>
                       </TD>
                       <TD className="text-sm text-muted-foreground">
                         {formatDate(m.effectiveFrom)}
                       </TD>
                       <TD className="text-sm text-muted-foreground">
-                        {m.effectiveTo ? formatDate(m.effectiveTo) : '—'}
+                        {m.effectiveTo ? formatDate(m.effectiveTo) : tm('dash')}
                       </TD>
                       <TD className="text-right">
                         <Menu
                           align="end"
-                          label={t('Change status')}
+                          label={tm('changeStatus')}
                           trigger={
                             <button
                               type="button"
-                              aria-label={t('Change status')}
+                              aria-label={tm('changeStatus')}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
                             >
                               <Icon name="more-horizontal" size={16} />
                             </button>
                           }
                         >
-                          <MenuLabel>{t('Set status')}</MenuLabel>
+                          <MenuLabel>{tm('setStatus')}</MenuLabel>
                           {STATUS_CHOICES.map((choice) => (
                             <MenuItem
                               key={choice}
@@ -292,7 +310,7 @@ export function MembershipsClient(): React.ReactElement {
                               }}
                               disabled={choice === m.status}
                             >
-                              {titleCase(choice)}
+                              {statusLabel(choice)}
                             </MenuItem>
                           ))}
                           {p ? (
@@ -304,7 +322,7 @@ export function MembershipsClient(): React.ReactElement {
                                   router.push(`/admin/people/${p.id}`);
                                 }}
                               >
-                                {t('Open profile')}
+                                {tm('openProfile')}
                               </MenuItem>
                             </>
                           ) : null}
@@ -327,13 +345,31 @@ export function MembershipsClient(): React.ReactElement {
           void load();
           push({
             tone: 'success',
-            title: t('Membership created'),
-            message: t('Started as {0}.', titleCase(created.status)),
+            title: tm('membershipCreated'),
+            message: tm('membershipCreatedMessage', {
+              status: statusLabel(created.status),
+            }),
           });
         }}
       />
     </div>
   );
+}
+
+function typeLabel(
+  value: string,
+  tm: ReturnType<typeof useTranslations<'AdminMemberships'>>,
+): string {
+  switch (value) {
+    case 'individual':
+      return tm('typeIndividual');
+    case 'household':
+      return tm('typeHousehold');
+    case 'family':
+      return tm('typeFamily');
+    default:
+      return value;
+  }
 }
 
 function statusTone(

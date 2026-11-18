@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -22,10 +23,9 @@ import {
   Textarea,
 } from '@/app/_ekklesia/ui';
 import { FormDialog, ListState, useRowAction } from '../../../_components/kit';
-import { formatDate, titleCase } from '../../../_lib/format';
+import { formatDate } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { usePeopleNames } from '../../../_lib/use-people-names';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface CorrectionRequest {
   id: string;
@@ -45,6 +45,7 @@ type Status = (typeof STATUSES)[number];
 const TONE = { pending: 'pending', approved: 'success', rejected: 'danger' } as const;
 
 export function CorrectionsClient(): React.ReactElement {
+  const t = useTranslations('AdminCorrections');
   const [status, setStatus] = useState<Status>('pending');
   const list = useApiList<CorrectionRequest>(
     `/api/v1/attendance/correction-requests?status=${status}&limit=100`,
@@ -68,24 +69,24 @@ export function CorrectionsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/attendance">{t('Attendance')}</Link>}
-        title={t('Attendance corrections')}
-        lede={t('Members who say their attendance was recorded wrongly. Approving updates their record for that service, including finalized totals.')}
+        eyebrow={<Link href="/admin/attendance">{t('attendance')}</Link>}
+        title={t('title')}
+        lede={t('lede')}
       />
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as Status)}>
-        <TabList aria-label={t('Correction status')}>
+        <TabList aria-label={t('correctionStatus')}>
           {STATUSES.map((s) => (
             <Tab key={s} value={s}>
-              {titleCase(s)}
+              {t('status', { status: s })}
             </Tab>
           ))}
         </TabList>
       </Tabs>
 
       <Panel
-        title={t('{0} corrections', titleCase(status))}
-        subtitle={list.loading ? t('Loading…') : t('{0} shown', list.items.length)}
+        title={t('panelTitle', { status })}
+        subtitle={list.loading ? t('loading') : t('shown', { count: list.items.length })}
         flush
       >
         <ListState
@@ -96,19 +97,19 @@ export function CorrectionsClient(): React.ReactElement {
           onRetry={() => void list.reload()}
           empty={{
             icon: 'calendar-check',
-            title: status === 'pending' ? t('No corrections to review') : t('No {0} corrections', titleCase(status).toLowerCase()),
+            title: status === 'pending' ? t('emptyPending') : t('emptyOther', { status }),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Member')}</TH>
-                  <TH>{t('Service')}</TH>
-                  <TH>{t('Asks to be marked')}</TH>
-                  <TH>{t('Note')}</TH>
-                  <TH>{t('Status')}</TH>
-                  {status === 'pending' ? <TH className="text-right">{t('Decision')}</TH> : null}
+                  <TH>{t('member')}</TH>
+                  <TH>{t('service')}</TH>
+                  <TH>{t('asksToBeMarked')}</TH>
+                  <TH>{t('note')}</TH>
+                  <TH>{t('statusHeader')}</TH>
+                  {status === 'pending' ? <TH className="text-right">{t('decision')}</TH> : null}
                 </TR>
               </THead>
               <TBody>
@@ -119,24 +120,24 @@ export function CorrectionsClient(): React.ReactElement {
                         {names[c.personId] ?? '…'}
                       </Link>
                       <div className="text-xs font-normal text-muted-foreground">
-                        {t('Asked')} {formatDate(c.createdAt)}
+                        {t('askedOn', { date: formatDate(c.createdAt) })}
                       </div>
                     </TD>
                     <TD className="text-sm">
-                      {c.eventTitle ?? t('Service')}
+                      {c.eventTitle ?? t('service')}
                       {c.serviceDate ? (
                         <div className="text-xs text-muted-foreground">{formatDate(c.serviceDate)}</div>
                       ) : null}
                     </TD>
-                    <TD className="text-sm">{titleCase(c.requestedPresence)}</TD>
+                    <TD className="text-sm">{t('presence', { presence: c.requestedPresence })}</TD>
                     <TD className="max-w-xs text-sm text-muted-foreground">
                       {c.note ?? '—'}
                       {c.resolutionNote ? (
-                        <div className="text-xs">{t('Reply:')} {c.resolutionNote}</div>
+                        <div className="text-xs">{t('reply', { note: c.resolutionNote })}</div>
                       ) : null}
                     </TD>
                     <TD>
-                      <StatusPill tone={TONE[c.status]}>{titleCase(c.status)}</StatusPill>
+                      <StatusPill tone={TONE[c.status]}>{t('status', { status: c.status })}</StatusPill>
                     </TD>
                     {status === 'pending' ? (
                       <TD className="text-right">
@@ -148,13 +149,16 @@ export function CorrectionsClient(): React.ReactElement {
                             disabled={busyKey !== null}
                             onClick={() =>
                               void run(c.id, () => resolve(c, 'approve'), {
-                                success: t('Attendance updated'),
-                                detail: t('{0} is now marked {1}.', names[c.personId] ?? t('The member'), titleCase(c.requestedPresence).toLowerCase()),
-                                failure: t('Could not approve'),
+                                success: t('approved'),
+                                detail: t('approvedBody', {
+                                  member: names[c.personId] ?? t('theMember'),
+                                  presence: c.requestedPresence,
+                                }),
+                                failure: t('approveFailed'),
                               })
                             }
                           >
-                            {t('Approve')}
+                            {t('approve')}
                           </Button>
                           <Button
                             size="sm"
@@ -162,7 +166,7 @@ export function CorrectionsClient(): React.ReactElement {
                             disabled={busyKey !== null}
                             onClick={() => setRejecting(c)}
                           >
-                            {t('Reject')}
+                            {t('reject')}
                           </Button>
                         </div>
                       </TD>
@@ -195,19 +199,20 @@ function RejectDialog({
   onClose: () => void;
   onReject: (note: string | undefined) => Promise<void>;
 }): React.ReactElement {
+  const t = useTranslations('AdminCorrections');
   const [note, setNote] = useState('');
   return (
     <FormDialog
-      title={t('Reject correction')}
-      description={t('The attendance record stays as it is.')}
-      submitLabel={t('Reject')}
+      title={t('rejectTitle')}
+      description={t('rejectDesc')}
+      submitLabel={t('reject')}
       submitVariant="destructive"
       size="sm"
       onClose={onClose}
       onSubmit={() => onReject(note.trim() || undefined)}
     >
       {(errors) => (
-        <Field label={t('Reply to the member')} hint="Optional." error={errors.resolutionNote}>
+        <Field label={t('replyToMember')} hint={t('optional')} error={errors.resolutionNote}>
           <Textarea data-autofocus value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={1000} />
         </Field>
       )}

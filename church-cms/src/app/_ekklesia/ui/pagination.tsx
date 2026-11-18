@@ -1,6 +1,5 @@
 import { Button } from './button';
 import { cn } from './utils';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<Pagination>`. */
 export interface PaginationProps {
@@ -35,7 +34,7 @@ export function Pagination({
   const hasNext = (totalPages === undefined || page < totalPages) && !disabled;
   return (
     <nav
-      aria-label={t(label)}
+      aria-label={label}
       className={cn('flex items-center justify-between gap-3', className)}
     >
       <Button
@@ -45,13 +44,13 @@ export function Pagination({
         disabled={!hasPrev}
         onClick={() => onPageChange(page - 1)}
       >
-        {t('Previous')}
+        Previous
       </Button>
       <p className="text-sm text-muted-foreground tabular-nums">
-        {t('Page')} <span className="font-medium text-foreground">{page}</span>
+        Page <span className="font-medium text-foreground">{page}</span>
         {totalPages !== undefined ? (
           <>
-            {' '}{t('of')} <span className="font-medium text-foreground">{totalPages}</span>
+            {' '}of <span className="font-medium text-foreground">{totalPages}</span>
           </>
         ) : null}
       </p>
@@ -62,7 +61,7 @@ export function Pagination({
         disabled={!hasNext}
         onClick={() => onPageChange(page + 1)}
       >
-        {t('Next')}
+        Next
       </Button>
     </nav>
   );

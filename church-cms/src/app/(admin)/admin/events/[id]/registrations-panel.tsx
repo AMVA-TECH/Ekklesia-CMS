@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button, EmptyState, Panel, StatusPill } from '@/app/_ekklesia/ui';
 import { ListState } from '../../../_components/kit';
 import { formatDate } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { usePeopleNames } from '../../../_lib/use-people-names';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface EventRegistration {
   id: string;
@@ -19,6 +19,7 @@ interface EventRegistration {
 
 /** Who said they're coming (members register from the app). */
 export function RegistrationsPanel({ eventId }: { eventId: string }): React.ReactElement {
+  const t = useTranslations('AdminEvents');
   const regs = useApiList<EventRegistration>(`/api/v1/events/${eventId}/registrations`);
   const [showCancelled, setShowCancelled] = useState(false);
   const names = usePeopleNames(regs.items.map((r) => r.personId));
@@ -31,16 +32,18 @@ export function RegistrationsPanel({ eventId }: { eventId: string }): React.Reac
 
   return (
     <Panel
-      title={t('Registrations')}
+      title={t('registrations')}
       subtitle={
         regs.loading
-          ? t('Loading…')
-          : t('{0} coming{1}', registered.length, cancelled ? ` · ${cancelled} cancelled` : '')
+          ? t('registrationsLoading')
+          : cancelled
+            ? t('registrationsSummaryCancelled', { coming: registered.length, cancelled })
+            : t('registrationsSummary', { coming: registered.length })
       }
       actions={
         cancelled > 0 ? (
           <Button size="sm" variant="ghost" onClick={() => setShowCancelled((v) => !v)}>
-            {showCancelled ? t('Hide cancelled') : t('Show cancelled')}
+            {showCancelled ? t('hideCancelled') : t('showCancelled')}
           </Button>
         ) : null
       }
@@ -53,12 +56,12 @@ export function RegistrationsPanel({ eventId }: { eventId: string }): React.Reac
         onRetry={() => void regs.reload()}
         empty={{
           icon: 'calendar-check',
-          title: t('No registrations yet'),
-          description: t('Members can register for this event from the app.'),
+          title: t('noRegistrations'),
+          description: t('noRegistrationsBody'),
         }}
       >
         {shown.length === 0 ? (
-          <EmptyState icon="calendar-check" tone="neutral" title={t('Everyone who registered has cancelled')} />
+          <EmptyState icon="calendar-check" tone="neutral" title={t('allRegistrationsCancelled')} />
         ) : (
           <ul className="divide-y divide-border rounded-md border border-border">
             {shown.map((r) => (
@@ -70,10 +73,10 @@ export function RegistrationsPanel({ eventId }: { eventId: string }): React.Reac
                   >
                     {names[r.personId] ?? '…'}
                   </Link>
-                  <p className="text-xs text-muted-foreground">{t('Registered')} {formatDate(r.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{t('registeredOn', { date: formatDate(r.createdAt) })}</p>
                 </div>
                 <StatusPill tone={r.status === 'registered' ? 'success' : 'neutral'}>
-                  {r.status === 'registered' ? t('Coming') : t('Cancelled')}
+                  {r.status === 'registered' ? t('registrationComing') : t('registrationCancelled')}
                 </StatusPill>
               </li>
             ))}

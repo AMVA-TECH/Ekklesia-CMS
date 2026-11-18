@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -22,9 +23,11 @@ import type { Fund } from '../../../_lib/api-types';
 import { asList } from '../../../_lib/list';
 import { titleCase } from '../../../_lib/format';
 import { CreateFundDialog } from './create-fund-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export function FundsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,11 +47,12 @@ export function FundsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load funds.'),
+            : tf('unableLoadFunds'),
       );
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -56,18 +60,18 @@ export function FundsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Funds')}
-        lede={t('How giving is categorised — general offerings, designated projects, and restricted funds.')}
+        title={t('funds')}
+        lede={t('fundsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            {t('New fund')}
+            {tf('newFund')}
           </Button>
         }
       />
 
       <Panel
-        title={t('All funds')}
-        subtitle={error ?? t('{0} total', funds.length)}
+        title={tf('allFunds')}
+        subtitle={error ?? tf('fundsCountTotal', { count: funds.length })}
         flush
       >
         {error ? (
@@ -75,7 +79,7 @@ export function FundsClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                {t('Try again')}
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -88,15 +92,15 @@ export function FundsClient(): React.ReactElement {
           <EmptyState
             icon="briefcase"
             tone="gold"
-            title={t('No funds yet')}
-            description={t('Add a general fund to start, then add project-specific funds as needed.')}
+            title={tf('noFundsYet')}
+            description={tf('noFundsBody')}
             action={
               <Button
                 iconLeft="plus"
                 size="sm"
                 onClick={() => setCreateOpen(true)}
               >
-                {t('New fund')}
+                {tf('newFund')}
               </Button>
             }
           />
@@ -105,10 +109,10 @@ export function FundsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Code')}</TH>
-                  <TH>{t('Name')}</TH>
-                  <TH>{t('Type')}</TH>
-                  <TH>{t('Status')}</TH>
+                  <TH>{tf('code')}</TH>
+                  <TH>{tf('name')}</TH>
+                  <TH>{tf('type')}</TH>
+                  <TH>{tf('status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -123,7 +127,7 @@ export function FundsClient(): React.ReactElement {
                       <StatusPill
                         tone={f.status === 'active' ? 'success' : 'neutral'}
                       >
-                        {titleCase(f.status)}
+                        {f.status === 'active' ? tf('statusActive') : titleCase(f.status)}
                       </StatusPill>
                     </TD>
                   </TR>
@@ -140,8 +144,8 @@ export function FundsClient(): React.ReactElement {
         onCreated={(f) => {
           push({
             tone: 'success',
-            title: t('Fund created'),
-            message: t('{0} is active.', f.name),
+            title: tf('fundCreated'),
+            message: tf('fundActiveMessage', { name: f.name }),
           });
           setCreateOpen(false);
           void load();

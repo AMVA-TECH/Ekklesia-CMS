@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import type { IconName } from '../icons';
 import { NavLink } from '../ui/nav-link';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** A single navigation link row. */
 export interface NavItem {
@@ -62,7 +61,7 @@ export function RoleNav({
         >
           {variant === 'sidebar' && group.label ? (
             <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-muted)]">
-              {t(group.label)}
+              {group.label}
             </p>
           ) : null}
           <div
@@ -80,7 +79,7 @@ export function RoleNav({
                 active={item.active}
                 variant={variant}
               >
-                {t(item.label)}
+                {item.label}
               </NavLink>
             ))}
           </div>

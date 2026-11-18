@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, useSession } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -22,7 +23,6 @@ import {
 import { FormDialog, ListState, useRowAction } from '../../../_components/kit';
 import { formatDateTime, titleCase } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface Delegation {
   id: string;
@@ -44,46 +44,59 @@ interface OrgUser {
 const TONE = { scheduled: 'info', active: 'success', ended: 'neutral', revoked: 'danger' } as const;
 
 export function DelegationsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tg = useTranslations('AdminGovernance');
+  const tc = useTranslations('Common');
   const delegations = useApiList<Delegation>('/api/v1/delegations?limit=100');
   const users = useApiList<OrgUser>('/api/v1/organisation-users');
   const [creating, setCreating] = useState(false);
   const { busyKey, run } = useRowAction();
 
   const userLabel = useMemo(() => {
-    const map = new Map(users.items.map((u) => [u.userAccountId, u.label || u.email || 'User']));
-    return (id: string): string => map.get(id) ?? t('User');
-  }, [users.items]);
+    const map = new Map(
+      users.items.map((u) => [u.userAccountId, u.label || u.email || tg('userFallback')]),
+    );
+    return (id: string): string => map.get(id) ?? tg('userFallback');
+  }, [users.items, tg]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Delegations')}
-        lede={t('Hand some of your permissions to another leader for a set period — for example while you travel. Every use is audited.')}
+        title={t('delegations')}
+        lede={t('delegationsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            {t('New delegation')}
+            {tg('newDelegation')}
           </Button>
         }
       />
 
-      <Panel title={t('Delegations')} subtitle={delegations.loading ? t('Loading…') : t('{0} total', delegations.items.length)} flush>
+      <Panel
+        title={tg('delegations')}
+        subtitle={
+          delegations.loading
+            ? tc('loading')
+            : tc('totalCount', { count: delegations.items.length })
+        }
+        flush
+      >
         <ListState
           loading={delegations.loading}
           error={delegations.error}
           forbidden={delegations.forbidden}
           isEmpty={delegations.items.length === 0}
           onRetry={() => void delegations.reload()}
-          empty={{ icon: 'key', title: t('No delegations') }}
+          empty={{ icon: 'key', title: tg('noDelegations') }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('From → to')}</TH>
-                  <TH>{t('Permissions')}</TH>
-                  <TH>{t('Period')}</TH>
-                  <TH>{t('Status')}</TH>
-                  <TH className="text-right">{t('Actions')}</TH>
+                  <TH>{tg('fromTo')}</TH>
+                  <TH>{tg('permissions')}</TH>
+                  <TH>{tg('period')}</TH>
+                  <TH>{tg('status')}</TH>
+                  <TH className="text-right">{tg('actions')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -99,7 +112,9 @@ export function DelegationsClient(): React.ReactElement {
                     <TD className="text-xs">
                       {formatDateTime(d.effectiveFrom)}
                       <br />
-                      {d.effectiveTo ? t('until {0}', formatDateTime(d.effectiveTo)) : t('until revoked')}
+                      {d.effectiveTo
+                        ? tg('untilDate', { date: formatDateTime(d.effectiveTo) })
+                        : tg('untilRevoked')}
                     </TD>
                     <TD>
                       <StatusPill tone={TONE[d.status]}>{titleCase(d.status)}</StatusPill>
@@ -115,12 +130,15 @@ export function DelegationsClient(): React.ReactElement {
                             const ok = await run(
                               d.id,
                               () => apiFetch(`/api/v1/delegations/${d.id}/revoke`, { method: 'POST' }),
-                              { success: t('Delegation revoked'), failure: t('Could not revoke') },
+                              {
+                                success: tg('delegationRevoked'),
+                                failure: tg('couldNotRevoke'),
+                              },
                             );
                             if (ok) void delegations.reload();
                           }}
                         >
-                          {t('Revoke')}
+                          {tg('revoke')}
                         </Button>
                       ) : null}
                     </TD>
@@ -155,6 +173,7 @@ function CreateDelegationDialog({
   onClose: () => void;
   onCreated: () => void;
 }): React.ReactElement {
+  const tg = useTranslations('AdminGovernance');
   const { session } = useSession();
   // You can only hand over permissions you hold yourself.
   const available = useMemo(
@@ -170,16 +189,16 @@ function CreateDelegationDialog({
 
   return (
     <FormDialog
-      title={t('New delegation')}
-      submitLabel={t('Delegate')}
+      title={tg('newDelegationTitle')}
+      submitLabel={tg('delegate')}
       size="lg"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!delegateUserId) e.delegateUserId = t('Choose who receives the permissions.');
-        if (grants.size === 0) e.grants = t('Choose at least one permission.');
-        if (!from) e.effectiveFrom = t('Choose when it starts.');
-        if (from && to && to <= from) e.effectiveTo = t('End must be after the start.');
+        if (!delegateUserId) e.delegateUserId = tg('chooseDelegate');
+        if (grants.size === 0) e.grants = tg('choosePermission');
+        if (!from) e.effectiveFrom = tg('chooseStart');
+        if (from && to && to <= from) e.effectiveTo = tg('endAfterStart');
         return e;
       }}
       onSubmit={async () => {
@@ -198,31 +217,31 @@ function CreateDelegationDialog({
     >
       {(errors) => (
         <>
-          <Field label={t('Delegate to')} required error={errors.delegateUserId}>
+          <Field label={tg('delegateTo')} required error={errors.delegateUserId}>
             <Select data-autofocus value={delegateUserId} onChange={(e) => setDelegateUserId(e.target.value)}>
-              <option value="">{t('Choose a leader…')}</option>
+              <option value="">{tg('chooseLeader')}</option>
               {users
                 .filter((u) => u.userAccountId !== me)
                 .map((u) => (
                   <option key={u.userAccountId} value={u.userAccountId}>
-                    {t(u.label)}
+                    {u.label}
                     {u.email ? ` (${u.email})` : ''}
                   </option>
                 ))}
             </Select>
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('Starts')} required error={errors.effectiveFrom}>
+            <Field label={tg('starts')} required error={errors.effectiveFrom}>
               <Input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} />
             </Field>
-            <Field label={t('Ends')} hint={t('Leave empty to run until revoked.')} error={errors.effectiveTo}>
+            <Field label={tg('ends')} hint={tg('endsHint')} error={errors.effectiveTo}>
               <Input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} />
             </Field>
           </div>
-          <Field label={t('Permissions')} required error={errors.grants}>
+          <Field label={tg('permissions')} required error={errors.grants}>
             <div className="grid max-h-56 gap-1 overflow-auto rounded-md border border-border p-2 sm:grid-cols-2">
               {available.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('You have no permissions to delegate.')}</p>
+                <p className="text-sm text-muted-foreground">{tg('noPermissionsToDelegate')}</p>
               ) : (
                 available.map((code) => (
                   <label key={code} className="flex items-center gap-2 text-sm">
@@ -244,7 +263,7 @@ function CreateDelegationDialog({
               )}
             </div>
           </Field>
-          <Field label={t('Reason')} error={errors.reason}>
+          <Field label={tg('reason')} error={errors.reason}>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} maxLength={500} />
           </Field>
         </>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -25,7 +26,6 @@ import { Icon } from '@/app/_ekklesia/icons';
 import { formatDate, titleCase } from '../../../_lib/format';
 import { asList } from '../../../_lib/list';
 import { CreateJobDialog, type MessageJobRow } from './create-job-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 function statusTone(status: string): StatusTone {
   switch (status) {
@@ -48,6 +48,9 @@ function statusTone(status: string): StatusTone {
  * Leadership send jobs — list, queue, and dispatch SMS/WhatsApp blasts.
  */
 export function JobsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tm = useTranslations('AdminMessaging');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [rows, setRows] = useState<MessageJobRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,12 +73,12 @@ export function JobsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load message jobs'),
+            : tm('unableLoadJobs'),
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tm]);
 
   useLoadEffect(load);
 
@@ -88,7 +91,7 @@ export function JobsClient(): React.ReactElement {
         { method: 'POST' },
       );
       setRows((prev) => prev.map((r) => (r.id === id ? updated : r)));
-      push({ tone: 'success', message: t('Job dispatched.') });
+      push({ tone: 'success', message: tm('jobDispatched') });
     } catch (err) {
       push({
         tone: 'danger',
@@ -97,7 +100,7 @@ export function JobsClient(): React.ReactElement {
             ? err.message
             : err instanceof Error
               ? err.message
-              : t('Dispatch failed.'),
+              : tm('dispatchFailed'),
       });
     } finally {
       setBusyId(null);
@@ -107,8 +110,8 @@ export function JobsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Send jobs')}
-        lede={t('Queue and dispatch SMS or WhatsApp blasts to opted-in members.')}
+        title={t('sendJobs')}
+        lede={t('sendJobsLede')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -117,25 +120,25 @@ export function JobsClient(): React.ReactElement {
               iconLeft="refresh"
               onClick={() => {
                 void load().then(() =>
-                  push({ tone: 'success', message: t('Jobs refreshed.') }),
+                  push({ tone: 'success', message: tm('jobsRefreshed') }),
                 );
               }}
             >
-              {t('Refresh')}
+              {tm('refresh')}
             </Button>
             <Button
               size="sm"
               iconLeft="plus"
               onClick={() => setCreateOpen(true)}
             >
-              {t('New send')}
+              {tm('newSend')}
             </Button>
           </div>
         }
       />
 
       {loading ? (
-        <Panel title={t('Jobs')}>
+        <Panel title={tm('jobs')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -146,11 +149,11 @@ export function JobsClient(): React.ReactElement {
         <EmptyState
           icon="alert"
           tone="sky"
-          title={t('Could not load send jobs')}
+          title={tm('couldNotLoadJobs')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              {t('Try again')}
+              {tc('retry')}
             </Button>
           }
         />
@@ -158,27 +161,27 @@ export function JobsClient(): React.ReactElement {
         <EmptyState
           icon="inbox"
           tone="sky"
-          title={t('No send jobs yet')}
-          description={t('Queue a leadership blast, then dispatch when you are ready to send.')}
+          title={tm('noJobsYet')}
+          description={tm('noJobsDesc')}
           action={
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-              {t('New send')}
+              {tm('newSend')}
             </Button>
           }
         />
       ) : (
-        <Panel title={t('All jobs')} flush>
+        <Panel title={tm('allJobs')} flush>
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Job')}</TH>
-                  <TH>{t('Channel')}</TH>
-                  <TH>{t('Status')}</TH>
-                  <TH>{t('Recipients')}</TH>
-                  <TH>{t('Created')}</TH>
+                  <TH>{tm('colJob')}</TH>
+                  <TH>{tm('colChannel')}</TH>
+                  <TH>{tm('colStatus')}</TH>
+                  <TH>{tm('colRecipients')}</TH>
+                  <TH>{tm('colCreated')}</TH>
                   <TH className="w-12">
-                    <span className="sr-only">{t('Actions')}</span>
+                    <span className="sr-only">{tm('actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -186,15 +189,16 @@ export function JobsClient(): React.ReactElement {
                 {rows.map((row) => {
                   const canDispatch =
                     row.status === 'queued' || row.status === 'failed';
+                  const jobTitle = row.title ?? tm('untitledBlast');
                   return (
                     <TR key={row.id}>
                       <TD>
                         <div className="flex flex-col gap-0.5">
                           <span className="font-medium text-foreground">
-                            {row.title ?? t('Untitled blast')}
+                            {jobTitle}
                           </span>
                           <span className="line-clamp-1 text-xs text-muted-foreground">
-                            {row.body ?? '—'}
+                            {row.body ?? tm('dash')}
                           </span>
                         </div>
                       </TD>
@@ -216,12 +220,12 @@ export function JobsClient(): React.ReactElement {
                         {canDispatch ? (
                           <Menu
                             align="end"
-                            label={t('Actions for {0}', row.title ?? 'job')}
+                            label={tm('actionsForJob', { title: jobTitle })}
                             trigger={
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                aria-label={t('Actions for {0}', row.title ?? 'job')}
+                                aria-label={tm('actionsForJob', { title: jobTitle })}
                                 disabled={busyId === row.id}
                               >
                                 <Icon name="more-horizontal" size={16} />
@@ -234,11 +238,11 @@ export function JobsClient(): React.ReactElement {
                                 void dispatchJob(row.id);
                               }}
                             >
-                              {t('Dispatch now')}
+                              {tm('dispatchNow')}
                             </MenuItem>
                           </Menu>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-xs text-muted-foreground">{tm('dash')}</span>
                         )}
                       </TD>
                     </TR>
@@ -252,7 +256,7 @@ export function JobsClient(): React.ReactElement {
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon name="alert-circle" size={14} />
-        {t('Create queues recipients with consent checks. Dispatch pushes pending deliveries through the configured notify provider.')}
+        {tm('jobsNote')}
       </p>
 
       <CreateJobDialog
@@ -261,7 +265,7 @@ export function JobsClient(): React.ReactElement {
         onCreated={(row) => {
           setRows((prev) => [row, ...prev]);
           setCreateOpen(false);
-          push({ tone: 'success', message: t('Send job queued.') });
+          push({ tone: 'success', message: tm('jobQueued') });
         }}
       />
     </div>

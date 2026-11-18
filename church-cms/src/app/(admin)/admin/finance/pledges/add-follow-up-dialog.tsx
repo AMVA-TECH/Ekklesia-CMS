@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -10,7 +11,6 @@ import {
   Textarea,
 } from '@/app/_ekklesia/ui';
 import { extractValidationErrors } from '../../people/form-errors';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AddFollowUpDialogProps {
   open: boolean;
@@ -28,6 +28,8 @@ export function AddFollowUpDialog({
   onClose,
   onSaved,
 }: AddFollowUpDialogProps): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -57,7 +59,7 @@ export function AddFollowUpDialog({
     if (submitting || !pledgeId) return;
     const trimmed = note.trim();
     if (!trimmed) {
-      setFieldErrors({ note: t('Enter a follow-up note.') });
+      setFieldErrors({ note: tf('enterFollowUpNote') });
       return;
     }
     setSubmitting(true);
@@ -77,7 +79,7 @@ export function AddFollowUpDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not save follow-up.'),
+          err instanceof Error ? err.message : tf('couldNotSaveFollowUp'),
         );
       }
       setSubmitting(false);
@@ -88,8 +90,8 @@ export function AddFollowUpDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={t('Log follow-up')}
-      description={t('Note a kind check-in about this pledge. This is recorded against the pledge for pastoral care.')}
+      title={tf('logFollowUpTitle')}
+      description={tf('logFollowUpDesc')}
       size="sm"
       footer={
         <DialogFooter>
@@ -98,10 +100,10 @@ export function AddFollowUpDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            {t('Cancel')}
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? t('Saving…') : t('Save follow-up')}
+            {submitting ? tf('saving') : tf('saveFollowUp')}
           </Button>
         </DialogFooter>
       }
@@ -122,14 +124,14 @@ export function AddFollowUpDialog({
           </div>
         ) : null}
 
-        <Field label={t('Note')} required error={fieldErrors.note}>
+        <Field label={tf('note')} required error={fieldErrors.note}>
           <Textarea
             data-autofocus
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={1000}
-            placeholder={t('Called to check in…')}
+            placeholder={tf('followUpPlaceholder')}
             required
           />
         </Field>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/app/_ekklesia/session';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Session-wide cache: personId → display name (or a promise in flight). */
 const cache = new Map<string, string>();
@@ -14,8 +13,8 @@ function fetchName(id: string): Promise<string> {
   const pending = inflight.get(id);
   if (pending) return pending;
   const request = apiFetch<{ displayName?: string }>(`/api/v1/people/${id}`)
-    .then((p) => p.displayName || t('Unknown person'))
-    .catch(() => t('Unknown person'))
+    .then((p) => p.displayName || 'Unknown person')
+    .catch(() => 'Unknown person')
     .then((name) => {
       cache.set(id, name);
       inflight.delete(id);

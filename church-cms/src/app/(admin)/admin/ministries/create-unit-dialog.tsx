@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -12,7 +13,6 @@ import {
   Textarea,
 } from '@/app/_ekklesia/ui';
 import type { OrganisationalUnit } from '../../_lib/api-types';
-import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface CreateUnitDialogProps {
   open: boolean;
@@ -21,16 +21,15 @@ interface CreateUnitDialogProps {
   parents: readonly OrganisationalUnit[];
 }
 
-const KINDS: Array<{
-  value: 'ministry' | 'department' | 'life_group' | 'branch' | 'team';
-  label: string;
-}> = [
-  { value: 'ministry', label: tk('Ministry') },
-  { value: 'department', label: tk('Department') },
-  { value: 'team', label: tk('Team') },
-  { value: 'branch', label: tk('Branch') },
-  { value: 'life_group', label: tk('Life group') },
-];
+const KIND_VALUES = [
+  'ministry',
+  'department',
+  'team',
+  'branch',
+  'life_group',
+] as const;
+
+type KindValue = (typeof KIND_VALUES)[number];
 
 export function CreateUnitDialog({
   open,
@@ -38,14 +37,31 @@ export function CreateUnitDialog({
   onCreated,
   parents,
 }: CreateUnitDialogProps): React.ReactElement {
+  const to = useTranslations('AdminOrganisation');
+  const tc = useTranslations('Common');
   const formId = useId();
-  const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('ministry');
+  const [kind, setKind] = useState<KindValue>('ministry');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [parentId, setParentId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
+
+  const kindLabel = (value: KindValue): string => {
+    switch (value) {
+      case 'ministry':
+        return to('kindMinistry');
+      case 'department':
+        return to('kindDepartment');
+      case 'team':
+        return to('kindTeam');
+      case 'branch':
+        return to('kindBranch');
+      case 'life_group':
+        return to('kindLifeGroup');
+    }
+  };
 
   const reset = (): void => {
     setKind('ministry');
@@ -103,7 +119,7 @@ export function CreateUnitDialog({
         setFormError(body?.error ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not create this unit.'),
+          err instanceof Error ? err.message : to('couldNotCreateUnit'),
         );
       }
       setSubmitting(false);
@@ -114,16 +130,16 @@ export function CreateUnitDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={t('New unit')}
-      description={t('Create a ministry, department, team, branch, or life group.')}
+      title={to('newUnit')}
+      description={to('newUnitDesc')}
       size="sm"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            {t('Cancel')}
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? t('Saving…') : t('Create unit')}
+            {submitting ? tc('saving') : to('createUnit')}
           </Button>
         </DialogFooter>
       }
@@ -144,25 +160,23 @@ export function CreateUnitDialog({
           </div>
         ) : null}
 
-        <Field label={t('Kind')} required error={fieldErrors.kind}>
+        <Field label={to('kindLabel')} required error={fieldErrors.kind}>
           <Select
             value={kind}
-            onChange={(e) =>
-              setKind(e.target.value as (typeof KINDS)[number]['value'])
-            }
+            onChange={(e) => setKind(e.target.value as KindValue)}
           >
-            {KINDS.map((k) => (
-              <option key={k.value} value={k.value}>
-                {t(k.label)}
+            {KIND_VALUES.map((k) => (
+              <option key={k} value={k}>
+                {kindLabel(k)}
               </option>
             ))}
           </Select>
         </Field>
 
         <Field
-          label={t('Name')}
+          label={to('nameLabel')}
           required
-          hint={t('e.g. \'Worship ministry\' or \'Youth department\'.')}
+          hint={to('nameHint')}
           error={fieldErrors.name}
         >
           <Input
@@ -173,7 +187,7 @@ export function CreateUnitDialog({
           />
         </Field>
 
-        <Field label={t('Description')} error={fieldErrors.description}>
+        <Field label={to('descriptionLabel')} error={fieldErrors.description}>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -184,12 +198,12 @@ export function CreateUnitDialog({
 
         {parents.length > 0 ? (
           <Field
-            label={t('Parent unit')}
-            hint={t('Optional — nest this under another unit.')}
+            label={to('parentUnit')}
+            hint={to('parentHint')}
             error={fieldErrors.parentId}
           >
             <Select value={parentId} onChange={(e) => setParentId(e.target.value)}>
-              <option value="">{t('No parent')}</option>
+              <option value="">{to('noParent')}</option>
               {parents.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}

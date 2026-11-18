@@ -6,6 +6,7 @@
  */
 
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import type { IconName } from '@/app/_ekklesia/icons';
 import {
@@ -21,7 +22,6 @@ import {
 import type { Person } from '../_lib/api-types';
 import { errorMessage, fieldErrorsFrom } from '../_lib/errors';
 import { asList } from '../_lib/list';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /* ------------------------------------------------------------------ */
 /* List states                                                         */
@@ -47,13 +47,14 @@ export function ListState({
   empty,
   children,
 }: ListStateProps): React.ReactElement {
+  const t = useTranslations('Common');
   if (forbidden) {
     return (
       <EmptyState
         icon="lock"
         tone="neutral"
-        title={t('You don\'t have access to this')}
-        description={t('Ask a church administrator to grant the permission if you need it.')}
+        title={t('noAccessTitle')}
+        description={t('noAccessBody')}
       />
     );
   }
@@ -63,7 +64,7 @@ export function ListState({
         {error}
         <div className="mt-3">
           <Button variant="secondary" size="sm" onClick={onRetry}>
-            {t('Try again')}
+            {t('retry')}
           </Button>
         </div>
       </div>
@@ -82,8 +83,8 @@ export function ListState({
       <EmptyState
         icon={empty.icon ?? 'inbox'}
         tone="gold"
-        title={t(empty.title)}
-        description={t(empty.description)}
+        title={empty.title}
+        description={empty.description}
         action={empty.action}
       />
     );
@@ -125,6 +126,7 @@ export function FormDialog({
   submitVariant = 'primary',
   children,
 }: FormDialogProps): React.ReactElement {
+  const t = useTranslations('Common');
   const formId = useId();
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -146,7 +148,7 @@ export function FormDialog({
       await onSubmit();
     } catch (err) {
       setFieldErrors(fieldErrorsFrom(err));
-      setFormError(errorMessage(err, t('Something went wrong. Please try again.')));
+      setFormError(errorMessage(err, t('error')));
       setSubmitting(false);
     }
   };
@@ -161,7 +163,7 @@ export function FormDialog({
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={close} disabled={submitting}>
-            {t('Cancel')}
+            {t('cancel')}
           </Button>
           <Button
             type="submit"
@@ -214,6 +216,7 @@ export function useRowAction(): {
     messages: { success: string; detail?: string; failure: string },
   ) => Promise<boolean>;
 } {
+  const t = useTranslations('Common');
   const { push } = useToast();
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
@@ -228,14 +231,14 @@ export function useRowAction(): {
       push({
         tone: 'success',
         title: messages.success,
-        message: messages.detail ?? 'Saved.',
+        message: messages.detail ?? t('success'),
       });
       return true;
     } catch (err) {
       push({
         tone: 'danger',
         title: messages.failure,
-        message: errorMessage(err, t('Please try again.')),
+        message: errorMessage(err, t('pleaseTryAgain')),
       });
       return false;
     } finally {
@@ -260,12 +263,14 @@ export interface PersonPickerProps {
 
 /** Debounce-free search box: type ≥2 chars, press Search or Enter, pick one. */
 export function PersonPicker({
-  label = 'Person',
+  label,
   required,
   error,
   value,
   onChange,
 }: PersonPickerProps): React.ReactElement {
+  const t = useTranslations('Common');
+  const resolvedLabel = label ?? t('person');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Person[]>([]);
   const [searching, setSearching] = useState(false);
@@ -290,11 +295,11 @@ export function PersonPicker({
 
   if (value) {
     return (
-      <Field label={t(label)} required={required} error={error}>
+      <Field label={resolvedLabel} required={required} error={error}>
         <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 py-2 text-sm">
           <span className="font-medium text-foreground">{value.displayName}</span>
           <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
-            {t('Change')}
+            {t('change')}
           </Button>
         </div>
       </Field>
@@ -303,10 +308,10 @@ export function PersonPicker({
 
   return (
     <Field
-      label={t(label)}
+      label={resolvedLabel}
       required={required}
       error={error}
-      hint={t('Type at least two letters of their name.')}
+      hint={t('typeAtLeastTwo')}
     >
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
@@ -322,7 +327,7 @@ export function PersonPicker({
                 void search();
               }
             }}
-            placeholder={t('Search by name…')}
+            placeholder={t('searchByName')}
           />
           <Button
             variant="secondary"
@@ -330,7 +335,7 @@ export function PersonPicker({
             loading={searching}
             disabled={query.trim().length < 2}
           >
-            {t('Search')}
+            {t('search')}
           </Button>
         </div>
         {results.length > 0 ? (
@@ -351,7 +356,7 @@ export function PersonPicker({
             ))}
           </ul>
         ) : searched && !searching ? (
-          <p className="text-sm text-muted-foreground">{t('No people match that search.')}</p>
+          <p className="text-sm text-muted-foreground">{t('noPeopleMatch')}</p>
         ) : null}
       </div>
     </Field>

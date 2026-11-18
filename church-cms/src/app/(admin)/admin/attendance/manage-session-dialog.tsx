@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -17,7 +19,6 @@ import { formatDateTime, titleCase } from '../../_lib/format';
 import { extractValidationErrors } from '../people/form-errors';
 import type { AttendanceRecord, AttendanceSession } from './attendance-types';
 import { AttendanceQrPanel } from './attendance-qr-panel';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 interface ManageSessionDialogProps {
   open: boolean;
@@ -40,6 +41,8 @@ export function ManageSessionDialog({
   onClose,
   onChanged,
 }: ManageSessionDialogProps): React.ReactElement {
+  const ta = useTranslations('AdminAttendance');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [current, setCurrent] = useState<AttendanceSession | null>(session);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -109,12 +112,12 @@ export function ManageSessionDialog({
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load session records.'),
+            : ta('unableLoadRecords'),
       );
     } finally {
       setLoadingRecords(false);
     }
-  }, []);
+  }, [ta]);
 
   // Reset the dialog when it opens or the session changes — adjusted during
   // render (React's prop-change pattern) instead of in an effect.
@@ -192,7 +195,7 @@ export function ManageSessionDialog({
     event.preventDefault();
     if (!current || !isOpen || recording) return;
     if (!personId) {
-      setFieldErrors({ personId: t('Pick a person from the search results.') });
+      setFieldErrors({ personId: ta('pickPerson') });
       return;
     }
     setFieldErrors({});
@@ -229,7 +232,7 @@ export function ManageSessionDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not record attendance.'),
+          err instanceof Error ? err.message : ta('couldNotRecord'),
         );
       }
     } finally {
@@ -244,15 +247,15 @@ export function ManageSessionDialog({
     const children = Number(childrenCount);
     const visitors = Number(visitorsCount);
     const nextErrors: Record<string, string> = {};
-    if (!Number.isInteger(men) || men < 0) nextErrors.menCount = t('Enter a whole number.');
+    if (!Number.isInteger(men) || men < 0) nextErrors.menCount = ta('wholeNumber');
     if (!Number.isInteger(women) || women < 0) {
-      nextErrors.womenCount = t('Enter a whole number.');
+      nextErrors.womenCount = ta('wholeNumber');
     }
     if (!Number.isInteger(children) || children < 0) {
-      nextErrors.childrenCount = t('Enter a whole number.');
+      nextErrors.childrenCount = ta('wholeNumber');
     }
     if (!Number.isInteger(visitors) || visitors < 0) {
-      nextErrors.visitorsCount = t('Enter a whole number.');
+      nextErrors.visitorsCount = ta('wholeNumber');
     }
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
@@ -283,7 +286,7 @@ export function ManageSessionDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not save headcount.'),
+          err instanceof Error ? err.message : ta('couldNotSaveHeadcount'),
         );
       }
     } finally {
@@ -312,7 +315,7 @@ export function ManageSessionDialog({
         setFormError(err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not finalize session.'),
+          err instanceof Error ? err.message : ta('couldNotFinalize'),
         );
       }
     } finally {
@@ -326,19 +329,19 @@ export function ManageSessionDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={eventTitle || t('Attendance session')}
+      title={eventTitle || ta('sessionTitle')}
       description={
         current
           ? `${titleCase(current.mode.replaceAll('_', ' '))} · ${
-              isOpen ? t('Open') : t('Finalized')
+              isOpen ? ta('open') : ta('finalized')
             }`
-          : t('Manage attendance for this event.')
+          : ta('manageDesc')
       }
       size="lg"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={busy}>
-            {t('Close')}
+            {ta('close')}
           </Button>
           {isOpen ? (
             confirmFinalize ? (
@@ -348,7 +351,7 @@ export function ManageSessionDialog({
                   onClick={() => setConfirmFinalize(false)}
                   disabled={finalizing}
                 >
-                  {t('Not yet')}
+                  {ta('notYet')}
                 </Button>
                 <Button
                   variant="primary"
@@ -357,7 +360,7 @@ export function ManageSessionDialog({
                     void handleFinalize();
                   }}
                 >
-                  {finalizing ? t('Finalizing…') : t('Yes, finalize')}
+                  {finalizing ? ta('finalizing') : ta('yesFinalize')}
                 </Button>
               </>
             ) : (
@@ -369,7 +372,7 @@ export function ManageSessionDialog({
                   void handleFinalize();
                 }}
               >
-                {t('Finalize session')}
+                {ta('finalizeSession')}
               </Button>
             )
           ) : null}
@@ -377,7 +380,7 @@ export function ManageSessionDialog({
       }
     >
       {!current ? (
-        <p className="text-sm text-muted-foreground">{t('No session selected.')}</p>
+        <p className="text-sm text-muted-foreground">{ta('noSessionSelected')}</p>
       ) : (
         <div className="flex flex-col gap-5">
           {formError ? (
@@ -394,22 +397,24 @@ export function ManageSessionDialog({
               role="status"
               className="rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]"
             >
-              {t('Finalizing locks this session. You will not be able to add more records afterward.')}
+              {ta('finalizeLocksHint')}
             </div>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <StatusPill tone={isOpen ? 'info' : 'success'}>
-              {isOpen ? t('Open') : t('Finalized')}
+              {isOpen ? ta('open') : ta('finalized')}
             </StatusPill>
             <Badge tone="neutral">{titleCase(current.mode.replaceAll('_', ' '))}</Badge>
             <span className="text-muted-foreground">
               {current.recordCount ?? 0}{' '}
-              {(current.recordCount ?? 0) === 1 ? t('record') : t('records')}
+              {(current.recordCount ?? 0) === 1
+                ? ta('recordOne')
+                : ta('recordMany')}
             </span>
             {current.summary ? (
               <span className="text-muted-foreground">
-                {t('· Headcount')} {current.summary.totalCount}
+                · {ta('headcountCount', { count: current.summary.totalCount })}
               </span>
             ) : null}
           </div>
@@ -425,7 +430,7 @@ export function ManageSessionDialog({
           {allowsRecords ? (
             <section className="flex flex-col gap-3" aria-labelledby="record-people">
               <h3 id="record-people" className="text-sm font-medium text-foreground">
-                {t('People present')}
+                {ta('peoplePresent')}
               </h3>
               {isOpen ? (
                 <form
@@ -436,9 +441,9 @@ export function ManageSessionDialog({
                   className="flex flex-col gap-3"
                 >
                   <Field
-                    label={t('Add person')}
+                    label={ta('addPerson')}
                     required
-                    hint={searching ? t('Searching…') : t('Type at least 2 letters')}
+                    hint={searching ? tc('searching') : tc('typeAtLeast2')}
                     error={fieldErrors.personId}
                   >
                     <Input
@@ -449,7 +454,7 @@ export function ManageSessionDialog({
                         if (e.target.value.trim().length < 2) setResults([]);
                         setPersonId('');
                       }}
-                      placeholder={t('Search by name…')}
+                      placeholder={tc('searchByName')}
                       disabled={recording}
                     />
                   </Field>
@@ -486,17 +491,17 @@ export function ManageSessionDialog({
                       iconLeft={recording ? undefined : 'user-plus'}
                       disabled={!personId}
                     >
-                      {recording ? t('Recording…') : t('Mark present')}
+                      {recording ? ta('recording') : ta('markPresent')}
                     </Button>
                   </div>
                 </form>
               ) : null}
 
               {loadingRecords ? (
-                <p className="text-sm text-muted-foreground">{t('Loading records…')}</p>
+                <p className="text-sm text-muted-foreground">{ta('loadingRecords')}</p>
               ) : records.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  {t('No people recorded yet.')}
+                  {ta('noPeopleRecorded')}
                 </p>
               ) : (
                 <ul className="max-h-56 divide-y divide-border overflow-y-auto rounded-md border border-border">
@@ -510,8 +515,8 @@ export function ManageSessionDialog({
                           {r.personId
                             ? (nameByPersonId[r.personId] ??
                               r.checkInName ??
-                              t('Person'))
-                            : (r.checkInName ?? t('Guest'))}
+                              ta('person'))
+                            : (r.checkInName ?? ta('guest'))}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDateTime(r.checkedInAt)} · {titleCase(r.presence)}
@@ -528,10 +533,10 @@ export function ManageSessionDialog({
           {allowsSummary ? (
             <section className="flex flex-col gap-3" aria-labelledby="headcount">
               <h3 id="headcount" className="text-sm font-medium text-foreground">
-                {isHeadcount ? t('Headcount') : t('Optional headcount')}
+                {isHeadcount ? ta('headcount') : ta('optionalHeadcount')}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label={t('Men')} error={fieldErrors.menCount}>
+                <Field label={ta('men')} error={fieldErrors.menCount}>
                   <Input
                     type="number"
                     min={0}
@@ -541,7 +546,7 @@ export function ManageSessionDialog({
                     onChange={(e) => setMenCount(e.target.value)}
                   />
                 </Field>
-                <Field label={t('Women')} error={fieldErrors.womenCount}>
+                <Field label={ta('women')} error={fieldErrors.womenCount}>
                   <Input
                     type="number"
                     min={0}
@@ -551,7 +556,7 @@ export function ManageSessionDialog({
                     onChange={(e) => setWomenCount(e.target.value)}
                   />
                 </Field>
-                <Field label={t('Children')} error={fieldErrors.childrenCount}>
+                <Field label={ta('children')} error={fieldErrors.childrenCount}>
                   <Input
                     type="number"
                     min={0}
@@ -561,7 +566,7 @@ export function ManageSessionDialog({
                     onChange={(e) => setChildrenCount(e.target.value)}
                   />
                 </Field>
-                <Field label={t('Visitors')} error={fieldErrors.visitorsCount}>
+                <Field label={ta('visitors')} error={fieldErrors.visitorsCount}>
                   <Input
                     type="number"
                     min={0}
@@ -582,7 +587,7 @@ export function ManageSessionDialog({
                       void handleSaveSummary();
                     }}
                   >
-                    {savingSummary ? t('Saving…') : t('Save headcount')}
+                    {savingSummary ? ta('saving') : ta('saveHeadcount')}
                   </Button>
                 </div>
               ) : null}

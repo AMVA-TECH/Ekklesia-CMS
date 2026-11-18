@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Fragment, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -23,7 +24,7 @@ import {
 import type { Fund, OrganisationalUnit } from '../../../_lib/api-types';
 import { FormDialog, ListState } from '../../../_components/kit';
 import { toMinorUnits } from '../../../_lib/errors';
-import { formatMoney, titleCase } from '../../../_lib/format';
+import { formatMoney } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import {
   accountLabel,
@@ -31,16 +32,12 @@ import {
   type Budget,
   type FinancialYear,
 } from '../_lib/finance-types';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const PERIOD_KINDS = ['monthly', 'quarterly', 'yearly'] as const;
-const PERIOD_HINT = {
-  monthly: 'e.g. 2027-03',
-  quarterly: 'e.g. 2027-Q1',
-  yearly: 'e.g. 2027',
-} as const;
 
 export function BudgetsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
   const budgets = useApiList<Budget>('/api/v1/budgets');
   const accounts = useApiList<Account>('/api/v1/accounts');
   const years = useApiList<FinancialYear>('/api/v1/financial-years');
@@ -54,6 +51,20 @@ export function BudgetsClient(): React.ReactElement {
     [accounts.items],
   );
   const yearById = useMemo(() => new Map(years.items.map((y) => [y.id, y])), [years.items]);
+
+  const periodKindLabel = (kind: string): string => {
+    switch (kind) {
+      case 'monthly':
+        return tf('periodKindMonthly');
+      case 'quarterly':
+        return tf('periodKindQuarterly');
+      case 'yearly':
+        return tf('periodKindYearly');
+      default:
+        return kind;
+    }
+  };
+
   const scope = (b: Budget): string =>
     [
       b.fundId ? funds.items.find((f) => f.id === b.fundId)?.name : null,
@@ -62,31 +73,35 @@ export function BudgetsClient(): React.ReactElement {
         : null,
     ]
       .filter(Boolean)
-      .join(' · ') || t('Church-wide');
+      .join(' · ') || tf('churchWide');
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Budgets')}
-        lede={t('Planned spending and income per account. Compare against actuals in the Budget vs actual report.')}
+        title={t('budgets')}
+        lede={t('budgetsLede')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/reports?report=R-FIN-06"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Budget vs actual')}
+              {tf('budgetVsActual')}
             </Link>
             <Button iconLeft="plus" onClick={() => setCreating(true)}>
-              {t('New budget')}
+              {tf('newBudget')}
             </Button>
           </div>
         }
       />
 
       <Panel
-        title={t('All budgets')}
-        subtitle={budgets.loading ? t('Loading…') : t('{0} total', budgets.items.length)}
+        title={tf('allBudgets')}
+        subtitle={
+          budgets.loading
+            ? tf('loading')
+            : tf('budgetsTotal', { count: budgets.items.length })
+        }
         flush
       >
         <ListState
@@ -97,19 +112,19 @@ export function BudgetsClient(): React.ReactElement {
           onRetry={() => void budgets.reload()}
           empty={{
             icon: 'chart',
-            title: t('No budgets yet'),
-            description: t('Create a yearly budget, then break it down monthly or quarterly as needed.'),
+            title: tf('noBudgetsYet'),
+            description: tf('noBudgetsBody'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Budget')}</TH>
-                  <TH>{t('Period')}</TH>
-                  <TH>{t('Scope')}</TH>
-                  <TH className="text-right">{t('Planned')}</TH>
-                  <TH>{t('Status')}</TH>
+                  <TH>{tf('budget')}</TH>
+                  <TH>{tf('period')}</TH>
+                  <TH>{tf('scope')}</TH>
+                  <TH className="text-right">{tf('planned')}</TH>
+                  <TH>{tf('status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -132,13 +147,16 @@ export function BudgetsClient(): React.ReactElement {
                           </div>
                         </TD>
                         <TD className="text-sm">
-                          {titleCase(b.periodKind)} · {b.periodKey}
+                          {tf('periodDisplay', {
+                            kind: periodKindLabel(b.periodKind),
+                            key: b.periodKey,
+                          })}
                         </TD>
                         <TD className="text-sm text-muted-foreground">{scope(b)}</TD>
                         <TD className="text-right tabular-nums">{formatMoney(b.plannedMinor)}</TD>
                         <TD>
                           <StatusPill tone={b.status === 'active' ? 'success' : 'neutral'}>
-                            {titleCase(b.status)}
+                            {b.status === 'active' ? tf('statusActive') : b.status}
                           </StatusPill>
                         </TD>
                       </TR>
@@ -199,6 +217,7 @@ function CreateBudgetDialog({
   onClose: () => void;
   onCreated: () => void;
 }): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
   const [name, setName] = useState('');
   const [yearId, setYearId] = useState(years.find((y) => y.status === 'open')?.id ?? years[0]?.id ?? '');
   const [periodKind, setPeriodKind] = useState<(typeof PERIOD_KINDS)[number]>('yearly');
@@ -209,19 +228,43 @@ function CreateBudgetDialog({
   const budgetable = accounts.filter((a) => a.accountType === 'expense' || a.accountType === 'income');
   const total = lines.reduce((s, l) => s + (toMinorUnits(l.amount) ?? 0), 0);
 
+  const periodHint = (kind: (typeof PERIOD_KINDS)[number]): string => {
+    switch (kind) {
+      case 'monthly':
+        return tf('periodHintMonthly');
+      case 'quarterly':
+        return tf('periodHintQuarterly');
+      case 'yearly':
+        return tf('periodHintYearly');
+    }
+  };
+
+  const periodKindLabel = (kind: string): string => {
+    switch (kind) {
+      case 'monthly':
+        return tf('periodKindMonthly');
+      case 'quarterly':
+        return tf('periodKindQuarterly');
+      case 'yearly':
+        return tf('periodKindYearly');
+      default:
+        return kind;
+    }
+  };
+
   return (
     <FormDialog
-      title={t('New budget')}
-      submitLabel={t('Create budget')}
+      title={tf('newBudgetTitle')}
+      submitLabel={tf('createBudget')}
       size="lg"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!name.trim()) e.name = t('Enter a name.');
-        if (!yearId) e.financialYearId = t('Create a financial year first.');
-        if (!periodKey.trim()) e.periodKey = t('Enter the period, {0}.', PERIOD_HINT[periodKind]);
+        if (!name.trim()) e.name = tf('enterName');
+        if (!yearId) e.financialYearId = tf('createYearFirst');
+        if (!periodKey.trim()) e.periodKey = tf('enterPeriod', { hint: periodHint(periodKind) });
         if (lines.some((l) => !l.accountId || toMinorUnits(l.amount) === null))
-          e.lines = t('Each line needs an account and an amount.');
+          e.lines = tf('eachLineNeedsAccountAmount');
         return e;
       }}
       onSubmit={async () => {
@@ -246,43 +289,43 @@ function CreateBudgetDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('Name')} required error={errors.name}>
+            <Field label={tf('name')} required error={errors.name}>
               <Input
                 data-autofocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={t('Youth ministry 2027')}
+                placeholder={tf('namePlaceholderBudget')}
                 maxLength={200}
               />
             </Field>
-            <Field label={t('Financial year')} required error={errors.financialYearId}>
+            <Field label={tf('financialYear')} required error={errors.financialYearId}>
               <Select value={yearId} onChange={(e) => setYearId(e.target.value)}>
-                {years.length === 0 ? <option value="">{t('No years')}</option> : null}
+                {years.length === 0 ? <option value="">{tf('noYears')}</option> : null}
                 {years.map((y) => (
                   <option key={y.id} value={y.id}>
-                    {t(y.label)}
+                    {y.label}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label={t('Period')} error={errors.periodKind}>
+            <Field label={tf('period')} error={errors.periodKind}>
               <Select
                 value={periodKind}
                 onChange={(e) => setPeriodKind(e.target.value as (typeof PERIOD_KINDS)[number])}
               >
                 {PERIOD_KINDS.map((k) => (
                   <option key={k} value={k}>
-                    {titleCase(k)}
+                    {periodKindLabel(k)}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label={t('Period key')} required hint={PERIOD_HINT[periodKind]} error={errors.periodKey}>
+            <Field label={tf('periodKey')} required hint={periodHint(periodKind)} error={errors.periodKey}>
               <Input value={periodKey} onChange={(e) => setPeriodKey(e.target.value)} maxLength={32} />
             </Field>
-            <Field label={t('Fund')} error={errors.fundId}>
+            <Field label={tf('fund')} error={errors.fundId}>
               <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-                <option value="">{t('Any fund')}</option>
+                <option value="">{tf('anyFund')}</option>
                 {funds.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -290,9 +333,9 @@ function CreateBudgetDialog({
                 ))}
               </Select>
             </Field>
-            <Field label={t('Ministry / unit')} error={errors.organisationalUnitId}>
+            <Field label={tf('ministryUnit')} error={errors.organisationalUnitId}>
               <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-                <option value="">{t('Church-wide')}</option>
+                <option value="">{tf('churchWide')}</option>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
@@ -303,11 +346,11 @@ function CreateBudgetDialog({
           </div>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium text-foreground">{t('Lines')}</legend>
+            <legend className="mb-1 text-sm font-medium text-foreground">{tf('lines')}</legend>
             {lines.map((l, i) => (
               <div key={l.key} className="grid gap-2 sm:grid-cols-[2fr_1fr_auto]">
                 <Select
-                  aria-label={t('Line {0} account', i + 1)}
+                  aria-label={tf('lineAccountAria', { n: i + 1 })}
                   value={l.accountId}
                   onChange={(e) =>
                     setLines((ls) =>
@@ -315,7 +358,7 @@ function CreateBudgetDialog({
                     )
                   }
                 >
-                  <option value="">{t('Account…')}</option>
+                  <option value="">{tf('accountEllipsis')}</option>
                   {budgetable.map((a) => (
                     <option key={a.id} value={a.id}>
                       {accountLabel(a)}
@@ -323,9 +366,9 @@ function CreateBudgetDialog({
                   ))}
                 </Select>
                 <Input
-                  aria-label={t('Line {0} amount', i + 1)}
+                  aria-label={tf('lineAmountAria', { n: i + 1 })}
                   inputMode="decimal"
-                  placeholder={t('Amount')}
+                  placeholder={tf('amountPlaceholder')}
                   value={l.amount}
                   onChange={(e) =>
                     setLines((ls) =>
@@ -337,7 +380,7 @@ function CreateBudgetDialog({
                   variant="ghost"
                   size="sm"
                   iconLeft="trash"
-                  aria-label={t('Remove line {0}', i + 1)}
+                  aria-label={tf('removeLineAria', { n: i + 1 })}
                   disabled={lines.length <= 1}
                   onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}
                 />
@@ -352,9 +395,11 @@ function CreateBudgetDialog({
                   setLines((ls) => [...ls, { key: nextKey++, accountId: '', amount: '' }])
                 }
               >
-                {t('Add line')}
+                {tf('addLine')}
               </Button>
-              <span className="text-sm text-muted-foreground">{t('Total')} {formatMoney(total)}</span>
+              <span className="text-sm text-muted-foreground">
+                {tf('totalAmount', { amount: formatMoney(total) })}
+              </span>
             </div>
             {errors.lines ? (
               <p role="alert" className="text-sm text-[color:var(--danger-ink)]">

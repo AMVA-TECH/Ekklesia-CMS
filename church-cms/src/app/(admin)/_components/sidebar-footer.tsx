@@ -1,9 +1,9 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Icon } from '@/app/_ekklesia/icons';
 import { useRole, useSession } from '@/app/_ekklesia/session';
 import { Avatar } from '@/app/_ekklesia/ui';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const ROLE_PRIORITY = [
   'church_administrator',
@@ -16,22 +16,23 @@ const ROLE_PRIORITY = [
   'member',
 ] as const;
 
-const ROLE_FALLBACK_LABELS: Record<string, string> = {
-  church_administrator: 'Church Administrator',
-  platform_operator: 'Platform Operator',
-  senior_pastor: 'Senior Pastor',
-  pastor: 'Pastor',
-  pastoral_leadership: 'Pastoral Leadership',
-  finance_officer: 'Finance Officer',
-  ministry_leader: 'Ministry Leader',
-  member: 'Member',
-};
+const ROLE_MESSAGE_KEYS = {
+  church_administrator: 'roleChurchAdmin',
+  platform_operator: 'rolePlatform',
+  senior_pastor: 'roleSeniorPastor',
+  pastor: 'rolePastor',
+  pastoral_leadership: 'rolePastoral',
+  finance_officer: 'roleFinance',
+  ministry_leader: 'roleMinistry',
+  member: 'roleMember',
+} as const;
 
 /**
  * Account summary at the bottom of the admin sidebar.
  * Shows user avatar, display name, role, and Admin when applicable.
  */
 export function SidebarFooter(): React.ReactElement | null {
+  const t = useTranslations('AdminChrome');
   const { session, user, isAuthenticated } = useSession();
   const { isChurchAdministrator, isPlatformOperator } = useRole();
 
@@ -43,16 +44,21 @@ export function SidebarFooter(): React.ReactElement | null {
       Boolean,
     ) ?? roles[0];
 
+  const roleKey =
+    primary?.code && primary.code in ROLE_MESSAGE_KEYS
+      ? ROLE_MESSAGE_KEYS[primary.code as keyof typeof ROLE_MESSAGE_KEYS]
+      : null;
+
   const roleLabel =
     primary?.label?.trim() ||
-    (primary?.code ? ROLE_FALLBACK_LABELS[primary.code] : null) ||
+    (roleKey ? t(roleKey) : null) ||
     primary?.code?.replaceAll('_', ' ') ||
-    t('Member');
+    t('member');
 
   const displayName =
     user.displayName?.trim() ||
     user.email?.split('@')[0] ||
-    t('Signed in');
+    t('signedIn');
 
   const showAdmin = isChurchAdministrator || isPlatformOperator;
 
@@ -81,7 +87,7 @@ export function SidebarFooter(): React.ReactElement | null {
           </p>
           {showAdmin ? (
             <span className="shrink-0 rounded-md bg-[color:var(--sidebar-active-bg)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-active-accent)] ring-1 ring-inset ring-[color:var(--sidebar-active-border)]">
-              {t('Admin')}
+              {t('admin')}
             </span>
           ) : null}
         </div>

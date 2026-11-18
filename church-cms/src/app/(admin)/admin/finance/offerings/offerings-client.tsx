@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -23,9 +24,11 @@ import type { Fund, Offering } from '../../../_lib/api-types';
 import { formatDate, formatMoney } from '../../../_lib/format';
 import { asList } from '../../../_lib/list';
 import { CreateOfferingDialog } from './create-offering-dialog';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export function OfferingsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [offerings, setOfferings] = useState<Offering[]>([]);
   const [funds, setFunds] = useState<Fund[]>([]);
@@ -52,11 +55,12 @@ export function OfferingsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : t('Unable to load offerings.'),
+            : tf('unableLoadOfferings'),
       );
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -73,20 +77,20 @@ export function OfferingsClient(): React.ReactElement {
       });
       push({
         tone: 'success',
-        title: t('Offering posted'),
+        title: tf('offeringPosted'),
         message: formatMoney(offering.amountMinor, offering.currency),
       });
       void load();
     } catch (err) {
       push({
         tone: 'danger',
-        title: t('Could not post offering'),
+        title: tf('couldNotPostOffering'),
         message:
           err instanceof ApiError
             ? err.message
             : err instanceof Error
               ? err.message
-              : t('Something went wrong.'),
+              : tf('somethingWrong'),
       });
     } finally {
       setPostingId(null);
@@ -104,34 +108,34 @@ export function OfferingsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Offerings')}
-        lede={t('Record Sunday collections and other gifts. Post them to the ledger when you\'re ready.')}
+        title={t('offerings')}
+        lede={t('offeringsLede')}
         actions={
           <Button
             iconLeft="plus"
             onClick={() => setCreateOpen(true)}
             disabled={funds.length === 0}
           >
-            {t('Record offering')}
+            {tf('recordOffering')}
           </Button>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Metric
-          label={t('Total recorded')}
+          label={tf('totalRecorded')}
           value={loading ? '—' : formatMoney(total, currency)}
           icon="coin"
           tone="peach"
         />
         <Metric
-          label={t('Posted to ledger')}
+          label={tf('postedToLedger')}
           value={loading ? '—' : formatMoney(postedTotal, currency)}
           icon="check-circle"
           tone="sage"
         />
         <Metric
-          label={t('Draft')}
+          label={tf('draft')}
           value={loading ? '—' : formatMoney(pendingTotal, currency)}
           icon="clock"
           tone="gold"
@@ -140,17 +144,17 @@ export function OfferingsClient(): React.ReactElement {
 
       {funds.length === 0 && !loading ? (
         <div className="rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]">
-          {t('Create a fund first so you can direct offerings to it.')}
+          {tf('createFundFirst')}
         </div>
       ) : null}
 
-      <Panel title={t('All offerings')} subtitle={error ?? undefined} flush>
+      <Panel title={tf('allOfferings')} subtitle={error ?? undefined} flush>
         {error ? (
           <div className="px-5 py-8 text-center text-sm text-[color:var(--danger-ink)]">
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                {t('Try again')}
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -163,8 +167,8 @@ export function OfferingsClient(): React.ReactElement {
           <EmptyState
             icon="coin"
             tone="peach"
-            title={t('No offerings recorded')}
-            description={t('Record a Sunday collection to track giving over time.')}
+            title={tf('noOfferingsRecorded')}
+            description={tf('noOfferingsBody')}
             action={
               <Button
                 iconLeft="plus"
@@ -172,7 +176,7 @@ export function OfferingsClient(): React.ReactElement {
                 onClick={() => setCreateOpen(true)}
                 disabled={funds.length === 0}
               >
-                {t('Record offering')}
+                {tf('recordOffering')}
               </Button>
             }
           />
@@ -181,13 +185,13 @@ export function OfferingsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Service date')}</TH>
-                  <TH>{t('Amount')}</TH>
-                  <TH>{t('Fund')}</TH>
-                  <TH>{t('Status')}</TH>
-                  <TH>{t('Note')}</TH>
+                  <TH>{tf('serviceDate')}</TH>
+                  <TH>{tf('amount')}</TH>
+                  <TH>{tf('fund')}</TH>
+                  <TH>{tf('status')}</TH>
+                  <TH>{tf('note')}</TH>
                   <TH className="w-28">
-                    <span className="sr-only">{t('Actions')}</span>
+                    <span className="sr-only">{tf('actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -209,11 +213,11 @@ export function OfferingsClient(): React.ReactElement {
                       <TD>
                         {posted ? (
                           <StatusPill tone="success" hideDot>
-                            {t('Posted')}
+                            {tf('posted')}
                           </StatusPill>
                         ) : (
                           <StatusPill tone="pending" hideDot>
-                            {t('Draft')}
+                            {tf('draft')}
                           </StatusPill>
                         )}
                       </TD>
@@ -229,14 +233,14 @@ export function OfferingsClient(): React.ReactElement {
                             disabled={!canPost || postingId !== null}
                             title={
                               canPost
-                                ? t('Post this offering to the ledger')
-                                : t('Income and deposit accounts are required to post')
+                                ? tf('postOfferingTitle')
+                                : tf('accountsRequiredToPost')
                             }
                             onClick={() => {
                               void handlePost(o);
                             }}
                           >
-                            {t('Post')}
+                            {tf('post')}
                           </Button>
                         ) : null}
                       </TD>
@@ -256,7 +260,7 @@ export function OfferingsClient(): React.ReactElement {
         onCreated={(o) => {
           push({
             tone: 'success',
-            title: t('Offering recorded'),
+            title: tf('offeringRecorded'),
             message: formatMoney(o.amountMinor, o.currency),
           });
           setCreateOpen(false);

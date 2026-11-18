@@ -8,10 +8,10 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
 import { cn } from './utils';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<Dialog>`. */
 export interface DialogProps {
@@ -74,6 +74,7 @@ export function Dialog({
   sheetOnMobile = true,
   hideCloseButton = false,
 }: DialogProps): React.ReactElement | null {
+  const t = useTranslations('Common');
   const reactId = useId();
   const titleId = `dlg-${reactId}-title`;
   const descId = description ? `dlg-${reactId}-desc` : undefined;
@@ -153,7 +154,7 @@ export function Dialog({
       {/* Overlay */}
       <button
         type="button"
-        aria-label={t('Close dialog')}
+        aria-label={t('closeDialog')}
         tabIndex={-1}
         data-focus-skip
         className="absolute inset-0 bg-foreground/40 backdrop-blur-[1px]"
@@ -189,7 +190,7 @@ export function Dialog({
           {hideCloseButton ? null : (
             <button
               type="button"
-              aria-label={t('Close dialog')}
+              aria-label={t('closeDialog')}
               onClick={onClose}
               className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
             >

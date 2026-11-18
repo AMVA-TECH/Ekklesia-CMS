@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -27,11 +28,10 @@ import {
 import type { Fund, OrganisationalUnit } from '../../../_lib/api-types';
 import { FormDialog, ListState, useRowAction } from '../../../_components/kit';
 import { todayLocalIso, toMinorUnits } from '../../../_lib/errors';
-import { formatDate, formatMoney, titleCase } from '../../../_lib/format';
+import { formatDate, formatMoney } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { accountLabel, type Account } from '../_lib/finance-types';
 import type { Expense } from './expense-types';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 const FILTERS = ['all', 'draft', 'pending_approval', 'approved', 'posted', 'rejected'] as const;
 type Filter = (typeof FILTERS)[number];
@@ -45,6 +45,8 @@ const TONE = {
 } as const;
 
 export function ExpensesClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
   const [filter, setFilter] = useState<Filter>('all');
   const expenses = useApiList<Expense>(
     `/api/v1/expenses?limit=100${filter === 'all' ? '' : `&status=${filter}`}`,
@@ -61,17 +63,36 @@ export function ExpensesClient(): React.ReactElement {
   );
   const unitById = useMemo(() => new Map(units.items.map((u) => [u.id, u])), [units.items]);
 
+  const statusLabel = (status: string): string => {
+    switch (status) {
+      case 'all':
+        return tf('statusAll');
+      case 'draft':
+        return tf('statusDraft');
+      case 'pending_approval':
+        return tf('statusPendingApproval');
+      case 'approved':
+        return tf('statusApproved');
+      case 'posted':
+        return tf('statusPosted');
+      case 'rejected':
+        return tf('statusRejected');
+      default:
+        return status;
+    }
+  };
+
   const act = async (e: Expense, action: 'submit' | 'post'): Promise<void> => {
     const ok = await run(
       `${e.id}:${action}`,
       () => apiFetch(`/api/v1/expenses/${e.id}/${action}`, { method: 'POST' }),
       action === 'submit'
         ? {
-            success: t('Submitted for approval'),
-            detail: t('A second person must approve it in Approvals.'),
-            failure: t('Could not submit'),
+            success: tf('submittedForApproval'),
+            detail: tf('submittedForApprovalDetail'),
+            failure: tf('couldNotSubmit'),
           }
-        : { success: t('Posted to the ledger'), failure: t('Could not post') },
+        : { success: tf('postedToTheLedger'), failure: tf('couldNotPost') },
     );
     if (ok) void expenses.reload();
   };
@@ -79,36 +100,40 @@ export function ExpensesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t('Expenses')}
-        lede={t('Record a spend as a draft, submit it, and a second person approves it in Approvals. Approved expenses with accounts set are posted to the ledger automatically.')}
+        title={t('expenses')}
+        lede={t('expensesLede')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/approvals"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              {t('Approvals')}
+              {t('approvals')}
             </Link>
             <Button iconLeft="plus" onClick={() => setCreating(true)}>
-              {t('New expense')}
+              {tf('newExpense')}
             </Button>
           </div>
         }
       />
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-        <TabList aria-label={t('Expense status')}>
+        <TabList aria-label={tf('expenseStatusAria')}>
           {FILTERS.map((f) => (
             <Tab key={f} value={f}>
-              {titleCase(f)}
+              {statusLabel(f)}
             </Tab>
           ))}
         </TabList>
       </Tabs>
 
       <Panel
-        title={t('Expenses')}
-        subtitle={expenses.loading ? t('Loading…') : t('{0} shown', expenses.items.length)}
+        title={tf('expensesPanel')}
+        subtitle={
+          expenses.loading
+            ? tf('loading')
+            : tf('shownCount', { count: expenses.items.length })
+        }
         flush
       >
         <ListState
@@ -119,20 +144,20 @@ export function ExpensesClient(): React.ReactElement {
           onRetry={() => void expenses.reload()}
           empty={{
             icon: 'wallet',
-            title: t('No expenses here'),
-            description: t('Record a payment request to start the approval flow.'),
+            title: tf('noExpensesHere'),
+            description: tf('noExpensesBody'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>{t('Purpose')}</TH>
-                  <TH>{t('Date')}</TH>
-                  <TH className="text-right">{t('Amount')}</TH>
-                  <TH className="hidden lg:table-cell">{t('Accounts')}</TH>
-                  <TH>{t('Status')}</TH>
-                  <TH className="text-right">{t('Actions')}</TH>
+                  <TH>{tf('purpose')}</TH>
+                  <TH>{tf('date')}</TH>
+                  <TH className="text-right">{tf('amount')}</TH>
+                  <TH className="hidden lg:table-cell">{tf('accountsCol')}</TH>
+                  <TH>{tf('status')}</TH>
+                  <TH className="text-right">{tf('actions')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -151,14 +176,16 @@ export function ExpensesClient(): React.ReactElement {
                       {formatMoney(e.amountMinor, e.currency)}
                     </TD>
                     <TD className="hidden text-xs text-muted-foreground lg:table-cell">
-                      {e.accountId ? accountLabel(accountById.get(e.accountId)) : t('No expense account')}
+                      {e.accountId ? accountLabel(accountById.get(e.accountId)) : tf('noExpenseAccount')}
                       <br />
                       {e.paymentAccountId
-                        ? t('from {0}', accountLabel(accountById.get(e.paymentAccountId)))
-                        : t('No payment account')}
+                        ? tf('fromAccount', {
+                            account: accountLabel(accountById.get(e.paymentAccountId)),
+                          })
+                        : tf('noPaymentAccount')}
                     </TD>
                     <TD>
-                      <StatusPill tone={TONE[e.status]}>{titleCase(e.status)}</StatusPill>
+                      <StatusPill tone={TONE[e.status]}>{statusLabel(e.status)}</StatusPill>
                     </TD>
                     <TD className="text-right">
                       {e.status === 'draft' ? (
@@ -168,7 +195,7 @@ export function ExpensesClient(): React.ReactElement {
                           disabled={busyKey !== null}
                           onClick={() => void act(e, 'submit')}
                         >
-                          {t('Submit')}
+                          {tf('submit')}
                         </Button>
                       ) : e.status === 'approved' && !e.journalId ? (
                         <Button
@@ -178,12 +205,12 @@ export function ExpensesClient(): React.ReactElement {
                           disabled={busyKey !== null || !e.accountId || !e.paymentAccountId}
                           title={
                             !e.accountId || !e.paymentAccountId
-                              ? t('Set both accounts to post this expense')
+                              ? tf('setBothAccountsToPost')
                               : undefined
                           }
                           onClick={() => void act(e, 'post')}
                         >
-                          {t('Post')}
+                          {tf('post')}
                         </Button>
                       ) : null}
                     </TD>
@@ -224,6 +251,7 @@ function CreateExpenseDialog({
   onClose: () => void;
   onCreated: () => void;
 }): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
   const [amount, setAmount] = useState('');
   const [expenseDate, setExpenseDate] = useState(todayLocalIso);
   const [purpose, setPurpose] = useState('');
@@ -237,15 +265,15 @@ function CreateExpenseDialog({
 
   return (
     <FormDialog
-      title={t('New expense')}
-      description={t('Saved as a draft. Submit it from the list to request approval.')}
-      submitLabel={t('Save draft')}
+      title={tf('newExpenseTitle')}
+      description={tf('newExpenseDesc')}
+      submitLabel={tf('saveDraft')}
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (toMinorUnits(amount) === null) e.amountMinor = t('Enter an amount greater than zero.');
-        if (!expenseDate) e.expenseDate = t('Choose a date.');
-        if (!purpose.trim()) e.purpose = t('Describe what the money is for.');
+        if (toMinorUnits(amount) === null) e.amountMinor = tf('amountGreaterThanZero');
+        if (!expenseDate) e.expenseDate = tf('chooseDate');
+        if (!purpose.trim()) e.purpose = tf('describePurpose');
         return e;
       }}
       onSubmit={async () => {
@@ -267,7 +295,7 @@ function CreateExpenseDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('Amount (TZS)')} required error={errors.amountMinor}>
+            <Field label={tf('amountTzs')} required error={errors.amountMinor}>
               <Input
                 data-autofocus
                 inputMode="decimal"
@@ -276,7 +304,7 @@ function CreateExpenseDialog({
                 placeholder="150000"
               />
             </Field>
-            <Field label={t('Date')} required error={errors.expenseDate}>
+            <Field label={tf('date')} required error={errors.expenseDate}>
               <Input
                 type="date"
                 value={expenseDate}
@@ -284,18 +312,18 @@ function CreateExpenseDialog({
               />
             </Field>
           </div>
-          <Field label={t('Purpose')} required error={errors.purpose}>
+          <Field label={tf('purpose')} required error={errors.purpose}>
             <Textarea
               value={purpose}
               onChange={(e) => setPurpose(e.target.value)}
               rows={2}
               maxLength={1000}
-              placeholder={t('Sound system repair for Sunday service')}
+              placeholder={tf('purposePlaceholder')}
             />
           </Field>
-          <Field label={t('Ministry / unit')} error={errors.organisationalUnitId}>
+          <Field label={tf('ministryUnit')} error={errors.organisationalUnitId}>
             <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-              <option value="">{t('Church-wide')}</option>
+              <option value="">{tf('churchWide')}</option>
               {units.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
@@ -305,12 +333,12 @@ function CreateExpenseDialog({
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
-              label={t('Expense account')}
-              hint={t('Needed to post automatically.')}
+              label={tf('expenseAccount')}
+              hint={tf('expenseAccountHint')}
               error={errors.accountId}
             >
               <Select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                <option value="">{t('Choose later')}</option>
+                <option value="">{tf('chooseLater')}</option>
                 {expenseAccounts.map((a) => (
                   <option key={a.id} value={a.id}>
                     {accountLabel(a)}
@@ -318,12 +346,12 @@ function CreateExpenseDialog({
                 ))}
               </Select>
             </Field>
-            <Field label={t('Paid from')} hint={t('Bank or cash account.')} error={errors.paymentAccountId}>
+            <Field label={tf('paidFrom')} hint={tf('paidFromHint')} error={errors.paymentAccountId}>
               <Select
                 value={paymentAccountId}
                 onChange={(e) => setPaymentAccountId(e.target.value)}
               >
-                <option value="">{t('Choose later')}</option>
+                <option value="">{tf('chooseLater')}</option>
                 {paymentAccounts.map((a) => (
                   <option key={a.id} value={a.id}>
                     {accountLabel(a)}
@@ -332,9 +360,9 @@ function CreateExpenseDialog({
               </Select>
             </Field>
           </div>
-          <Field label={t('Fund')} error={errors.fundId}>
+          <Field label={tf('fund')} error={errors.fundId}>
             <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-              <option value="">{t('No specific fund')}</option>
+              <option value="">{tf('noSpecificFund')}</option>
               {funds.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.name}

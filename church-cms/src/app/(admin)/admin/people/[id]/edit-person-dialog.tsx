@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -12,7 +13,6 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Person } from '../../../_lib/api-types';
 import { extractValidationErrors } from '../form-errors';
-import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface EditPersonDialogProps {
   open: boolean;
@@ -21,10 +21,7 @@ interface EditPersonDialogProps {
   onSaved: (person: Person) => void;
 }
 
-const LOCALES: Array<{ value: string; label: string }> = [
-  { value: 'en', label: tk('English') },
-  { value: 'sw', label: tk('Kiswahili') },
-];
+const LOCALE_VALUES = ['en', 'sw'] as const;
 
 /**
  * Admin identity edit — maps to `PATCH /api/v1/people/:id`
@@ -36,6 +33,9 @@ export function EditPersonDialog({
   onClose,
   onSaved,
 }: EditPersonDialogProps): React.ReactElement {
+  const tp = useTranslations('AdminPeople');
+  const tc = useTranslations('Common');
+  const tLocale = useTranslations('Locale');
   const formId = useId();
   const [displayName, setDisplayName] = useState(person.displayName);
   const [fullName, setFullName] = useState(person.fullName ?? '');
@@ -97,7 +97,7 @@ export function EditPersonDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : t('Could not save this person.'),
+          err instanceof Error ? err.message : tp('couldNotSavePerson'),
         );
       }
     } finally {
@@ -109,13 +109,13 @@ export function EditPersonDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={t('Edit person')}
-      description={t('Update how this person appears in the church directory.')}
+      title={tp('editTitle')}
+      description={tp('editDesc')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            {t('Cancel')}
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -123,7 +123,7 @@ export function EditPersonDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'check'}
           >
-            {submitting ? t('Saving…') : t('Save changes')}
+            {submitting ? tp('saving') : tp('saveChanges')}
           </Button>
         </DialogFooter>
       }
@@ -144,7 +144,7 @@ export function EditPersonDialog({
           </div>
         ) : null}
 
-        <Field label={t('Display name')} required error={fieldErrors.displayName}>
+        <Field label={tp('displayName')} required error={fieldErrors.displayName}>
           <Input
             data-autofocus
             value={displayName}
@@ -153,7 +153,7 @@ export function EditPersonDialog({
           />
         </Field>
 
-        <Field label={t('Full name')} error={fieldErrors.fullName}>
+        <Field label={tp('fullName')} error={fieldErrors.fullName}>
           <Input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -163,8 +163,8 @@ export function EditPersonDialog({
 
         <div className="grid gap-4 md:grid-cols-2">
           <Field
-            label={t('Date of birth')}
-            hint={t('YYYY-MM-DD')}
+            label={tp('dateOfBirth')}
+            hint={tp('dobHintShort')}
             error={fieldErrors.dateOfBirth}
           >
             <Input
@@ -173,18 +173,18 @@ export function EditPersonDialog({
               onChange={(e) => setDateOfBirth(e.target.value)}
             />
           </Field>
-          <Field label={t('Preferred language')} error={fieldErrors.preferredLocale}>
+          <Field label={tp('preferredLanguage')} error={fieldErrors.preferredLocale}>
             <Select value={locale} onChange={(e) => setLocale(e.target.value)}>
-              {LOCALES.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {t(l.label)}
+              {LOCALE_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {tLocale(value)}
                 </option>
               ))}
             </Select>
           </Field>
         </div>
 
-        <Field label={t('Visibility')}>
+        <Field label={tp('visibility')}>
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
@@ -192,7 +192,7 @@ export function EditPersonDialog({
               onChange={(e) => setDirectoryOptIn(e.target.checked)}
               className="h-4 w-4 rounded-sm border-border text-foreground focus-ring"
             />
-            {t('Show in church directory')}
+            {tp('showInDirectory')}
           </label>
         </Field>
       </form>

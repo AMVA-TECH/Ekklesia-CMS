@@ -4,7 +4,6 @@ import { useCallback, useState } from 'react';
 import { apiFetch, useLoadEffect } from '@/app/_ekklesia/session';
 import { errorMessage } from './errors';
 import { asList } from './list';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 export interface ApiList<T> {
   items: T[];
@@ -41,7 +40,7 @@ export function useApiList<T>(url: string | null): ApiList<T> {
       if (status === 403) {
         setForbidden(true);
       } else {
-        setError(errorMessage(err, t('Unable to load this list.')));
+        setError(errorMessage(err, 'Unable to load this list.'));
       }
     } finally {
       setLoading(false);

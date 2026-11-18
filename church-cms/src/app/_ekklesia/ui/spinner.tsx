@@ -1,7 +1,6 @@
 import type { HTMLAttributes } from 'react';
 import { Icon } from '../icons';
 import { cn } from './utils';
-import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<Spinner>`. */
 export interface SpinnerProps extends HTMLAttributes<HTMLSpanElement> {
@@ -35,7 +34,7 @@ export function Spinner({
         size={SIZE_PX[size]}
         className="animate-spin motion-reduce:animate-none"
       />
-      <span className="sr-only">{t(label)}</span>
+      <span className="sr-only">{label}</span>
     </span>
   );
 }
