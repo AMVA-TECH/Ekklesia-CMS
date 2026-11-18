@@ -129,7 +129,7 @@ export function AttendanceQrPanel({
     const anchor = document.createElement('a');
     anchor.href = dataUrl;
     anchor.download = `${safeTitle || 'attendance'}-check-in-qr.png`;
-    anchor.rel = t('noopener');
+    anchor.rel = 'noopener';
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();

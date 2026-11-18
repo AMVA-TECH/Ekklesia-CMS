@@ -143,9 +143,9 @@ export function ImportClient(): React.ReactElement {
         <Panel title={t('1. Upload a CSV file')}>
           <div className="flex flex-col gap-4 text-sm">
             <p className="text-muted-foreground">
-              {t('In Excel choose')} <strong>{t('File → Save As → CSV (UTF-8)')}</strong>{t('. Use one row per person with these column headers:')} <code>{t('displayName')}</code> {t('(required),')} <code>{t('fullName')}</code>,{' '}
-              <code>{t('phone')}</code> {t('(international format, e.g. +255712345678),')} <code>{t('email')}</code>,{' '}
-              <code>{t('dob')}</code> {t('(YYYY-MM-DD) and')} <code>{t('locale')}</code> {t('(sw or en). Up to 5,000 rows.')}
+              {t('In Excel choose')} <strong>{t('File → Save As → CSV (UTF-8)')}</strong>{t('. Use one row per person with these column headers:')} <code>displayName</code> {t('(required),')} <code>fullName</code>,{' '}
+              <code>phone</code> {t('(international format, e.g. +255712345678),')} <code>email</code>,{' '}
+              <code>dob</code> {t('(YYYY-MM-DD) and')} <code>locale</code> {t('(sw or en). Up to 5,000 rows.')}
             </p>
             <a
               href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`}

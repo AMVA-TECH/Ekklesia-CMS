@@ -476,7 +476,7 @@ export function PositionDetailClient({
       {directReports.length > 0 ? (
         <Panel
           title={t('Direct reports')}
-          subtitle={t('{0} position{1}', directReports.length, directReports.length === 1 ? '' : 's')}
+          subtitle={(directReports.length === 1 ? t('{0} position', directReports.length) : t('{0} positions', directReports.length))}
         >
           <TableWrap>
             <Table>

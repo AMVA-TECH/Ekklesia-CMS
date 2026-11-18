@@ -188,7 +188,7 @@ export function MembershipsClient(): React.ReactElement {
         subtitle={
           error
             ? t('We couldn\'t load memberships.')
-            : t('{0} record{1}.', memberships.length, memberships.length === 1 ? '' : 's')
+            : (memberships.length === 1 ? t('{0} record.', memberships.length) : t('{0} records.', memberships.length))
         }
         flush
       >

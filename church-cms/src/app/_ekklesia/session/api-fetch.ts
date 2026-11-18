@@ -1,4 +1,3 @@
-import { t } from '@/app/_ekklesia/i18n/core';
 /**
  * Central fetch helper for Ekklesia client components.
  *
@@ -23,7 +22,7 @@ export class ApiError extends Error {
 
   constructor(message: string, status: number, body: unknown) {
     super(message);
-    this.name = t('ApiError');
+    this.name = 'ApiError';
     this.status = status;
     this.body = body;
   }

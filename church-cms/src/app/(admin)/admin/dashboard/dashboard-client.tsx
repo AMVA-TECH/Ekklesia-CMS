@@ -362,7 +362,7 @@ export function DashboardClient(): React.ReactElement {
       {!loading && approvals.length > 0 ? (
         <Panel
           title={t('Needs your attention')}
-          subtitle={t('{0} pending approval{1}', counts.pendingApprovals, counts.pendingApprovals === 1 ? '' : 's')}
+          subtitle={(counts.pendingApprovals === 1 ? t('{0} pending approval', counts.pendingApprovals) : t('{0} pending approvals', counts.pendingApprovals))}
           linkHref="/admin/approvals"
           linkLabel={t('Review')}
         >

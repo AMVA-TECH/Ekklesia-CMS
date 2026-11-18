@@ -86,7 +86,7 @@ export function Dialog({
     previousFocusRef.current = document.activeElement as HTMLElement | null;
     const { body } = document;
     const previousOverflow = body.style.overflow;
-    body.style.overflow = t('hidden');
+    body.style.overflow = 'hidden';
 
     const focusInitial = (): void => {
       const root = dialogRef.current;

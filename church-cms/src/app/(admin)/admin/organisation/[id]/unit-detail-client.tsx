@@ -448,7 +448,7 @@ export function UnitDetailClient({
           subtitle={
             programmes.length === 0
               ? t('None yet')
-              : t('{0} programme{1}', programmes.length, programmes.length === 1 ? '' : 's')
+              : (programmes.length === 1 ? t('{0} programme', programmes.length) : t('{0} programmes', programmes.length))
           }
         >
           {programmes.length === 0 ? (
@@ -494,7 +494,7 @@ export function UnitDetailClient({
         subtitle={
           positions.length === 0
             ? t('None linked')
-            : t('{0} position{1}', positions.length, positions.length === 1 ? '' : 's')
+            : (positions.length === 1 ? t('{0} position', positions.length) : t('{0} positions', positions.length))
         }
       >
         {positions.length === 0 ? (

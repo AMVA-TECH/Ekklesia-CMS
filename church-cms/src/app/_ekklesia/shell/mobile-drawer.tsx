@@ -48,7 +48,7 @@ export function MobileDrawer({
     if (!open) return;
     const { body } = document;
     const prevOverflow = body.style.overflow;
-    body.style.overflow = t('hidden');
+    body.style.overflow = 'hidden';
     const prevActive = document.activeElement as HTMLElement | null;
 
     const handleKey = (event: KeyboardEvent): void => {

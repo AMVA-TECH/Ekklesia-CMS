@@ -55,8 +55,8 @@ export function formatRelativeToToday(iso: string): string {
   if (diffDays === 0) return t('Today');
   if (diffDays === 1) return t('Tomorrow');
   if (diffDays === -1) return t('Yesterday');
-  if (diffDays > 1 && diffDays < 7) return `In ${diffDays} days`;
-  if (diffDays < -1 && diffDays > -7) return `${Math.abs(diffDays)} days ago`;
+  if (diffDays > 1 && diffDays < 7) return t('In {0} days', diffDays);
+  if (diffDays < -1 && diffDays > -7) return t('{0} days ago', Math.abs(diffDays));
   return formatServiceDate(iso);
 }
 
