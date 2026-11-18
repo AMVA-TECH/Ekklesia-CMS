@@ -1,7 +1,7 @@
 import type { Ctx } from '@/platform/auth';
 import { getDb } from '@/platform/db/client';
 import { writeAudit } from '@/platform/audit';
-import { conflict, notFound, validationFailed } from '@/platform/errors';
+import { conflict, forbidden, notFound, validationFailed } from '@/platform/errors';
 import {
   findPersonIdForUser,
   getPersonInChurch,
@@ -10,6 +10,7 @@ import { getUnitById } from '@/modules/organisation/repository';
 import { PARTICIPATION_STATUS_TRANSITIONS } from './constants';
 import { toParticipationRequestResponse, toParticipationResponse } from './mappers';
 import {
+  filterDecidableRequests,
   assertCanApproveParticipations,
   assertCanReadParticipations,
   assertCanRequestParticipation,
@@ -20,6 +21,7 @@ import type {
   DecideParticipationRequestBody,
   EndParticipationBody,
   ListMyParticipationRequestsQuery,
+  ListParticipationRequestsQuery,
 } from './schemas';
 import * as repo from './repository';
 
@@ -136,6 +138,19 @@ export async function listMyParticipationRequests(
     limit: query.limit,
   });
   return { data: rows.map(toParticipationRequestResponse) };
+}
+
+export async function listParticipationRequests(
+  ctx: Ctx,
+  query: ListParticipationRequestsQuery,
+) {
+  if (!ctx.permissions.has('participations:approve')) throw forbidden();
+  const rows = await repo.listParticipationRequests(getDb(), ctx, {
+    status: query.status,
+    organisationalUnitId: query.organisationalUnitId,
+    limit: query.limit,
+  });
+  return { data: filterDecidableRequests(ctx, rows).map(toParticipationRequestResponse) };
 }
 
 export async function createParticipationRequest(

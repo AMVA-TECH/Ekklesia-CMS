@@ -16,6 +16,7 @@ export {
   createParticipationRequestBodySchema,
   decideParticipationRequestBodySchema,
   listMyParticipationRequestsQuerySchema,
+  listParticipationRequestsQuerySchema,
   participationResponseSchema,
   participationRequestResponseSchema,
   type AddParticipationBody,
@@ -23,6 +24,7 @@ export {
   type CreateParticipationRequestBody,
   type DecideParticipationRequestBody,
   type ListMyParticipationRequestsQuery,
+  type ListParticipationRequestsQuery,
   type ParticipationResponse,
   type ParticipationRequestResponse,
 } from './schemas';
@@ -31,6 +33,7 @@ export {
   addParticipation,
   endParticipation,
   listMyParticipationRequests,
+  listParticipationRequests,
   createParticipationRequest,
   decideParticipationRequest,
 } from './service';

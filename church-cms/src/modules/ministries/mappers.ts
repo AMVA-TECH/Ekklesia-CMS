@@ -25,5 +25,6 @@ export function toParticipationRequestResponse(
     personId: row.personId,
     status: row.status,
     decidedAt: row.decidedAt ? row.decidedAt.toISOString() : null,
+    createdAt: row.createdAt.toISOString(),
   };
 }

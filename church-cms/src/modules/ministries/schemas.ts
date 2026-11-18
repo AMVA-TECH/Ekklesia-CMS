@@ -56,6 +56,18 @@ export type ListMyParticipationRequestsQuery = z.infer<
   typeof listMyParticipationRequestsQuerySchema
 >;
 
+/** Approver queue: defaults to pending requests across units the caller leads. */
+export const listParticipationRequestsQuerySchema = z
+  .object({
+    status: z.enum(['pending', 'approved', 'rejected']).default('pending'),
+    organisationalUnitId: z.guid().optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+  })
+  .strict();
+export type ListParticipationRequestsQuery = z.infer<
+  typeof listParticipationRequestsQuerySchema
+>;
+
 export const participationResponseSchema = z.object({
   id: z.guid(),
   organisationalUnitId: z.guid(),
@@ -74,6 +86,7 @@ export const participationRequestResponseSchema = z.object({
   personId: z.guid(),
   status: z.string(),
   decidedAt: z.string().nullable(),
+  createdAt: z.string(),
 });
 
 export type ParticipationRequestResponse = z.infer<

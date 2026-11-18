@@ -28,6 +28,8 @@ import {
   assertCanRequestCorrection,
   assertCanResolveCorrection,
   assertCanWriteEvents,
+  isAttendanceStaff,
+  mayActForPerson,
 } from './policies';
 import { getMediaAsset } from '@/modules/media/repository';
 import {
@@ -102,11 +104,15 @@ function toCorrectionResponse(row: {
   resolvedByUserId: string | null;
   resolvedAt: Date | null;
   createdAt: Date;
+  serviceDate?: string | null;
+  eventTitle?: string | null;
 }) {
   return {
     id: row.id,
     personId: row.personId,
     sessionId: row.sessionId,
+    serviceDate: row.serviceDate ?? null,
+    eventTitle: row.eventTitle ?? null,
     requestedPresence: row.requestedPresence,
     status: row.status,
     note: row.note,
@@ -594,6 +600,7 @@ export async function createAbsenceNotice(ctx: Ctx, body: CreateAbsenceNoticeBod
   const db = getDb();
   const person = await getPersonInChurch(db, ctx, body.personId);
   if (!person) throw notFound();
+  await assertMayActForPerson(db, ctx, body.personId);
   if (body.eventId) {
     const event = await repo.getEventById(db, ctx, body.eventId);
     if (!event) throw notFound();
@@ -643,6 +650,7 @@ export async function createCorrectionRequest(
   if (!session) throw notFound();
   const person = await getPersonInChurch(db, ctx, body.personId);
   if (!person) throw notFound();
+  await assertMayActForPerson(db, ctx, body.personId);
 
   const existing = await repo.findOpenCorrectionForPersonSession(
     db,
@@ -669,8 +677,14 @@ export async function listCorrectionRequests(
   query: ListCorrectionRequestsQuery,
 ) {
   assertCanReadAttendance(ctx);
-  const rows = await repo.listCorrectionRequests(getDb(), ctx, query);
-  return { data: rows.map(toCorrectionResponse) };
+  const db = getDb();
+  const rows = await repo.listCorrectionRequests(db, ctx, query);
+  // Members (attendance:read) only see their own requests; staff see all.
+  if (isAttendanceStaff(ctx)) return { data: rows.map(toCorrectionResponse) };
+  const actorPersonId = await findPersonIdForUser(db, ctx);
+  return {
+    data: rows.filter((r) => r.personId === actorPersonId).map(toCorrectionResponse),
+  };
 }
 
 export async function resolveCorrectionRequest(
@@ -735,6 +749,33 @@ function isUniqueViolation(error: unknown): boolean {
   );
 }
 
+/** Enforce mayActForPerson for absence notices / correction requests. */
+async function assertMayActForPerson(
+  db: ReturnType<typeof getDb>,
+  ctx: Ctx,
+  targetPersonId: string,
+): Promise<void> {
+  const staff = isAttendanceStaff(ctx);
+  const actorPersonId = staff ? null : await findPersonIdForUser(db, ctx);
+  let inHousehold = false;
+  if (!staff && actorPersonId && actorPersonId !== targetPersonId) {
+    const householdId = await repo.findHouseholdIdForPerson(db, ctx, actorPersonId);
+    inHousehold = householdId
+      ? await repo.isPersonInHousehold(db, ctx, householdId, targetPersonId)
+      : false;
+  }
+  if (
+    !mayActForPerson({
+      isAttendanceStaff: staff,
+      actorPersonId,
+      targetPersonId,
+      targetInActorHousehold: inHousehold,
+    })
+  ) {
+    throw forbidden('You can only do this for yourself or someone in your household.');
+  }
+}
+
 async function requireActorPersonId(ctx: Ctx): Promise<string> {
   const personId = await findPersonIdForUser(getDb(), ctx);
   if (!personId) {
@@ -764,10 +805,11 @@ export async function getMyAttendance(ctx: Ctx, query: MyAttendanceQuery) {
   const db = getDb();
   const { from, to } = resolveAttendanceWindow(query);
 
-  const [serviceDates, presenceRows, noticeDates] = await Promise.all([
+  const [serviceDates, presenceRows, noticeDates, sessionByDate] = await Promise.all([
     repo.listFinalizedServiceDates(db, ctx, from, to),
     repo.listPersonPresenceByDate(db, ctx, personId, from, to),
     repo.listPersonAbsenceNoticeDates(db, ctx, personId, from, to),
+    repo.listFinalizedSessionIdsByDate(db, ctx, from, to),
   ]);
 
   const presentByDate = new Map(presenceRows.map((r) => [r.serviceDate, r.present]));
@@ -779,6 +821,8 @@ export async function getMyAttendance(ctx: Ctx, query: MyAttendanceQuery) {
     return {
       serviceDate,
       status: present ? ('present' as const) : notice ? ('notice' as const) : ('absent' as const),
+      // Lets the member ask for a correction on a day marked missed.
+      sessionId: sessionByDate.get(serviceDate) ?? null,
     };
   });
 

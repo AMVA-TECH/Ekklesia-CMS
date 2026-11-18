@@ -34,6 +34,7 @@ import {
   assertCanWriteBudgets,
   assertCanWriteMinutes,
   assertCanReadExpenses,
+  grantsNotHeld,
 } from './policies';
 import type {
   CreateAppointmentRequestBody,
@@ -400,6 +401,16 @@ export async function listDelegations(ctx: Ctx, query: ListDelegationsQuery) {
 
 export async function createDelegation(ctx: Ctx, body: CreateDelegationBody) {
   assertCanManageDelegations(ctx);
+  const notHeld = grantsNotHeld(ctx, body.grants);
+  if (notHeld.length > 0) {
+    throw validationFailed([
+      {
+        field: 'grants',
+        code: 'not_held',
+        message: `You can only delegate permissions you hold yourself (not held: ${notHeld.join(', ')}).`,
+      },
+    ]);
+  }
   if (body.delegateUserId === ctx.actor.userAccountId) {
     throw validationFailed([
       {

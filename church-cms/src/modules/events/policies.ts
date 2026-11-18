@@ -88,3 +88,24 @@ export function assertCanReadFamilyAttendance(ctx: Ctx): void {
 export function assertCanReadLeadershipAttendanceStats(ctx: Ctx): void {
   if (!can(ctx, 'attendance:stats_leadership')) throw forbidden();
 }
+
+/**
+ * Absence notices and correction requests are personal: members may file
+ * them for themselves or someone in their own household; attendance staff
+ * may file them for anyone.
+ */
+export function mayActForPerson(input: {
+  isAttendanceStaff: boolean;
+  actorPersonId: string | null;
+  targetPersonId: string;
+  targetInActorHousehold: boolean;
+}): boolean {
+  if (input.isAttendanceStaff) return true;
+  if (!input.actorPersonId) return false;
+  return input.actorPersonId === input.targetPersonId || input.targetInActorHousehold;
+}
+
+/** Staff who may see and act on everyone's attendance requests. */
+export function isAttendanceStaff(ctx: Ctx): boolean {
+  return can(ctx, 'attendance:record') || can(ctx, 'attendance:correct_resolve');
+}

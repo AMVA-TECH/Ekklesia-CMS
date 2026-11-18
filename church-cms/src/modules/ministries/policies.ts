@@ -19,6 +19,19 @@ export function assertCanRequestParticipation(ctx: Ctx): void {
   }
 }
 
+/**
+ * Keep only requests the caller may decide: church-wide approvers see all,
+ * unit-scoped approvers (ministry leaders) see their own units.
+ */
+export function filterDecidableRequests<T extends { organisationalUnitId: string }>(
+  ctx: Ctx,
+  rows: readonly T[],
+): T[] {
+  return rows.filter((r) =>
+    can(ctx, 'participations:approve', { organisationalUnitId: r.organisationalUnitId }),
+  );
+}
+
 export function assertCanApproveParticipations(
   ctx: Ctx,
   organisationalUnitId?: string,

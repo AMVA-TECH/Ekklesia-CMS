@@ -137,6 +137,29 @@ export async function getParticipationRequestById(db: Db, ctx: Ctx, requestId: s
   return row ?? null;
 }
 
+export async function listParticipationRequests(
+  db: Db,
+  ctx: Ctx,
+  options: { status: string; organisationalUnitId?: string; limit: number },
+) {
+  const conditions = [
+    eq(participationRequests.churchId, ctx.churchId),
+    eq(participationRequests.status, options.status),
+    isNull(participationRequests.deletedAt),
+  ];
+  if (options.organisationalUnitId) {
+    conditions.push(
+      eq(participationRequests.organisationalUnitId, options.organisationalUnitId),
+    );
+  }
+  return db
+    .select()
+    .from(participationRequests)
+    .where(and(...conditions))
+    .orderBy(desc(participationRequests.createdAt))
+    .limit(options.limit);
+}
+
 export async function listParticipationRequestsForPerson(
   db: Db,
   ctx: Ctx,

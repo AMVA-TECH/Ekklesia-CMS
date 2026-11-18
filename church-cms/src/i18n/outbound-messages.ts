@@ -1,5 +1,5 @@
-import en from '../../messages/en.json';
-import sw from '../../messages/sw.json';
+import en from '../../messages/en.json' with { type: 'json' };
+import sw from '../../messages/sw.json' with { type: 'json' };
 import { DEFAULT_LOCALE, isAppLocale, type AppLocale } from './config';
 
 type OutboundCatalog = (typeof en)['Outbound'];

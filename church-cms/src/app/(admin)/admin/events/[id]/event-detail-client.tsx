@@ -26,6 +26,7 @@ import { ManageSessionDialog } from '../../attendance/manage-session-dialog';
 import { OpenSessionDialog } from '../../attendance/open-session-dialog';
 import { EditEventDialog } from '../edit-event-dialog';
 import { PosterImage } from '../poster-image';
+import { RegistrationsPanel } from './registrations-panel';
 
 interface EventDetailClientProps {
   eventId: string;
@@ -375,6 +376,8 @@ export function EventDetailClient({
               </Link>
             </div>
           </Panel>
+
+          <RegistrationsPanel eventId={event.id} />
         </div>
       </div>
 

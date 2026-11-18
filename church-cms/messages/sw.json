@@ -429,7 +429,16 @@
     "reasonHint": "Maneno machache yanatosha — mf. safari ya mazishi.",
     "chooseDateReason": "Chagua tarehe na ongeza sababu fupi.",
     "letChurchKnow": "Fahamisha kanisa",
-    "sendFail": "Hatukuweza kutuma. Jaribu tena."
+    "sendFail": "Hatukuweza kutuma. Jaribu tena.",
+    "correctionSent": "Ombi la marekebisho limetumwa",
+    "correctionSentBody": "Timu ya kanisa itaipitia na kusasisha kumbukumbu yako.",
+    "iWasThere": "Nilikuwepo",
+    "fixMyAttendance": "Rekebisha mahudhurio yangu",
+    "fixMyAttendanceDesc": "Ijulishe kanisa kuwa ulikuwepo kwenye ibada ya {date}.",
+    "cancel": "Ghairi",
+    "send": "Tuma",
+    "note": "Maelezo",
+    "correctionNoteHint": "Si lazima — mfano: nilichelewa na sikuskani."
   },
   "MemberGiving": {
     "title": "Sadaka",
@@ -574,7 +583,9 @@
     "exports": "Usafirishaji",
     "exportsHint": "Pakua CSV",
     "auditLog": "Kumbukumbu ya ukaguzi",
-    "auditLogHint": "Nani alifanya nini"
+    "auditLogHint": "Nani alifanya nini",
+    "ministryRequests": "Maombi ya huduma",
+    "ministryRequestsHint": "Washirika wanaoomba kujiunga"
   },
   "AdminChrome": {
     "noChurch": "Hakuna kanisa lililochaguliwa",
@@ -728,7 +739,11 @@
     "membershipApplicationsTitle": "Maombi ya uanachama",
     "membershipApplicationsDescription": "Kagua na amua maombi ya uanachama.",
     "joinRequestsTitle": "Maombi ya kujiunga",
-    "joinRequestsDescription": "Idhinisha au kataa watu waliomba kujiunga na kanisa hili."
+    "joinRequestsDescription": "Idhinisha au kataa watu waliomba kujiunga na kanisa hili.",
+    "ministryRequestsTitle": "Maombi ya kujiunga na huduma",
+    "ministryRequestsDescription": "Washirika wanaoomba kujiunga na huduma.",
+    "attendanceCorrectionsTitle": "Marekebisho ya mahudhurio",
+    "attendanceCorrectionsDescription": "Maombi ya kurekebisha kumbukumbu za mahudhurio."
   },
   "AdminDashboard": {
     "backendUnreachable": "Haikuweza kufikia seva.",
@@ -1040,7 +1055,25 @@
     "label": "Lebo",
     "labelPlaceholder": "FY2027",
     "startsOn": "Inaanza",
-    "endsOn": "Inaisha"
+    "endsOn": "Inaisha",
+    "pledgedBy": "Aliyeahidi",
+    "householdPledge": "Ahadi ya familia",
+    "recordPayment": "Rekodi malipo",
+    "recordPaymentTitle": "Rekodi malipo ya ahadi",
+    "recordPaymentDesc": "{name} aliahidi {pledged}; bado anadaiwa {owed}.",
+    "recordPaymentJournalRequired": "Chagua ingizo lililowekwa ambapo pesa hizi zilirekodiwa.",
+    "recordPaymentAmountRequired": "Weka kiasi kikubwa kuliko sifuri.",
+    "receivedIn": "Imepokelewa kwenye",
+    "receivedInHint": "Rekodi pesa kama sadaka au jarida na uliweke kwanza, kisha liunganishe hapa.",
+    "loadingPostedEntries": "Inapakia maingizo yaliyowekwa…",
+    "noPostedEntries": "Bado hakuna maingizo yaliyowekwa",
+    "choosePostedEntry": "Chagua ingizo lililowekwa…",
+    "nothingPostedYet": "Bado hakuna kilichowekwa. <offering>Rekodi sadaka</offering> au <journal>weka jarida</journal>.",
+    "amountInCurrency": "Kiasi ({currency})",
+    "thisMember": "Mshirika huyu",
+    "thisHousehold": "Familia hii",
+    "paymentRecorded": "Malipo yamerekodiwa",
+    "paymentRecordedBody": "{amount} imeingizwa kwenye ahadi."
   },
   "AdminOrganisation": {
     "unableLoadStructure": "Imeshindikana kupakia muundo wa shirika",
@@ -1142,7 +1175,8 @@
     "pickPerson": "Chagua mtu kutoka matokeo ya utafutaji.",
     "roleHint": "Si lazima — mf. Kiongozi, Mwanachama",
     "effectiveFrom": "Inaanza",
-    "effectiveFromHint": "Si lazima — YYYY-MM-DD (chaguo-msingi leo)"
+    "effectiveFromHint": "Si lazima — YYYY-MM-DD (chaguo-msingi leo)",
+    "joinRequests": "Maombi ya kujiunga"
   },
   "AdminPeople": {
     "loadingPeople": "Inapakia watu",
@@ -1770,7 +1804,19 @@
     "keepCurrentPoster": "Weka bango la sasa",
     "noEventTypesConfigured": "Hakuna aina za matukio zilizowekwa bado. Mwombe msimamizi aongeze moja (mf. “Ibada ya Jumapili”) kabla ya kupanga.",
     "previewAppearsHere": "Hakikisho linaonekana hapa",
-    "emDash": "—"
+    "emDash": "—",
+    "registrations": "Usajili",
+    "registrationsLoading": "Inapakia…",
+    "registrationsSummary": "Watakaokuja: {coming}",
+    "registrationsSummaryCancelled": "Watakaokuja: {coming} · Waliositisha: {cancelled}",
+    "hideCancelled": "Ficha waliositisha",
+    "showCancelled": "Onyesha waliositisha",
+    "noRegistrations": "Bado hakuna usajili",
+    "noRegistrationsBody": "Washirika wanaweza kujisajili kwa tukio hili kupitia programu.",
+    "allRegistrationsCancelled": "Wote waliojisajili wamesitisha",
+    "registeredOn": "Alijisajili {date}",
+    "registrationComing": "Anakuja",
+    "registrationCancelled": "Amesitisha"
   },
   "AdminAttendance": {
     "unableLoad": "Imeshindikana kupakia mahudhurio.",
@@ -1882,7 +1928,27 @@
     "openCheckIn": "Fungua kuingia",
     "serviceDate": "Tarehe ya ibada",
     "reason": "Sababu",
-    "attendanceQr": "QR ya mahudhurio"
+    "attendanceQr": "QR ya mahudhurio",
+    "corrections": "Marekebisho",
+    "leadershipSubtitleNudge": "Jinsi kila kiongozi anavyohudhuria, pamoja na hatua inayopendekezwa.",
+    "showingFollowUps": "Inaonyesha wanaohitaji ufuatiliaji",
+    "needsFollowUpOnly": "Wanaohitaji ufuatiliaji tu",
+    "suggestedFollowUp": "Ufuatiliaji unaopendekezwa",
+    "tooEarlyToTell": "Bado ni mapema kusema",
+    "nudge": {
+      "congratulate": {
+        "label": "Mshukuru",
+        "hint": "Huhudhuria kila mara — neno la shukrani lina maana kubwa."
+      },
+      "encourage": {
+        "label": "Mtie moyo",
+        "hint": "Huja baadhi ya wiki — mjulie hali kwa upendo."
+      },
+      "remind": {
+        "label": "Mtafute",
+        "hint": "Hajaonekana karibuni — simu au kumtembelea kunaweza kusaidia."
+      }
+    }
   },
   "AdminProjects": {
     "newProject": "Mradi mpya",
@@ -2218,5 +2284,65 @@
     "system": "Mfumo",
     "user": "Mtumiaji",
     "emDash": "—"
+  },
+  "AdminMinistryRequests": {
+    "ministries": "Huduma",
+    "ministry": "Huduma",
+    "title": "Maombi ya kujiunga na huduma",
+    "lede": "Washirika wanaoomba kujiunga na timu. Ukiidhinisha, wanaongezwa kwenye huduma mara moja. Viongozi wa huduma wanaona maombi ya huduma zao tu.",
+    "requestStatus": "Hali ya ombi",
+    "status": "{status, select, pending {Inasubiri} approved {Imeidhinishwa} rejected {Imekataliwa} other {{status}}}",
+    "allMyMinistries": "Huduma zangu zote",
+    "panelTitle": "Maombi {status, select, pending {yanayosubiri} approved {yaliyoidhinishwa} rejected {yaliyokataliwa} other {{status}}}",
+    "loading": "Inapakia…",
+    "shown": "{count} yanaonyeshwa",
+    "emptyPending": "Hakuna anayesubiri kujiunga",
+    "emptyOther": "Hakuna maombi {status, select, approved {yaliyoidhinishwa} rejected {yaliyokataliwa} other {{status}}}",
+    "emptyPendingBody": "Washirika wakiomba kujiunga na huduma kupitia programu, maombi yao yataonekana hapa.",
+    "member": "Mshirika",
+    "requested": "Iliombwa",
+    "statusHeader": "Hali",
+    "decision": "Uamuzi",
+    "approve": "Idhinisha",
+    "decline": "Kataa",
+    "declined": "Ombi limekataliwa",
+    "declinedBody": "Mshirika ataona kuwa halikuidhinishwa.",
+    "declineFailed": "Imeshindwa kukataa",
+    "thisMember": "mshirika huyu",
+    "approveTitle": "Idhinisha ombi la kujiunga",
+    "approveDesc": "{member} atajiunga na {ministry} kuanzia leo.",
+    "roleInMinistry": "Jukumu katika huduma",
+    "roleInMinistryHint": "Si lazima, mfano Mwimbaji au Mhudumu."
+  },
+  "AdminCorrections": {
+    "attendance": "Mahudhurio",
+    "title": "Marekebisho ya mahudhurio",
+    "lede": "Washirika wanaosema mahudhurio yao yalirekodiwa vibaya. Ukiidhinisha, kumbukumbu yao ya ibada hiyo inasasishwa, pamoja na jumla zilizokamilishwa.",
+    "correctionStatus": "Hali ya marekebisho",
+    "status": "{status, select, pending {Inasubiri} approved {Imeidhinishwa} rejected {Imekataliwa} other {{status}}}",
+    "panelTitle": "Marekebisho {status, select, pending {yanayosubiri} approved {yaliyoidhinishwa} rejected {yaliyokataliwa} other {{status}}}",
+    "loading": "Inapakia…",
+    "shown": "{count} yanaonyeshwa",
+    "emptyPending": "Hakuna marekebisho ya kupitia",
+    "emptyOther": "Hakuna marekebisho {status, select, approved {yaliyoidhinishwa} rejected {yaliyokataliwa} other {{status}}}",
+    "member": "Mshirika",
+    "service": "Ibada",
+    "asksToBeMarked": "Anaomba aandikwe",
+    "note": "Maelezo",
+    "statusHeader": "Hali",
+    "decision": "Uamuzi",
+    "askedOn": "Aliomba {date}",
+    "presence": "{presence, select, present {Alikuwepo} absent {Hakuwepo} late {Alichelewa} other {{presence}}}",
+    "reply": "Jibu: {note}",
+    "approved": "Mahudhurio yamesasishwa",
+    "approvedBody": "{member} sasa ameandikwa {presence, select, present {alikuwepo} absent {hakuwepo} late {alichelewa} other {{presence}}}.",
+    "theMember": "Mshirika",
+    "approveFailed": "Imeshindwa kuidhinisha",
+    "approve": "Idhinisha",
+    "reject": "Kataa",
+    "rejectTitle": "Kataa marekebisho",
+    "rejectDesc": "Kumbukumbu ya mahudhurio itabaki kama ilivyo.",
+    "replyToMember": "Mjibu mshirika",
+    "optional": "Si lazima."
   }
 }
