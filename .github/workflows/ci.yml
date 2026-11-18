@@ -38,6 +38,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: i18n key parity (en ↔ sw)
+        run: pnpm i18n:check
+
       - name: Lint
         run: pnpm lint
 
