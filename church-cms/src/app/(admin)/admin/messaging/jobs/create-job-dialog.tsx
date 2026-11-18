@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -41,14 +42,8 @@ interface CreateJobDialogProps {
   onCreated: (row: MessageJobRow) => void;
 }
 
-const CHANNELS = [
-  { value: 'sms', label: 'SMS' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-] as const;
-
-const AUDIENCES = [
-  { value: 'all_members', label: 'All members' },
-] as const;
+const CHANNEL_VALUES = ['sms', 'whatsapp'] as const;
+const AUDIENCE_VALUES = ['all_members'] as const;
 
 /**
  * Queue a leadership text blast (create message job).
@@ -59,6 +54,8 @@ export function CreateJobDialog({
   onClose,
   onCreated,
 }: CreateJobDialogProps): React.ReactElement {
+  const tm = useTranslations('AdminMessaging');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [channel, setChannel] = useState<string>('sms');
   const [audienceType, setAudienceType] = useState<string>('all_members');
@@ -176,6 +173,17 @@ export function CreateJobDialog({
     }
   };
 
+  const channelLabel = (value: string): string => {
+    switch (value) {
+      case 'sms':
+        return tm('channelSms');
+      case 'whatsapp':
+        return tm('channelWhatsapp');
+      default:
+        return value;
+    }
+  };
+
   const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (submitting) return;
@@ -207,7 +215,7 @@ export function CreateJobDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create message job.',
+          err instanceof Error ? err.message : tm('couldNotCreateJob'),
         );
       }
       setSubmitting(false);
@@ -218,8 +226,8 @@ export function CreateJobDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New send job"
-      description="Queue an SMS or WhatsApp blast for members who have opted in."
+      title={tm('newSendJobTitle')}
+      description={tm('newSendJobDesc')}
       size="md"
       footer={
         <DialogFooter>
@@ -228,10 +236,10 @@ export function CreateJobDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Queuing…' : 'Queue job'}
+            {submitting ? tm('queuing') : tm('queueJob')}
           </Button>
         </DialogFooter>
       }
@@ -253,27 +261,27 @@ export function CreateJobDialog({
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Channel" required error={fieldErrors.channel}>
+          <Field label={tm('channel')} required error={fieldErrors.channel}>
             <Select
               value={channel}
               onChange={(e) => handleChannelChange(e.target.value)}
             >
-              {CHANNELS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
+              {CHANNEL_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {channelLabel(value)}
                 </option>
               ))}
             </Select>
           </Field>
 
-          <Field label="Audience" required error={fieldErrors.audienceType}>
+          <Field label={tm('audience')} required error={fieldErrors.audienceType}>
             <Select
               value={audienceType}
               onChange={(e) => setAudienceType(e.target.value)}
             >
-              {AUDIENCES.map((a) => (
-                <option key={a.value} value={a.value}>
-                  {a.label}
+              {AUDIENCE_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {tm('audienceAllMembers')}
                 </option>
               ))}
             </Select>
@@ -281,11 +289,11 @@ export function CreateJobDialog({
         </div>
 
         <Field
-          label="Start from"
+          label={tm('startFrom')}
           hint={
             listsLoading
-              ? 'Loading saved messages…'
-              : 'Optional. Pick a saved template or published announcement, then edit if needed.'
+              ? tm('loadingSavedMessages')
+              : tm('startFromHint')
           }
         >
           <Select
@@ -293,19 +301,19 @@ export function CreateJobDialog({
             onChange={(e) => handleSourceChange(e.target.value)}
             disabled={listsLoading}
           >
-            <option value="custom">Write a new message</option>
-            <option value="template">Saved template</option>
-            <option value="announcement">Published announcement</option>
+            <option value="custom">{tm('writeNewMessage')}</option>
+            <option value="template">{tm('savedTemplate')}</option>
+            <option value="announcement">{tm('publishedAnnouncement')}</option>
           </Select>
         </Field>
 
         {source === 'template' ? (
           <Field
-            label="Template"
+            label={tm('template')}
             required
             hint={
               channelTemplates.length === 0
-                ? 'No templates for this channel yet.'
+                ? tm('noTemplatesForChannel')
                 : undefined
             }
             error={fieldErrors.templateId}
@@ -315,10 +323,10 @@ export function CreateJobDialog({
               onChange={(e) => handleTemplateChange(e.target.value)}
               disabled={channelTemplates.length === 0}
             >
-              <option value="">Choose a template…</option>
-              {channelTemplates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
+              <option value="">{tm('chooseTemplate')}</option>
+              {channelTemplates.map((tpl) => (
+                <option key={tpl.id} value={tpl.id}>
+                  {tpl.name}
                 </option>
               ))}
             </Select>
@@ -327,11 +335,11 @@ export function CreateJobDialog({
 
         {source === 'announcement' ? (
           <Field
-            label="Announcement"
+            label={tm('announcement')}
             required
             hint={
               announcements.length === 0
-                ? 'No published announcements yet.'
+                ? tm('noPublishedAnnouncements')
                 : undefined
             }
             error={fieldErrors.announcementId}
@@ -341,7 +349,7 @@ export function CreateJobDialog({
               onChange={(e) => handleAnnouncementChange(e.target.value)}
               disabled={announcements.length === 0}
             >
-              <option value="">Choose an announcement…</option>
+              <option value="">{tm('chooseAnnouncement')}</option>
               {announcements.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.title}
@@ -351,21 +359,21 @@ export function CreateJobDialog({
           </Field>
         ) : null}
 
-        <Field label="Title" hint="Optional label for this job." error={fieldErrors.title}>
+        <Field label={tm('title')} hint={tm('jobTitleHint')} error={fieldErrors.title}>
           <Input
             data-autofocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Sunday reminder"
+            placeholder={tm('titlePlaceholder')}
             maxLength={200}
           />
         </Field>
 
-        <Field label="Message" required error={fieldErrors.body}>
+        <Field label={tm('message')} required error={fieldErrors.body}>
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Karibu — service starts at 10:00…"
+            placeholder={tm('jobMessagePlaceholder')}
             rows={5}
             maxLength={2000}
           />

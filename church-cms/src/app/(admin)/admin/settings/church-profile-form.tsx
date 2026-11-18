@@ -7,6 +7,7 @@ import {
   useState,
   type FormEvent,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Avatar,
@@ -99,21 +100,29 @@ const TIMEZONES = [
   'UTC',
 ] as const;
 
-const LOCALES = [
-  { value: 'en', label: 'English' },
-  { value: 'sw', label: 'Kiswahili' },
+const LOCALE_VALUES = ['en', 'sw'] as const;
+
+const MODULE_IDS = [
+  'people',
+  'membership',
+  'organisation',
+  'events',
+  'attendance',
+  'finance',
+  'messaging',
+  'governance',
 ] as const;
 
-const MODULE_OPTIONS: Array<{ id: string; label: string }> = [
-  { id: 'people', label: 'People & households' },
-  { id: 'membership', label: 'Membership & join requests' },
-  { id: 'organisation', label: 'Organisational units' },
-  { id: 'events', label: 'Events' },
-  { id: 'attendance', label: 'Attendance' },
-  { id: 'finance', label: 'Finance' },
-  { id: 'messaging', label: 'Messaging' },
-  { id: 'governance', label: 'Governance' },
-];
+const MODULE_LABEL_KEYS = {
+  people: 'modulePeople',
+  membership: 'moduleMembership',
+  organisation: 'moduleOrganisation',
+  events: 'moduleEvents',
+  attendance: 'moduleAttendance',
+  finance: 'moduleFinance',
+  messaging: 'moduleMessaging',
+  governance: 'moduleGovernance',
+} as const;
 
 function empty(v: string | null | undefined): string {
   return v ?? '';
@@ -124,6 +133,9 @@ function empty(v: string | null | undefined): string {
  * Location, Online, Experience). Roles/Access remain on the parent settings page.
  */
 export function ChurchProfileForm(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tc = useTranslations('Common');
+  const ts = useTranslations('AdminSettings');
   const { push } = useToast();
   const formId = useId();
   const [section, setSection] = useState('general');
@@ -266,7 +278,7 @@ export function ChurchProfileForm(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load church profile',
+            : ts('unableLoadProfile'),
       );
     } finally {
       setLoading(false);
@@ -379,7 +391,7 @@ export function ChurchProfileForm(): React.ReactElement {
       });
       window.dispatchEvent(new Event('ek-session-refresh'));
       setDirty(false);
-      push({ tone: 'success', message: 'Church profile saved.' });
+      push({ tone: 'success', message: ts('profileSaved') });
       await load();
     } catch (err) {
       push({
@@ -389,7 +401,7 @@ export function ChurchProfileForm(): React.ReactElement {
             ? err.message
             : err instanceof Error
               ? err.message
-              : 'Could not save church profile.',
+              : ts('couldNotSaveProfile'),
       });
     } finally {
       setSaving(false);
@@ -398,7 +410,7 @@ export function ChurchProfileForm(): React.ReactElement {
 
   if (loading) {
     return (
-      <Panel title="Church profile">
+      <Panel title={ts('churchProfile')}>
         <div className="flex flex-col gap-3 p-4">
           <Skeleton size="heading" />
           <Skeleton size="line" />
@@ -413,11 +425,11 @@ export function ChurchProfileForm(): React.ReactElement {
       <EmptyState
         icon="settings"
         tone="gold"
-        title="Could not load profile"
+        title={ts('couldNotLoadProfile')}
         description={error}
         action={
           <Button variant="secondary" onClick={() => void load()}>
-            Try again
+            {tc('retry')}
           </Button>
         }
       />
@@ -427,8 +439,8 @@ export function ChurchProfileForm(): React.ReactElement {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Church profile"
-        lede="Editable identity, branding, contact, location, and experience settings for this church only."
+        title={t('churchProfile')}
+        lede={t('churchProfileLede')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button
@@ -437,7 +449,7 @@ export function ChurchProfileForm(): React.ReactElement {
               disabled={saving || !dirty}
               onClick={() => void load()}
             >
-              Cancel
+              {tc('cancel')}
             </Button>
             <Button
               type="submit"
@@ -445,7 +457,7 @@ export function ChurchProfileForm(): React.ReactElement {
               size="sm"
               loading={saving || logoBusy}
             >
-              {saving ? 'Saving…' : 'Save profile'}
+              {saving ? ts('saving') : ts('saveProfile')}
             </Button>
           </div>
         }
@@ -463,19 +475,19 @@ export function ChurchProfileForm(): React.ReactElement {
           onValueChange={(v) => setSection(v)}
         >
           <TabList>
-            <Tab value="general">General</Tab>
-            <Tab value="identity">Identity</Tab>
-            <Tab value="branding">Branding</Tab>
-            <Tab value="contact">Contact</Tab>
-            <Tab value="location">Location</Tab>
-            <Tab value="online">Online</Tab>
-            <Tab value="experience">Experience</Tab>
+            <Tab value="general">{ts('tabGeneral')}</Tab>
+            <Tab value="identity">{ts('tabIdentity')}</Tab>
+            <Tab value="branding">{ts('tabBranding')}</Tab>
+            <Tab value="contact">{ts('tabContact')}</Tab>
+            <Tab value="location">{ts('tabLocation')}</Tab>
+            <Tab value="online">{ts('tabOnline')}</Tab>
+            <Tab value="experience">{ts('tabExperience')}</Tab>
           </TabList>
 
           <TabPanel value="general">
-            <Panel title="General information">
+            <Panel title={ts('generalInfo')}>
               <div className="grid max-w-2xl gap-4 p-4 sm:p-5">
-                <Field label="Official name" required>
+                <Field label={ts('officialName')} required>
                   <Input
                     value={name}
                     onChange={(e) => {
@@ -487,7 +499,7 @@ export function ChurchProfileForm(): React.ReactElement {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Short name" hint="e.g. CMN">
+                  <Field label={ts('shortName')} hint={ts('shortNameHint')}>
                     <Input
                       value={shortName}
                       onChange={(e) => {
@@ -497,7 +509,7 @@ export function ChurchProfileForm(): React.ReactElement {
                       maxLength={40}
                     />
                   </Field>
-                  <Field label="Display name" hint="e.g. CrossLife">
+                  <Field label={ts('displayName')} hint={ts('displayNameHint')}>
                     <Input
                       value={displayName}
                       onChange={(e) => {
@@ -509,8 +521,8 @@ export function ChurchProfileForm(): React.ReactElement {
                   </Field>
                 </div>
                 <Field
-                  label="URL slug"
-                  hint="Lowercase letters, numbers, hyphens. Changing slug does not create a new tenant."
+                  label={ts('urlSlug')}
+                  hint={ts('urlSlugHint')}
                 >
                   <Input
                     value={slug}
@@ -522,7 +534,7 @@ export function ChurchProfileForm(): React.ReactElement {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Timezone">
+                  <Field label={ts('timezone')}>
                     <Select
                       value={timezone}
                       onChange={(e) => {
@@ -537,7 +549,7 @@ export function ChurchProfileForm(): React.ReactElement {
                       ))}
                     </Select>
                   </Field>
-                  <Field label="Default locale">
+                  <Field label={ts('defaultLocale')}>
                     <Select
                       value={defaultLocale}
                       onChange={(e) => {
@@ -545,9 +557,11 @@ export function ChurchProfileForm(): React.ReactElement {
                         markDirty();
                       }}
                     >
-                      {LOCALES.map((l) => (
-                        <option key={l.value} value={l.value}>
-                          {l.label}
+                      {LOCALE_VALUES.map((value) => (
+                        <option key={value} value={value}>
+                          {value === 'en'
+                            ? ts('localeEnglish')
+                            : ts('localeSwahili')}
                         </option>
                       ))}
                     </Select>
@@ -558,9 +572,9 @@ export function ChurchProfileForm(): React.ReactElement {
           </TabPanel>
 
           <TabPanel value="identity">
-            <Panel title="Vision, mission and identity">
+            <Panel title={ts('identityPanel')}>
               <div className="grid max-w-2xl gap-4 p-4 sm:p-5">
-                <Field label="Category / denomination">
+                <Field label={ts('category')}>
                   <Input
                     value={category}
                     onChange={(e) => {
@@ -569,7 +583,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Description">
+                <Field label={ts('description')}>
                   <Textarea
                     value={description}
                     onChange={(e) => {
@@ -579,7 +593,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     rows={3}
                   />
                 </Field>
-                <Field label="Motto">
+                <Field label={ts('motto')}>
                   <Input
                     value={motto}
                     onChange={(e) => {
@@ -588,7 +602,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Secondary motto">
+                <Field label={ts('secondaryMotto')}>
                   <Input
                     value={secondaryMotto}
                     onChange={(e) => {
@@ -597,7 +611,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Vision">
+                <Field label={ts('vision')}>
                   <Textarea
                     value={vision}
                     onChange={(e) => {
@@ -607,7 +621,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     rows={3}
                   />
                 </Field>
-                <Field label="Mission">
+                <Field label={ts('mission')}>
                   <Textarea
                     value={mission}
                     onChange={(e) => {
@@ -617,7 +631,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     rows={4}
                   />
                 </Field>
-                <Field label="Mandate">
+                <Field label={ts('mandate')}>
                   <Textarea
                     value={mandate}
                     onChange={(e) => {
@@ -627,7 +641,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     rows={2}
                   />
                 </Field>
-                <Field label="Core values">
+                <Field label={ts('coreValues')}>
                   <Textarea
                     value={coreValues}
                     onChange={(e) => {
@@ -637,7 +651,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     rows={3}
                   />
                 </Field>
-                <Field label="History / background">
+                <Field label={ts('history')}>
                   <Textarea
                     value={history}
                     onChange={(e) => {
@@ -652,12 +666,12 @@ export function ChurchProfileForm(): React.ReactElement {
           </TabPanel>
 
           <TabPanel value="branding">
-            <Panel title="Branding">
+            <Panel title={ts('branding')}>
               <div className="grid max-w-2xl gap-4 p-4 sm:p-5">
                 <div className="flex items-center gap-4">
                   <Avatar
                     src={logoPreviewUrl ?? logoUrl ?? undefined}
-                    name={displayName || name || 'Church'}
+                    name={displayName || name || ts('churchFallback')}
                     size="lg"
                   />
                   <div className="flex flex-col gap-2">
@@ -681,14 +695,14 @@ export function ChurchProfileForm(): React.ReactElement {
                           markDirty();
                         }}
                       >
-                        Remove logo
+                        {ts('removeLogo')}
                       </Button>
                     ) : null}
                   </div>
                 </div>
                 <Field
-                  label="Product name"
-                  hint="Used in verification SMS and similar member-facing copy."
+                  label={ts('productName')}
+                  hint={ts('productNameHint')}
                 >
                   <Input
                     value={productName}
@@ -700,7 +714,7 @@ export function ChurchProfileForm(): React.ReactElement {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Primary colour" hint="#RRGGBB">
+                  <Field label={ts('primaryColour')} hint={ts('colourHint')}>
                     <Input
                       value={primaryColor}
                       onChange={(e) => {
@@ -710,7 +724,7 @@ export function ChurchProfileForm(): React.ReactElement {
                       placeholder="#1B3A4B"
                     />
                   </Field>
-                  <Field label="Secondary colour">
+                  <Field label={ts('secondaryColour')}>
                     <Input
                       value={secondaryColor}
                       onChange={(e) => {
@@ -720,7 +734,7 @@ export function ChurchProfileForm(): React.ReactElement {
                       placeholder="#C4A35A"
                     />
                   </Field>
-                  <Field label="Accent colour">
+                  <Field label={ts('accentColour')}>
                     <Input
                       value={accentColor}
                       onChange={(e) => {
@@ -735,9 +749,9 @@ export function ChurchProfileForm(): React.ReactElement {
           </TabPanel>
 
           <TabPanel value="contact">
-            <Panel title="Contact information">
+            <Panel title={ts('contactInformation')}>
               <div className="grid max-w-2xl gap-4 p-4 sm:p-5">
-                <Field label="Primary contact">
+                <Field label={ts('primaryContact')}>
                   <Input
                     value={contactName}
                     onChange={(e) => {
@@ -746,7 +760,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Official email">
+                <Field label={ts('officialEmail')}>
                   <Input
                     type="email"
                     value={email}
@@ -756,7 +770,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Telephone">
+                <Field label={ts('telephone')}>
                   <Input
                     value={phone}
                     onChange={(e) => {
@@ -765,7 +779,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Alternative phone">
+                <Field label={ts('alternatePhone')}>
                   <Input
                     value={altPhone}
                     onChange={(e) => {
@@ -774,7 +788,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Alternative email">
+                <Field label={ts('alternateEmail')}>
                   <Input
                     type="email"
                     value={altEmail}
@@ -789,10 +803,10 @@ export function ChurchProfileForm(): React.ReactElement {
           </TabPanel>
 
           <TabPanel value="location">
-            <Panel title="Location">
+            <Panel title={ts('location')}>
               <div className="grid max-w-2xl gap-4 p-4 sm:p-5">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Country">
+                  <Field label={ts('country')}>
                     <Input
                       value={country}
                       onChange={(e) => {
@@ -801,7 +815,7 @@ export function ChurchProfileForm(): React.ReactElement {
                       }}
                     />
                   </Field>
-                  <Field label="Region">
+                  <Field label={ts('region')}>
                     <Input
                       value={region}
                       onChange={(e) => {
@@ -811,7 +825,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     />
                   </Field>
                 </div>
-                <Field label="City / district">
+                <Field label={ts('cityDistrict')}>
                   <Input
                     value={city}
                     onChange={(e) => {
@@ -820,7 +834,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Address line 1">
+                <Field label={ts('address1')}>
                   <Input
                     value={address1}
                     onChange={(e) => {
@@ -829,7 +843,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Address line 2">
+                <Field label={ts('address2')}>
                   <Input
                     value={address2}
                     onChange={(e) => {
@@ -838,7 +852,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Postal code">
+                <Field label={ts('postalCode')}>
                   <Input
                     value={postal}
                     onChange={(e) => {
@@ -852,9 +866,9 @@ export function ChurchProfileForm(): React.ReactElement {
           </TabPanel>
 
           <TabPanel value="online">
-            <Panel title="Online presence">
+            <Panel title={ts('online')}>
               <div className="grid max-w-2xl gap-4 p-4 sm:p-5">
-                <Field label="Website">
+                <Field label={ts('website')}>
                   <Input
                     type="url"
                     value={website}
@@ -865,7 +879,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     placeholder="https://"
                   />
                 </Field>
-                <Field label="Facebook">
+                <Field label={ts('facebook')}>
                   <Input
                     value={facebook}
                     onChange={(e) => {
@@ -874,7 +888,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Instagram">
+                <Field label={ts('instagram')}>
                   <Input
                     value={instagram}
                     onChange={(e) => {
@@ -883,7 +897,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="YouTube">
+                <Field label={ts('youtube')}>
                   <Input
                     value={youtube}
                     onChange={(e) => {
@@ -892,7 +906,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="X / Twitter">
+                <Field label={ts('twitter')}>
                   <Input
                     value={twitter}
                     onChange={(e) => {
@@ -901,7 +915,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="Telegram">
+                <Field label={ts('telegram')}>
                   <Input
                     value={telegram}
                     onChange={(e) => {
@@ -910,7 +924,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                 </Field>
-                <Field label="TikTok">
+                <Field label={ts('tiktok')}>
                   <Input
                     value={tiktok}
                     onChange={(e) => {
@@ -924,14 +938,13 @@ export function ChurchProfileForm(): React.ReactElement {
           </TabPanel>
 
           <TabPanel value="experience">
-            <Panel title="Experience">
+            <Panel title={ts('experience')}>
               <div className="grid max-w-2xl gap-4 p-4 sm:p-5">
                 <p className="text-sm text-muted-foreground">
-                  Labels and modules for this church only. Security and
-                  permission codes stay platform-controlled.
+                  {ts('experienceHint')}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Unit singular">
+                  <Field label={ts('unitSingular')}>
                     <Input
                       value={unitSingular}
                       onChange={(e) => {
@@ -940,7 +953,7 @@ export function ChurchProfileForm(): React.ReactElement {
                       }}
                     />
                   </Field>
-                  <Field label="Unit plural">
+                  <Field label={ts('unitPlural')}>
                     <Input
                       value={unitPlural}
                       onChange={(e) => {
@@ -950,7 +963,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     />
                   </Field>
                 </div>
-                <Field label="Membership label">
+                <Field label={ts('membershipLabel')}>
                   <Input
                     value={membershipLabel}
                     onChange={(e) => {
@@ -961,27 +974,27 @@ export function ChurchProfileForm(): React.ReactElement {
                 </Field>
                 <fieldset className="space-y-2">
                   <legend className="text-sm font-medium text-foreground">
-                    Enabled modules
+                    {ts('modules')}
                   </legend>
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {MODULE_OPTIONS.map((opt) => (
+                    {MODULE_IDS.map((id) => (
                       <label
-                        key={opt.id}
+                        key={id}
                         className="flex items-center gap-2 text-sm text-foreground"
                       >
                         <input
                           type="checkbox"
                           className="h-4 w-4 rounded border-border"
-                          checked={modules[opt.id] !== false}
+                          checked={modules[id] !== false}
                           onChange={(e) => {
                             setModules((prev) => ({
                               ...prev,
-                              [opt.id]: e.target.checked,
+                              [id]: e.target.checked,
                             }));
                             markDirty();
                           }}
                         />
-                        {opt.label}
+                        {ts(MODULE_LABEL_KEYS[id])}
                       </label>
                     ))}
                   </div>
@@ -997,11 +1010,7 @@ export function ChurchProfileForm(): React.ReactElement {
                     }}
                   />
                   <span>
-                    Prefer dual-control for church-wide announcements
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      Stored now; publish policy will honour this in a later
-                      phase.
-                    </span>
+                    {ts('dualControl')}
                   </span>
                 </label>
               </div>

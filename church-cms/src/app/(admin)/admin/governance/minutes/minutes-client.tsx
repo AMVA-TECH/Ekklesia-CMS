@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -32,6 +33,9 @@ interface MeetingMinutes {
 const TONE = { draft: 'pending', published: 'success', archived: 'neutral' } as const;
 
 export function MinutesClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tg = useTranslations('AdminGovernance');
+  const tc = useTranslations('Common');
   const minutes = useApiList<MeetingMinutes>('/api/v1/meeting-minutes');
   const units = useApiList<OrganisationalUnit>('/api/v1/organisational-units?limit=100');
   const [open, setOpen] = useState<string | null>(null);
@@ -45,23 +49,30 @@ export function MinutesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Meeting minutes"
-        lede="A searchable record of what leadership and ministry teams decided."
+        title={t('minutes')}
+        lede={t('minutesLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            Record minutes
+            {tg('recordMinutes')}
           </Button>
         }
       />
 
-      <Panel title="All minutes" subtitle={minutes.loading ? 'Loading…' : `${sorted.length} meetings`}>
+      <Panel
+        title={tg('allMinutes')}
+        subtitle={
+          minutes.loading
+            ? tc('loading')
+            : tg('meetingsCount', { count: sorted.length })
+        }
+      >
         <ListState
           loading={minutes.loading}
           error={minutes.error}
           forbidden={minutes.forbidden}
           isEmpty={sorted.length === 0}
           onRetry={() => void minutes.reload()}
-          empty={{ icon: 'file', title: 'No minutes recorded yet' }}
+          empty={{ icon: 'file', title: tg('noMinutes') }}
         >
           <ul className="flex flex-col gap-3">
             {sorted.map((m) => {
@@ -82,7 +93,7 @@ export function MinutesClient(): React.ReactElement {
                           {formatDate(m.meetingDate)}
                           {m.organisationalUnitId
                             ? ` · ${unitById.get(m.organisationalUnitId)?.name ?? ''}`
-                            : ' · Church-wide'}
+                            : tg('churchWideDot')}
                         </span>
                       </span>
                       <StatusPill tone={TONE[m.status]}>{titleCase(m.status)}</StatusPill>
@@ -92,7 +103,7 @@ export function MinutesClient(): React.ReactElement {
                         <p className="whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
                         {attendees.length > 0 ? (
                           <p className="text-xs text-muted-foreground">
-                            Present: {attendees.join(', ')}
+                            {tg('presentLabel', { names: attendees.join(', ') })}
                           </p>
                         ) : null}
                       </div>
@@ -128,6 +139,7 @@ function CreateMinutesDialog({
   onClose: () => void;
   onCreated: () => void;
 }): React.ReactElement {
+  const tg = useTranslations('AdminGovernance');
   const [title, setTitle] = useState('');
   const [meetingDate, setMeetingDate] = useState(todayLocalIso);
   const [unitId, setUnitId] = useState('');
@@ -137,15 +149,15 @@ function CreateMinutesDialog({
 
   return (
     <FormDialog
-      title="Record minutes"
-      submitLabel="Save minutes"
+      title={tg('recordMinutesTitle')}
+      submitLabel={tg('saveMinutes')}
       size="lg"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!title.trim()) e.title = 'Enter a title.';
-        if (!meetingDate) e.meetingDate = 'Choose the meeting date.';
-        if (!body.trim()) e.body = 'Write the minutes.';
+        if (!title.trim()) e.title = tg('enterTitle');
+        if (!meetingDate) e.meetingDate = tg('chooseMeetingDate');
+        if (!body.trim()) e.body = tg('writeMinutes');
         return e;
       }}
       onSubmit={async () => {
@@ -170,23 +182,23 @@ function CreateMinutesDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
-            <Field label="Title" required error={errors.title}>
+            <Field label={tg('title')} required error={errors.title}>
               <Input
                 data-autofocus
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Church council — March"
+                placeholder={tg('titlePlaceholder')}
                 maxLength={300}
               />
             </Field>
-            <Field label="Meeting date" required error={errors.meetingDate}>
+            <Field label={tg('meetingDate')} required error={errors.meetingDate}>
               <Input type="date" value={meetingDate} onChange={(e) => setMeetingDate(e.target.value)} />
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Ministry / unit" error={errors.organisationalUnitId}>
+            <Field label={tg('ministryUnit')} error={errors.organisationalUnitId}>
               <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-                <option value="">Church-wide</option>
+                <option value="">{tg('churchWide')}</option>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
@@ -194,17 +206,17 @@ function CreateMinutesDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Status" error={errors.status}>
+            <Field label={tg('status')} error={errors.status}>
               <Select value={status} onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}>
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
+                <option value="published">{tg('published')}</option>
+                <option value="draft">{tg('draft')}</option>
               </Select>
             </Field>
           </div>
-          <Field label="Minutes" required error={errors.body}>
+          <Field label={tg('minutes')} required error={errors.body}>
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} maxLength={50000} />
           </Field>
-          <Field label="Present" hint="Names separated by commas or new lines." error={errors.attendees}>
+          <Field label={tg('present')} hint={tg('presentHint')} error={errors.attendees}>
             <Textarea value={attendees} onChange={(e) => setAttendees(e.target.value)} rows={2} />
           </Field>
         </>

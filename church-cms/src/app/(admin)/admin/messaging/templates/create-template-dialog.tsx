@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -30,17 +31,8 @@ interface CreateTemplateDialogProps {
   onUpdated?: (row: MessageTemplateRow) => void;
 }
 
-const CHANNELS = [
-  { value: 'sms', label: 'SMS' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'email', label: 'Email' },
-  { value: 'in_app', label: 'In-app' },
-] as const;
-
-const LOCALES = [
-  { value: 'en', label: 'English' },
-  { value: 'sw', label: 'Kiswahili' },
-] as const;
+const CHANNEL_VALUES = ['sms', 'whatsapp', 'email', 'in_app'] as const;
+const LOCALE_VALUES = ['en', 'sw'] as const;
 
 /**
  * Create or edit a reusable message template.
@@ -53,6 +45,9 @@ export function CreateTemplateDialog({
   template = null,
   onUpdated,
 }: CreateTemplateDialogProps): React.ReactElement {
+  const tm = useTranslations('AdminMessaging');
+  const tc = useTranslations('Common');
+  const tLocale = useTranslations('Locale');
   const formId = useId();
   const editing = Boolean(template);
   const [name, setName] = useState('');
@@ -89,6 +84,21 @@ export function CreateTemplateDialog({
   const handleClose = (): void => {
     if (submitting) return;
     onClose();
+  };
+
+  const channelLabel = (value: string): string => {
+    switch (value) {
+      case 'sms':
+        return tm('channelSms');
+      case 'whatsapp':
+        return tm('channelWhatsapp');
+      case 'email':
+        return tm('channelEmail');
+      case 'in_app':
+        return tm('channelInApp');
+      default:
+        return value;
+    }
   };
 
   const handleSubmit = async (event: FormEvent): Promise<void> => {
@@ -148,8 +158,8 @@ export function CreateTemplateDialog({
           err instanceof Error
             ? err.message
             : editing
-              ? 'Could not save template.'
-              : 'Could not create template.',
+              ? tm('couldNotSaveTemplate')
+              : tm('couldNotCreateTemplate'),
         );
       }
       setSubmitting(false);
@@ -158,18 +168,18 @@ export function CreateTemplateDialog({
 
   const smsHint =
     channel === 'sms'
-      ? `${body.length} characters · keep SMS short when you can`
+      ? tm('smsCharHint', { count: body.length })
       : null;
 
   return (
     <Dialog
       open={open}
       onClose={handleClose}
-      title={editing ? 'Edit template' : 'New template'}
+      title={editing ? tm('editTemplate') : tm('newTemplateTitle')}
       description={
         editing
-          ? 'Update the saved message your team can reuse when texting.'
-          : 'Save a message once, then reuse it when you send to the church.'
+          ? tm('editTemplateDesc')
+          : tm('newTemplateDesc')
       }
       size="md"
       footer={
@@ -179,14 +189,14 @@ export function CreateTemplateDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
             {submitting
-              ? 'Saving…'
+              ? tm('saving')
               : editing
-                ? 'Save changes'
-                : 'Create template'}
+                ? tm('saveChanges')
+                : tm('createTemplate')}
           </Button>
         </DialogFooter>
       }
@@ -208,45 +218,45 @@ export function CreateTemplateDialog({
         ) : null}
 
         <Field
-          label="Name"
+          label={tm('name')}
           required
-          hint="A plain label your team will recognise — e.g. Sunday welcome."
+          hint={tm('nameHint')}
           error={fieldErrors.name}
         >
           <Input
             data-autofocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Sunday welcome"
+            placeholder={tm('namePlaceholder')}
             maxLength={120}
           />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="Send as"
+            label={tm('sendAs')}
             required
             error={fieldErrors.channel}
-            hint={editing ? 'Channel cannot be changed after create.' : undefined}
+            hint={editing ? tm('channelLockedHint') : undefined}
           >
             <Select
               value={channel}
               onChange={(e) => setChannel(e.target.value)}
               disabled={editing}
             >
-              {CHANNELS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
+              {CHANNEL_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {channelLabel(value)}
                 </option>
               ))}
             </Select>
           </Field>
 
-          <Field label="Language" error={fieldErrors.locale}>
+          <Field label={tm('language')} error={fieldErrors.locale}>
             <Select value={locale} onChange={(e) => setLocale(e.target.value)}>
-              {LOCALES.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
+              {LOCALE_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {tLocale(value)}
                 </option>
               ))}
             </Select>
@@ -254,7 +264,7 @@ export function CreateTemplateDialog({
         </div>
 
         <Field
-          label="Message"
+          label={tm('message')}
           required
           hint={smsHint ?? undefined}
           error={fieldErrors.body}
@@ -262,7 +272,7 @@ export function CreateTemplateDialog({
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Karibu — service starts at 10:00…"
+            placeholder={tm('templateMessagePlaceholder')}
             rows={5}
             maxLength={2000}
           />

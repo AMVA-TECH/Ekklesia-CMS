@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -45,27 +46,13 @@ function statusTone(status: string): StatusTone {
   }
 }
 
-function statusLabel(status: string): string {
-  switch (status) {
-    case 'draft':
-      return 'Draft';
-    case 'pending_approval':
-      return 'Waiting for approval';
-    case 'published':
-      return 'Published';
-    case 'rejected':
-      return 'Needs changes';
-    case 'archived':
-      return 'Archived';
-    default:
-      return status.replaceAll('_', ' ');
-  }
-}
-
 /**
  * Admin announcements — list, open/edit, submit for approval, publish.
  */
 export function AnnouncementsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tm = useTranslations('AdminMessaging');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [rows, setRows] = useState<AnnouncementRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +60,23 @@ export function AnnouncementsClient(): React.ReactElement {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<AnnouncementRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const statusLabel = (status: string): string => {
+    switch (status) {
+      case 'draft':
+        return tm('statusDraft');
+      case 'pending_approval':
+        return tm('statusPendingApproval');
+      case 'published':
+        return tm('statusPublished');
+      case 'rejected':
+        return tm('statusNeedsChanges');
+      case 'archived':
+        return tm('statusArchived');
+      default:
+        return status.replaceAll('_', ' ');
+    }
+  };
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -89,12 +93,12 @@ export function AnnouncementsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load announcements',
+            : tm('unableLoadAnnouncements'),
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tm]);
 
   useLoadEffect(load);
 
@@ -115,7 +119,7 @@ export function AnnouncementsClient(): React.ReactElement {
         );
         push({
           tone: 'success',
-          message: 'Sent for approval.',
+          message: tm('sentForApproval'),
         });
       } else if (action === 'reject') {
         const updated = await apiFetch<AnnouncementRow>(
@@ -123,14 +127,14 @@ export function AnnouncementsClient(): React.ReactElement {
           { method: 'POST', json: {} },
         );
         setRows((prev) => prev.map((r) => (r.id === id ? updated : r)));
-        push({ tone: 'success', message: 'Announcement sent back for changes.' });
+        push({ tone: 'success', message: tm('sentBack') });
       } else {
         const updated = await apiFetch<AnnouncementRow>(
           `/api/v1/announcements/${id}/publish`,
           { method: 'POST' },
         );
         setRows((prev) => prev.map((r) => (r.id === id ? updated : r)));
-        push({ tone: 'success', message: 'Announcement published.' });
+        push({ tone: 'success', message: tm('published') });
       }
     } catch (err) {
       push({
@@ -140,7 +144,7 @@ export function AnnouncementsClient(): React.ReactElement {
             ? err.message
             : err instanceof Error
               ? err.message
-              : 'Action failed.',
+              : tm('actionFailed'),
       });
     } finally {
       setBusyId(null);
@@ -150,8 +154,8 @@ export function AnnouncementsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Announcements"
-        lede="Notices for your church family. Open one to read or edit, then publish when ready."
+        title={t('announcements')}
+        lede={t('announcementsLede')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -160,25 +164,25 @@ export function AnnouncementsClient(): React.ReactElement {
               iconLeft="refresh"
               onClick={() => {
                 void load().then(() =>
-                  push({ tone: 'success', message: 'Announcements refreshed.' }),
+                  push({ tone: 'success', message: tm('announcementsRefreshed') }),
                 );
               }}
             >
-              Refresh
+              {tm('refresh')}
             </Button>
             <Button
               size="sm"
               iconLeft="plus"
               onClick={() => setCreateOpen(true)}
             >
-              New announcement
+              {tm('newAnnouncement')}
             </Button>
           </div>
         }
       />
 
       {loading ? (
-        <Panel title="Notices">
+        <Panel title={tm('notices')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -189,11 +193,11 @@ export function AnnouncementsClient(): React.ReactElement {
         <EmptyState
           icon="alert"
           tone="peach"
-          title="Could not load announcements"
+          title={tm('couldNotLoadAnnouncements')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              Try again
+              {tc('retry')}
             </Button>
           }
         />
@@ -201,25 +205,25 @@ export function AnnouncementsClient(): React.ReactElement {
         <EmptyState
           icon="bell"
           tone="peach"
-          title="No announcements yet"
-          description="Write a notice for your church family, save the draft, then publish or send it for approval."
+          title={tm('noAnnouncementsYet')}
+          description={tm('noAnnouncementsDesc')}
           action={
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-              New announcement
+              {tm('newAnnouncement')}
             </Button>
           }
         />
       ) : (
-        <Panel title="All notices" flush>
+        <Panel title={tm('allNotices')} flush>
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Title</TH>
-                  <TH>Status</TH>
-                  <TH>Published</TH>
+                  <TH>{tm('colTitle')}</TH>
+                  <TH>{tm('colStatus')}</TH>
+                  <TH>{tm('colPublished')}</TH>
                   <TH className="w-12">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{tm('actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -243,7 +247,7 @@ export function AnnouncementsClient(): React.ReactElement {
                         }
                       }}
                       tabIndex={0}
-                      aria-label={`Open announcement ${row.title}`}
+                      aria-label={tm('openAnnouncementAria', { title: row.title })}
                     >
                       <TD>
                         <div className="flex flex-col gap-0.5">
@@ -261,7 +265,7 @@ export function AnnouncementsClient(): React.ReactElement {
                         </StatusPill>
                       </TD>
                       <TD className="text-muted-foreground">
-                        {row.publishedAt ? formatDate(row.publishedAt) : '—'}
+                        {row.publishedAt ? formatDate(row.publishedAt) : tm('dash')}
                       </TD>
                       <TD
                         onClick={(event) => {
@@ -271,12 +275,12 @@ export function AnnouncementsClient(): React.ReactElement {
                         {hasActions ? (
                           <Menu
                             align="end"
-                            label={`Actions for ${row.title}`}
+                            label={tm('actionsFor', { title: row.title })}
                             trigger={
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                aria-label={`Actions for ${row.title}`}
+                                aria-label={tm('actionsFor', { title: row.title })}
                                 disabled={busyId === row.id}
                               >
                                 <Icon name="more-horizontal" size={16} />
@@ -287,7 +291,7 @@ export function AnnouncementsClient(): React.ReactElement {
                               icon="edit"
                               onClick={() => setEditing(row)}
                             >
-                              Open
+                              {tm('open')}
                             </MenuItem>
                             <MenuSeparator />
                             {canSubmit ? (
@@ -297,7 +301,7 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'submit');
                                 }}
                               >
-                                Send for approval
+                                {tm('sendForApproval')}
                               </MenuItem>
                             ) : null}
                             {canPublishDirect ? (
@@ -307,7 +311,7 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'publish');
                                 }}
                               >
-                                Publish now
+                                {tm('publishNow')}
                               </MenuItem>
                             ) : null}
                             {canReject ? (
@@ -318,7 +322,7 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'reject');
                                 }}
                               >
-                                Send back
+                                {tm('sendBack')}
                               </MenuItem>
                             ) : null}
                           </Menu>
@@ -328,7 +332,7 @@ export function AnnouncementsClient(): React.ReactElement {
                             size="sm"
                             onClick={() => setEditing(row)}
                           >
-                            Open
+                            {tm('open')}
                           </Button>
                         )}
                       </TD>
@@ -343,8 +347,7 @@ export function AnnouncementsClient(): React.ReactElement {
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon name="alert-circle" size={14} />
-        Church-wide notices usually need a second person to approve before they
-        go live. Leaders with publish rights can publish a draft directly.
+        {tm('approvalNote')}
       </p>
 
       <CreateAnnouncementDialog
@@ -353,7 +356,7 @@ export function AnnouncementsClient(): React.ReactElement {
         onCreated={(row) => {
           setRows((prev) => [row, ...prev]);
           setCreateOpen(false);
-          push({ tone: 'success', message: 'Draft saved.' });
+          push({ tone: 'success', message: tm('draftSaved') });
         }}
       />
 
@@ -365,7 +368,7 @@ export function AnnouncementsClient(): React.ReactElement {
         onUpdated={(row) => {
           setRows((prev) => prev.map((r) => (r.id === row.id ? row : r)));
           setEditing(null);
-          push({ tone: 'success', message: 'Announcement saved.' });
+          push({ tone: 'success', message: tm('announcementSaved') });
         }}
       />
     </div>

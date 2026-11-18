@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import {
   apiFetch,
@@ -59,6 +60,8 @@ const EMPTY_COUNTS: DashboardCounts = {
  * upcoming events, ministries CTA) with live `/api/v1/*` data only.
  */
 export function DashboardClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const td = useTranslations('AdminDashboard');
   const { user, church, loading: sessionLoading } = useSession();
   const [counts, setCounts] = useState<DashboardCounts>(EMPTY_COUNTS);
   const [upcoming, setUpcoming] = useState<EventRow[]>([]);
@@ -150,10 +153,11 @@ export function DashboardClient(): React.ReactElement {
           ? reason.message
           : reason instanceof Error
             ? reason.message
-            : 'Could not reach the backend.',
+            : td('backendUnreachable'),
       );
     }
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount; td is stable for the locale
   }, []);
 
   useLoadEffect(refresh);
@@ -161,9 +165,11 @@ export function DashboardClient(): React.ReactElement {
   // Time-of-day greeting is client-only (server clock/timezone differ), so
   // render the neutral fallback until hydrated.
   const isClient = useIsClient();
-  const greeting = isClient ? buildGreeting(user?.displayName) : 'Welcome';
+  const greeting = isClient
+    ? buildGreeting((key) => t(key))
+    : t('dashboardWelcome');
 
-  const churchLabel = church?.name ?? 'your church';
+  const churchLabel = church?.name ?? t('yourChurch');
   // displayName can fall back to the email address; show a tidy first name.
   const rawFirst = user?.displayName?.split(/[\s@._]/)[0] ?? '';
   const firstName = rawFirst ? rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1) : '';
@@ -202,7 +208,7 @@ export function DashboardClient(): React.ReactElement {
             ) : null}
           </h1>
           <p className="max-w-xl text-sm text-muted-foreground sm:text-base">
-            Here&apos;s what&apos;s happening at {churchLabel}.
+            {t('dashboardWhatsHappening', { church: churchLabel })}
           </p>
           <div className="mt-2">
             <Link
@@ -210,7 +216,7 @@ export function DashboardClient(): React.ReactElement {
               className={buttonClassName({ variant: 'primary', size: 'sm' })}
             >
               <Icon name="plus" size={14} />
-              New service
+              {t('newService')}
             </Link>
           </div>
         </div>
@@ -228,7 +234,7 @@ export function DashboardClient(): React.ReactElement {
       {/* Tinted metrics — mockup row */}
       <section aria-labelledby="dashboard-metrics">
         <h2 id="dashboard-metrics" className="sr-only">
-          Key numbers
+          {t('keyNumbers')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {loading ? (
@@ -241,7 +247,7 @@ export function DashboardClient(): React.ReactElement {
           ) : (
             <>
               <Metric
-                label="Members"
+                label={t('members')}
                 value={
                   counts.members === null
                     ? '—'
@@ -250,18 +256,18 @@ export function DashboardClient(): React.ReactElement {
                 icon="users"
                 tone="peach"
                 href="/admin/memberships"
-                hint="Active members"
+                hint={td('activeMembers')}
               />
               <Metric
-                label="Upcoming events"
+                label={td('upcomingEvents')}
                 value={formatCount(counts.upcomingEvents)}
                 icon="calendar"
                 tone="sky"
                 href="/admin/events"
-                hint="From today forward"
+                hint={td('upcomingEventsHint')}
               />
               <Metric
-                label="Giving (recent)"
+                label={td('givingRecent')}
                 value={
                   counts.offeringsTotalMinor === null
                     ? '—'
@@ -273,15 +279,15 @@ export function DashboardClient(): React.ReactElement {
                 icon="wallet"
                 tone="sage"
                 href="/admin/finance"
-                hint="Last offerings loaded"
+                hint={td('givingRecentHint')}
               />
               <Metric
-                label="Ministries"
+                label={td('ministries')}
                 value={formatCount(counts.ministries)}
                 icon="hand"
                 tone="lavender"
                 href="/admin/ministries"
-                hint="Teams and units"
+                hint={td('ministriesHint')}
               />
             </>
           )}
@@ -292,10 +298,10 @@ export function DashboardClient(): React.ReactElement {
         {/* Attendance — calm placeholder until series API exists */}
         <div className="min-w-0 lg:col-span-2">
           <Panel
-            title="Recent attendance"
-            subtitle="Total present per service day, last 8 weeks."
+            title={td('recentAttendance')}
+            subtitle={td('recentAttendanceSubtitle')}
             linkHref="/admin/attendance"
-            linkLabel="Attendance"
+            linkLabel={td('attendanceLink')}
           >
             <AttendanceTrend />
           </Panel>
@@ -304,8 +310,8 @@ export function DashboardClient(): React.ReactElement {
         {/* Upcoming events with thumbs */}
         <div className="min-w-0 lg:col-span-3">
           <Panel
-            title="Upcoming events"
-            subtitle="Next gatherings on the calendar"
+            title={td('upcomingEventsPanel')}
+            subtitle={td('upcomingEventsPanelSubtitle')}
             linkHref="/admin/events"
           >
             {loading ? (
@@ -314,15 +320,15 @@ export function DashboardClient(): React.ReactElement {
               <EmptyState
                 icon="calendar"
                 tone="sky"
-                title="No upcoming services yet"
-                description="Schedule a Sunday service or small gathering so people know where to be."
+                title={td('noUpcomingServices')}
+                description={td('noUpcomingServicesBody')}
                 action={
                   <Link
                     href="/admin/events"
                     className={buttonClassName({ variant: 'primary', size: 'sm' })}
                   >
                     <Icon name="plus" size={14} />
-                    Add an event
+                    {td('addEvent')}
                   </Link>
                 }
               />
@@ -330,7 +336,7 @@ export function DashboardClient(): React.ReactElement {
               <ul className="divide-y divide-border">
                 {upcoming.map((ev) => (
                   <li key={ev.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                    <EventThumb event={ev} />
+                    <EventThumb event={ev} dayLabel={td('day')} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <Link
@@ -360,10 +366,10 @@ export function DashboardClient(): React.ReactElement {
       {/* Attention strip when approvals exist */}
       {!loading && approvals.length > 0 ? (
         <Panel
-          title="Needs your attention"
-          subtitle={`${counts.pendingApprovals} pending approval${counts.pendingApprovals === 1 ? '' : 's'}`}
+          title={td('needsAttention')}
+          subtitle={td('pendingApprovals', { count: counts.pendingApprovals ?? 0 })}
           linkHref="/admin/approvals"
-          linkLabel="Review"
+          linkLabel={td('review')}
         >
           <ul className="space-y-3">
             {approvals.map((a) => (
@@ -374,14 +380,16 @@ export function DashboardClient(): React.ReactElement {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-medium text-foreground">
-                      {titleCase(a.subjectType)} awaiting a second approval
+                      {td('awaitingSecondApproval', {
+                        subject: titleCase(a.subjectType),
+                      })}
                     </p>
                     <StatusPill tone="pending" hideDot>
-                      Pending
+                      {td('pending')}
                     </StatusPill>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Submitted {formatDate(a.createdAt)}
+                    {td('submitted', { date: formatDate(a.createdAt) })}
                   </p>
                 </Link>
               </li>
@@ -410,17 +418,17 @@ export function DashboardClient(): React.ReactElement {
               id="dashboard-ministries-cta"
               className="text-lg font-semibold tracking-tight text-foreground sm:text-xl"
             >
-              Grow in faith together
+              {td('growInFaith')}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Explore ministries and help people find where they belong.
+              {td('growInFaithBody')}
             </p>
           </div>
           <Link
             href="/admin/ministries"
             className={buttonClassName({ variant: 'primary' })}
           >
-            Explore ministries
+            {td('exploreMinistries')}
             <Icon name="arrow-right" size={16} />
           </Link>
         </div>
@@ -429,7 +437,13 @@ export function DashboardClient(): React.ReactElement {
   );
 }
 
-function EventThumb({ event }: { event: EventRow }): React.ReactElement {
+function EventThumb({
+  event,
+  dayLabel,
+}: {
+  event: EventRow;
+  dayLabel: string;
+}): React.ReactElement {
   if (event.posterUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -446,7 +460,7 @@ function EventThumb({ event }: { event: EventRow }): React.ReactElement {
       aria-hidden="true"
       className="mt-0.5 inline-flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[color:var(--sky-soft)] text-[color:var(--sky)]"
     >
-      <span className="text-[10px] font-semibold uppercase leading-none">Day</span>
+      <span className="text-[10px] font-semibold uppercase leading-none">{dayLabel}</span>
       <span className="text-base font-semibold tabular-nums leading-tight">{day}</span>
     </span>
   );
@@ -462,6 +476,7 @@ interface AttendanceDay {
  * empty state rather than an invented chart when nothing is recorded yet.
  */
 function AttendanceTrend(): React.ReactElement {
+  const td = useTranslations('AdminDashboard');
   const [days, setDays] = useState<AttendanceDay[] | null>(null);
   const [unavailable, setUnavailable] = useState(false);
 
@@ -489,11 +504,9 @@ function AttendanceTrend(): React.ReactElement {
       <EmptyState
         icon="calendar-check"
         tone="sage"
-        title={unavailable ? 'Attendance totals unavailable' : 'No attendance recorded yet'}
+        title={unavailable ? td('attendanceUnavailable') : td('noAttendanceYet')}
         description={
-          unavailable
-            ? 'Your role can’t view the attendance report.'
-            : 'Open a session on a service to start counting. Totals appear here after each service.'
+          unavailable ? td('attendanceUnavailableBody') : td('noAttendanceBody')
         }
       />
     );
@@ -515,7 +528,7 @@ function AttendanceTrend(): React.ReactElement {
           {change !== null ? (
             <span className={change >= 0 ? 'ml-2 text-[color:var(--success-ink)]' : 'ml-2 text-[color:var(--danger-ink)]'}>
               {change >= 0 ? '+' : ''}
-              {formatCount(change)} vs previous
+              {formatCount(change)} {td('vsPrevious')}
             </span>
           ) : null}
         </p>
@@ -539,8 +552,9 @@ function AttendanceTrend(): React.ReactElement {
         ))}
       </div>
       <figcaption className="sr-only">
-        Attendance by service day:{' '}
-        {days.map((d) => `${formatDate(d.serviceDate)} ${d.totalCount}`).join('; ')}.
+        {td('attendanceByDay', {
+          summary: days.map((d) => `${formatDate(d.serviceDate)} ${d.totalCount}`).join('; '),
+        })}
       </figcaption>
       <div className="flex justify-between text-[11px] text-muted-foreground" aria-hidden="true">
         <span>{formatDate(days[0]!.serviceDate)}</span>
@@ -576,18 +590,14 @@ function statusToneForEvent(status: string): 'neutral' | 'info' | 'warning' | 's
   }
 }
 
-function buildGreeting(name: string | undefined): string {
+function buildGreeting(
+  translate: (key: 'goodMorning' | 'goodAfternoon' | 'goodEvening') => string,
+): string {
   const hour = new Date().getHours();
-  const timeLabel =
-    hour < 5
-      ? 'Good evening'
-      : hour < 12
-        ? 'Good morning'
-        : hour < 17
-          ? 'Good afternoon'
-          : 'Good evening';
-  if (!name) return `${timeLabel}`;
-  return `${timeLabel}`;
+  if (hour < 5) return translate('goodEvening');
+  if (hour < 12) return translate('goodMorning');
+  if (hour < 17) return translate('goodAfternoon');
+  return translate('goodEvening');
 }
 
 function MetricSkeleton(): React.ReactElement {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import { Button, Card, Field, Input, PageHeader, useToast } from '@/app/_ekklesia/ui';
 import { Icon, type IconName } from '@/app/_ekklesia/icons';
@@ -9,45 +10,50 @@ import { errorMessage } from '../../_lib/errors';
 
 type Kind = 'people' | 'attendance' | 'finance';
 
-const KINDS: Array<{ kind: Kind; title: string; icon: IconName; body: string; needsRange: boolean }> = [
-  {
-    kind: 'people',
-    title: 'People',
-    icon: 'users',
-    body: 'Everyone on record with their main contacts.',
-    needsRange: false,
-  },
-  {
-    kind: 'attendance',
-    title: 'Attendance',
-    icon: 'calendar-check',
-    body: 'Attendance records for services and events in a date range.',
-    needsRange: true,
-  },
-  {
-    kind: 'finance',
-    title: 'Finance',
-    icon: 'wallet',
-    body: 'Posted journal lines in a date range, for your accountant.',
-    needsRange: true,
-  },
-];
-
 export function ExportsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tx = useTranslations('AdminExports');
   const { push } = useToast();
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [busy, setBusy] = useState<Kind | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const kinds = useMemo(
+    (): Array<{ kind: Kind; title: string; icon: IconName; body: string; needsRange: boolean }> => [
+      {
+        kind: 'people',
+        title: tx('peopleTitle'),
+        icon: 'users',
+        body: tx('peopleBody'),
+        needsRange: false,
+      },
+      {
+        kind: 'attendance',
+        title: tx('attendanceTitle'),
+        icon: 'calendar-check',
+        body: tx('attendanceBody'),
+        needsRange: true,
+      },
+      {
+        kind: 'finance',
+        title: tx('financeTitle'),
+        icon: 'wallet',
+        body: tx('financeBody'),
+        needsRange: true,
+      },
+    ],
+    [tx],
+  );
+
   const download = async (kind: Kind, needsRange: boolean): Promise<void> => {
     setError(null);
     if (needsRange && (!from || !to)) {
-      setError('Choose a from and to date for attendance and finance exports.');
+      setError(tx('chooseRange'));
       return;
     }
     if (needsRange && from > to) {
-      setError('The from date must be on or before the to date.');
+      setError(tx('fromBeforeTo'));
       return;
     }
     setBusy(kind);
@@ -68,11 +74,14 @@ export function ExportsClient(): React.ReactElement {
       URL.revokeObjectURL(url);
       push({
         tone: 'success',
-        title: 'Export ready',
-        message: `${res.headers.get('X-Export-Row-Count') ?? 'All'} rows in ${filename}.`,
+        title: tx('exportReady'),
+        message: tx('rowsInFile', {
+          rows: res.headers.get('X-Export-Row-Count') ?? 'All',
+          filename,
+        }),
       });
     } catch (err) {
-      setError(errorMessage(err, 'Could not create the export.'));
+      setError(errorMessage(err, tx('couldNotCreate')));
     } finally {
       setBusy(null);
     }
@@ -80,16 +89,13 @@ export function ExportsClient(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Exports"
-        lede="Download data as CSV to open in Excel. You only see exports your role allows; every export is recorded in the audit log."
-      />
+      <PageHeader title={t('exports')} lede={t('exportsLede')} />
 
       <div className="grid max-w-md gap-4 sm:grid-cols-2">
-        <Field label="From" hint="Attendance & finance">
+        <Field label={tx('from')} hint={tx('fromHint')}>
           <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
         </Field>
-        <Field label="To">
+        <Field label={tx('to')}>
           <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         </Field>
       </div>
@@ -97,7 +103,7 @@ export function ExportsClient(): React.ReactElement {
       {error ? <InlineAlert>{error}</InlineAlert> : null}
 
       <ul className="grid gap-4 md:grid-cols-3">
-        {KINDS.map((k) => (
+        {kinds.map((k) => (
           <li key={k.kind}>
             <Card className="flex h-full flex-col gap-3 p-5">
               <div className="flex items-center gap-2 font-medium text-foreground">
@@ -113,7 +119,7 @@ export function ExportsClient(): React.ReactElement {
                 disabled={busy !== null}
                 onClick={() => void download(k.kind, k.needsRange)}
               >
-                Download CSV
+                {tx('download')}
               </Button>
             </Card>
           </li>
