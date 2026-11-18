@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   // Cache Components on; Partial Prefetching off until auth-gated routes have
@@ -22,4 +25,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Plugin typings can resolve a sibling Next version in the monorepo workspace.
+export default withNextIntl(nextConfig) as typeof nextConfig;
