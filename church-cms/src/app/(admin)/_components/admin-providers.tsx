@@ -9,7 +9,9 @@ import {
 } from '@/app/_ekklesia/session';
 import { AdminShell } from '@/app/_ekklesia/shell';
 import { ToastProvider } from '@/app/_ekklesia/ui';
+import { syncLocaleCookie } from '@/i18n/sync-locale-cookie';
 import { buildAdminGroups } from '../_lib/nav-groups';
+import { useAdminNavLabels } from '../_lib/use-admin-nav-labels';
 import type { AuthMeResponse } from '../_lib/api-types';
 import { toUiSession } from '../_lib/session-mapper';
 import { TopbarEnd } from './topbar-end';
@@ -42,9 +44,15 @@ export function AdminProviders({ children }: AdminProvidersProps): React.ReactEl
     const load = async (): Promise<void> => {
       try {
         const me = await apiFetch<AuthMeResponse>('/api/v1/auth/me');
-        if (!cancelled) {
-          setSession(toUiSession(me));
-          setError(null);
+        if (cancelled) return;
+        setSession(toUiSession(me));
+        setError(null);
+        // Align cookie with profile locale after paint — hard reload if it
+        // changed so SSR and client catalogs never diverge mid-hydrate.
+        const localeChanged = await syncLocaleCookie(me.locale);
+        if (!cancelled && localeChanged) {
+          window.location.reload();
+          return;
         }
       } catch (err) {
         if (!cancelled) {
@@ -69,7 +77,11 @@ export function AdminProviders({ children }: AdminProvidersProps): React.ReactEl
     };
   }, []);
 
-  const groups = useMemo(() => buildAdminGroups(session), [session]);
+  const navLabels = useAdminNavLabels();
+  const groups = useMemo(
+    () => buildAdminGroups(session, navLabels),
+    [session, navLabels],
+  );
   const churchName = session?.church?.name;
 
   return (
