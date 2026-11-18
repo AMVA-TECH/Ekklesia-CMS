@@ -28,6 +28,8 @@ import {
   assertCanRequestCorrection,
   assertCanResolveCorrection,
   assertCanWriteEvents,
+  isAttendanceStaff,
+  mayActForPerson,
 } from './policies';
 import { getMediaAsset } from '@/modules/media/repository';
 import {
@@ -598,6 +600,7 @@ export async function createAbsenceNotice(ctx: Ctx, body: CreateAbsenceNoticeBod
   const db = getDb();
   const person = await getPersonInChurch(db, ctx, body.personId);
   if (!person) throw notFound();
+  await assertMayActForPerson(db, ctx, body.personId);
   if (body.eventId) {
     const event = await repo.getEventById(db, ctx, body.eventId);
     if (!event) throw notFound();
@@ -647,6 +650,7 @@ export async function createCorrectionRequest(
   if (!session) throw notFound();
   const person = await getPersonInChurch(db, ctx, body.personId);
   if (!person) throw notFound();
+  await assertMayActForPerson(db, ctx, body.personId);
 
   const existing = await repo.findOpenCorrectionForPersonSession(
     db,
@@ -673,8 +677,14 @@ export async function listCorrectionRequests(
   query: ListCorrectionRequestsQuery,
 ) {
   assertCanReadAttendance(ctx);
-  const rows = await repo.listCorrectionRequests(getDb(), ctx, query);
-  return { data: rows.map(toCorrectionResponse) };
+  const db = getDb();
+  const rows = await repo.listCorrectionRequests(db, ctx, query);
+  // Members (attendance:read) only see their own requests; staff see all.
+  if (isAttendanceStaff(ctx)) return { data: rows.map(toCorrectionResponse) };
+  const actorPersonId = await findPersonIdForUser(db, ctx);
+  return {
+    data: rows.filter((r) => r.personId === actorPersonId).map(toCorrectionResponse),
+  };
 }
 
 export async function resolveCorrectionRequest(
@@ -737,6 +747,33 @@ function isUniqueViolation(error: unknown): boolean {
     'code' in error &&
     (error as { code?: string }).code === '23505'
   );
+}
+
+/** Enforce mayActForPerson for absence notices / correction requests. */
+async function assertMayActForPerson(
+  db: ReturnType<typeof getDb>,
+  ctx: Ctx,
+  targetPersonId: string,
+): Promise<void> {
+  const staff = isAttendanceStaff(ctx);
+  const actorPersonId = staff ? null : await findPersonIdForUser(db, ctx);
+  let inHousehold = false;
+  if (!staff && actorPersonId && actorPersonId !== targetPersonId) {
+    const householdId = await repo.findHouseholdIdForPerson(db, ctx, actorPersonId);
+    inHousehold = householdId
+      ? await repo.isPersonInHousehold(db, ctx, householdId, targetPersonId)
+      : false;
+  }
+  if (
+    !mayActForPerson({
+      isAttendanceStaff: staff,
+      actorPersonId,
+      targetPersonId,
+      targetInActorHousehold: inHousehold,
+    })
+  ) {
+    throw forbidden('You can only do this for yourself or someone in your household.');
+  }
 }
 
 async function requireActorPersonId(ctx: Ctx): Promise<string> {
