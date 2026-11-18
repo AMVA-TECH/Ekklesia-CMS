@@ -133,6 +133,7 @@ Regenerate: `pnpm openapi:generate`
 | `POST` | `/api/v1/organisational-units/{id}/participations` | Organisation | session |
 | `GET` | `/api/v1/organisational-units/{id}/programmes` | Organisation | session |
 | `POST` | `/api/v1/organisational-units/{id}/programmes` | Organisation | session |
+| `GET` | `/api/v1/participation-requests` | Ministries | session |
 | `POST` | `/api/v1/participation-requests` | Ministries | session |
 | `POST` | `/api/v1/participation-requests/{id}/decision` | Ministries | session |
 | `GET` | `/api/v1/participation-requests/me` | Ministries | session |

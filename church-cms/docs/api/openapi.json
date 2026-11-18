@@ -8933,6 +8933,59 @@
       }
     },
     "/api/v1/participation-requests": {
+      "get": {
+        "tags": [
+          "Ministries"
+        ],
+        "summary": "GET /participation-requests",
+        "operationId": "get_api_v1_participation_requests",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DevChurchId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPermissions"
+          },
+          {
+            "$ref": "#/components/parameters/DevPersonId"
+          },
+          {
+            "$ref": "#/components/parameters/DevPlatformPermissions"
+          }
+        ],
+        "security": [
+          {
+            "DevAuth": []
+          },
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Ministries"
