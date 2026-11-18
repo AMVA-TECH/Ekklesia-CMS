@@ -2,11 +2,17 @@ import { writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { DEFAULT_LOCALE, parseAppLocale } from '@/i18n/config';
+import { fillOutbound, outboundMessages } from '@/i18n/outbound-messages';
 import { getDb } from '@/platform/db/client';
 import { getNotifyAdapter } from '@/platform/notify';
-import { churchSettings } from '@/modules/churches/db-schema';
+import { churches, churchSettings } from '@/modules/churches/db-schema';
 import { resolveChurchSettings } from '@/modules/churches/settings-schema';
-import { organisationUsers, userAccounts } from '@/modules/people/db-schema';
+import {
+  organisationUsers,
+  people,
+  userAccounts,
+} from '@/modules/people/db-schema';
 import { user as authUser } from './db-schema';
 import { sendOtpEmail } from './otp-email';
 
@@ -110,14 +116,18 @@ export async function deliverAuthOtp(input: {
   const masks: string[] = [];
   const errors: string[] = [];
 
-  const productName = await resolveOtpProductName(input.userId);
+  const branding = await resolveOtpBranding(input.userId);
+  const productName = branding.productName;
+  const locale = branding.locale;
+  const copy = outboundMessages(locale);
+  const vars = { product: productName, otp: input.otp };
 
   if (phone) {
     const notify = getNotifyAdapter();
     const result = await notify.send({
       channel: 'sms',
       to: phone,
-      body: `Your ${productName} verification code is ${input.otp}. It expires in a few minutes.`,
+      body: fillOutbound(copy.otpSms, vars),
       idempotencyKey: `auth-otp-sms:${input.userId ?? phone}:${randomUUID()}`,
     });
     if (result.ok) {
@@ -133,6 +143,7 @@ export async function deliverAuthOtp(input: {
       email,
       input.otp,
       productName,
+      locale,
     );
     if (emailResult.ok) {
       sent.push('email');
@@ -159,12 +170,18 @@ export async function deliverAuthOtp(input: {
   };
 }
 
-async function resolveOtpProductName(userId: string | undefined): Promise<string> {
-  if (!userId) return 'Ekklesia';
+async function resolveOtpBranding(
+  userId: string | undefined,
+): Promise<{ productName: string; locale: string }> {
+  const fallback = { productName: 'Ekklesia', locale: DEFAULT_LOCALE };
+  if (!userId) return fallback;
   try {
     const db = getDb();
     const [org] = await db
-      .select({ churchId: organisationUsers.churchId })
+      .select({
+        churchId: organisationUsers.churchId,
+        personId: organisationUsers.personId,
+      })
       .from(organisationUsers)
       .where(
         and(
@@ -174,7 +191,30 @@ async function resolveOtpProductName(userId: string | undefined): Promise<string
         ),
       )
       .limit(1);
-    if (!org?.churchId) return 'Ekklesia';
+    if (!org?.churchId) return fallback;
+
+    let locale = DEFAULT_LOCALE;
+    let hasPersonLocale = false;
+    if (org.personId) {
+      const [person] = await db
+        .select({ preferredLocale: people.preferredLocale })
+        .from(people)
+        .where(and(eq(people.id, org.personId), isNull(people.deletedAt)))
+        .limit(1);
+      if (person?.preferredLocale) {
+        locale = parseAppLocale(person.preferredLocale);
+        hasPersonLocale = true;
+      }
+    }
+    if (!hasPersonLocale) {
+      const [church] = await db
+        .select({ defaultLocale: churches.defaultLocale })
+        .from(churches)
+        .where(eq(churches.id, org.churchId))
+        .limit(1);
+      if (church?.defaultLocale) locale = parseAppLocale(church.defaultLocale);
+    }
+
     const [row] = await db
       .select({ settings: churchSettings.settings })
       .from(churchSettings)
@@ -185,11 +225,12 @@ async function resolveOtpProductName(userId: string | undefined): Promise<string
         ),
       )
       .limit(1);
-    return resolveChurchSettings(
+    const productName = resolveChurchSettings(
       (row?.settings as Record<string, unknown> | undefined) ?? {},
     ).branding.productName;
+    return { productName, locale };
   } catch {
-    return 'Ekklesia';
+    return fallback;
   }
 }
 
@@ -197,10 +238,11 @@ async function deliverOtpEmailChannel(
   email: string,
   otp: string,
   productName: string,
+  locale: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   // Real SMTP when configured.
   if (process.env.AUTH_EMAIL_OTP_STUB === '0') {
-    return sendOtpEmail({ to: email, otp, productName });
+    return sendOtpEmail({ to: email, otp, productName, locale });
   }
 
   // Dev stub — does not include OTP in logs.
