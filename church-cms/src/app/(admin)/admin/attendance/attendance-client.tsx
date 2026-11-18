@@ -162,6 +162,12 @@ export function AttendanceClient(): React.ReactElement {
             >
               Absence notices
             </Link>
+            <Link
+              href="/admin/attendance/corrections"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              Corrections
+            </Link>
             <Button
               variant="primary"
               iconLeft="calendar-check"
