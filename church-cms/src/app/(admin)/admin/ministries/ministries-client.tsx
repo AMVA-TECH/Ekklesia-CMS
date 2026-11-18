@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Fragment, useCallback, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Badge,
@@ -34,20 +35,23 @@ import { asList } from '../../_lib/list';
 import { AddParticipationDialog } from './add-participation-dialog';
 import { CreateUnitDialog } from './create-unit-dialog';
 
-const KIND_TABS: Array<{ value: string; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'ministry', label: 'Ministries' },
-  { value: 'department', label: 'Departments' },
-  { value: 'team', label: 'Teams' },
-  { value: 'branch', label: 'Branches' },
-  { value: 'life_group', label: 'Life groups' },
-];
+const KIND_TAB_VALUES = [
+  'all',
+  'ministry',
+  'department',
+  'team',
+  'branch',
+  'life_group',
+] as const;
 
 function canHaveParticipations(kind: string): boolean {
   return kind === 'ministry' || kind === 'life_group';
 }
 
 export function MinistriesClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const to = useTranslations('AdminOrganisation');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [kind, setKind] = useState('all');
   const [units, setUnits] = useState<OrganisationalUnit[]>([]);
@@ -61,6 +65,25 @@ export function MinistriesClient(): React.ReactElement {
   const [partsError, setPartsError] = useState<string | null>(null);
   const [endingId, setEndingId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+
+  const tabLabel = (value: string): string => {
+    switch (value) {
+      case 'all':
+        return to('tabAll');
+      case 'ministry':
+        return to('tabMinistries');
+      case 'department':
+        return to('tabDepartments');
+      case 'team':
+        return to('tabTeams');
+      case 'branch':
+        return to('tabBranches');
+      case 'life_group':
+        return to('tabLifeGroups');
+      default:
+        return value;
+    }
+  };
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -80,12 +103,12 @@ export function MinistriesClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load ministries',
+            : to('unableLoadMinistries'),
       );
     } finally {
       setLoading(false);
     }
-  }, [kind]);
+  }, [kind, to]);
 
   useLoadEffect(load);
 
@@ -129,12 +152,12 @@ export function MinistriesClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load participations',
+            : to('unableLoadParticipations'),
       );
     } finally {
       setPartsLoading(false);
     }
-  }, []);
+  }, [to]);
 
   const toggleExpand = (unitId: string): void => {
     if (expandedId === unitId) {
@@ -161,14 +184,14 @@ export function MinistriesClient(): React.ReactElement {
       );
       push({
         tone: 'success',
-        title: 'Participation ended',
-        message: 'This person is no longer active in the unit.',
+        title: to('participationEnded'),
+        message: to('participationEndedBody'),
       });
     } catch (err) {
       push({
         tone: 'danger',
-        title: 'Could not end participation',
-        message: err instanceof ApiError ? err.message : 'Please try again.',
+        title: to('couldNotEndParticipation'),
+        message: err instanceof ApiError ? err.message : tc('pleaseTryAgain'),
       });
     } finally {
       setEndingId(null);
@@ -191,23 +214,23 @@ export function MinistriesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Ministries"
-        lede="Teams, departments, and life groups that organise service in your church."
+        title={t('ministries')}
+        lede={t('ministriesLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New unit
+            {to('newUnit')}
           </Button>
         }
       />
 
       <Tabs value={kind} onValueChange={setKind}>
         <TabList>
-          {KIND_TABS.map((t) => (
-            <Tab key={t.value} value={t.value}>
-              {t.label}
-              {kind !== 'all' || t.value === 'all' ? (
+          {KIND_TAB_VALUES.map((value) => (
+            <Tab key={value} value={value}>
+              {tabLabel(value)}
+              {kind !== 'all' || value === 'all' ? (
                 <span className="ml-1 text-xs text-muted-foreground">
-                  · {counts[t.value as keyof typeof counts] ?? 0}
+                  · {counts[value as keyof typeof counts] ?? 0}
                 </span>
               ) : null}
             </Tab>
@@ -216,11 +239,13 @@ export function MinistriesClient(): React.ReactElement {
       </Tabs>
 
       <Panel
-        title={kind === 'all' ? 'All units' : titleCase(kind) + 's'}
+        title={
+          kind === 'all'
+            ? to('allUnits')
+            : to('kindPanelTitle', { kind: titleCase(kind) })
+        }
         subtitle={
-          error
-            ? 'We couldn\'t load organisational units.'
-            : `${units.length} total`
+          error ? to('couldNotLoadUnits') : tc('totalCount', { count: units.length })
         }
         flush
       >
@@ -229,7 +254,7 @@ export function MinistriesClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                Try again
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -242,15 +267,15 @@ export function MinistriesClient(): React.ReactElement {
           <EmptyState
             icon="hand"
             tone="lavender"
-            title="No ministries yet"
-            description="Create a ministry, department, or life group to start organising teams and events."
+            title={to('noMinistriesYet')}
+            description={to('noMinistriesBody')}
             action={
               <Button
                 iconLeft="plus"
                 size="sm"
                 onClick={() => setCreateOpen(true)}
               >
-                New unit
+                {to('newUnit')}
               </Button>
             }
           />
@@ -259,10 +284,10 @@ export function MinistriesClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Name</TH>
-                  <TH>Kind</TH>
-                  <TH>Status</TH>
-                  <TH>Parent</TH>
+                  <TH>{to('nameLabel')}</TH>
+                  <TH>{to('kindLabel')}</TH>
+                  <TH>{to('statusLabel')}</TH>
+                  <TH>{to('parentLabel')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -310,7 +335,7 @@ export function MinistriesClient(): React.ReactElement {
                           </StatusPill>
                         </TD>
                         <TD className="text-sm text-muted-foreground">
-                          {parent ? parent.name : '—'}
+                          {parent ? parent.name : to('emDash')}
                         </TD>
                       </TR>
                       {open ? (
@@ -348,8 +373,8 @@ export function MinistriesClient(): React.ReactElement {
         onCreated={(unit) => {
           push({
             tone: 'success',
-            title: 'Unit created',
-            message: `${unit.name} is live.`,
+            title: to('unitCreatedTitle'),
+            message: to('unitCreatedBody', { name: unit.name }),
           });
           setCreateOpen(false);
           void load();
@@ -365,8 +390,8 @@ export function MinistriesClient(): React.ReactElement {
           onCreated={(created) => {
             push({
               tone: 'success',
-              title: 'Participation added',
-              message: 'Person linked to this unit.',
+              title: to('participationAdded'),
+              message: to('participationAddedBody'),
             });
             setAddOpen(false);
             setParticipations((current) => [created, ...current]);
@@ -413,17 +438,21 @@ function UnitParticipationsPanel({
   onAdd,
   onEnd,
 }: UnitParticipationsPanelProps): React.ReactElement {
+  const to = useTranslations('AdminOrganisation');
+  const tc = useTranslations('Common');
   const allowAdd = canHaveParticipations(unit.kind);
 
   return (
     <div className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-foreground">Participations</p>
+          <p className="text-sm font-medium text-foreground">
+            {to('participations')}
+          </p>
           <p className="text-xs text-muted-foreground">
             {allowAdd
-              ? 'People currently or previously serving in this unit.'
-              : 'Participations apply to ministries and life groups only.'}
+              ? to('participationsHint')
+              : to('participationsKindHint')}
           </p>
         </div>
         {allowAdd ? (
@@ -435,7 +464,7 @@ function UnitParticipationsPanel({
               onAdd();
             }}
           >
-            Add
+            {to('add')}
           </Button>
         ) : null}
       </div>
@@ -445,7 +474,7 @@ function UnitParticipationsPanel({
           {error}
           <div className="mt-2">
             <Button variant="secondary" size="sm" onClick={onRetry}>
-              Try again
+              {tc('retry')}
             </Button>
           </div>
         </div>
@@ -456,8 +485,8 @@ function UnitParticipationsPanel({
       ) : participations.length === 0 ? (
         <p className="py-3 text-sm text-muted-foreground">
           {allowAdd
-            ? 'No participations yet. Add someone to get started.'
-            : 'No participations for this unit kind.'}
+            ? to('noParticipationsYet')
+            : to('noParticipationsForKind')}
         </p>
       ) : (
         <ul className="divide-y divide-border rounded-md border border-border bg-background">
@@ -475,9 +504,9 @@ function UnitParticipationsPanel({
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {row.roleInUnit ? `${row.roleInUnit} · ` : null}
-                    From {formatDate(row.effectiveFrom)}
+                    {to('fromDate', { date: formatDate(row.effectiveFrom) })}
                     {row.effectiveTo
-                      ? ` · to ${formatDate(row.effectiveTo)}`
+                      ? ` · ${to('toDate', { date: formatDate(row.effectiveTo) })}`
                       : null}
                   </p>
                 </div>
@@ -496,7 +525,7 @@ function UnitParticipationsPanel({
                         onEnd(row);
                       }}
                     >
-                      End
+                      {to('end')}
                     </Button>
                   ) : null}
                 </div>

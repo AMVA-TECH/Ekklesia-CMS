@@ -28,6 +28,7 @@ import { asList } from '../../_lib/list';
 import type { AttendanceSession } from './attendance-types';
 import { ManageSessionDialog } from './manage-session-dialog';
 import { OpenSessionDialog } from './open-session-dialog';
+import { useTranslations } from 'next-intl';
 
 interface LeadershipStatsEnvelope {
   people: Array<{
@@ -47,6 +48,8 @@ interface LeadershipStatsEnvelope {
  * calm write path: open a session, record people or headcount, then finalize.
  */
 export function AttendanceClient(): React.ReactElement {
+  const ta = useTranslations('AdminAttendance');
+  const t = useTranslations('AdminPages');
   const [events, setEvents] = useState<EventRow[]>([]);
   const [sessionsByEvent, setSessionsByEvent] = useState<
     Record<string, AttendanceSession[]>
@@ -95,7 +98,7 @@ export function AttendanceClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load attendance.',
+            : ta('unableLoad'),
       );
     } finally {
       setLoading(false);
@@ -110,10 +113,10 @@ export function AttendanceClient(): React.ReactElement {
       setStats(null);
       setStatsError(
         err instanceof ApiError && err.status === 403
-          ? 'Leadership attendance insights require a leadership role.'
+          ? ta('leadershipRequireRole')
           : err instanceof Error
             ? err.message
-            : 'Leadership attendance unavailable.',
+            : ta('leadershipUnavailable'),
       );
     }
   }, []);
@@ -152,15 +155,15 @@ export function AttendanceClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Attendance"
-        lede="How many showed up to recent services, and who among your leaders might need a nudge."
+        title={t('attendance')}
+        lede={t('attendanceLede')}
         actions={
           <>
             <Link
               href="/admin/attendance/absences"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Absence notices
+              {ta('absenceNotices')}
             </Link>
             <Button
               variant="primary"
@@ -168,14 +171,14 @@ export function AttendanceClient(): React.ReactElement {
               onClick={() => startOpenSession()}
               disabled={events.length === 0}
             >
-              Record attendance
+              {ta('recordAttendance')}
             </Button>
             <Link
               href="/admin/events"
               className={buttonClassName({ variant: 'secondary' })}
             >
               <Icon name="calendar" size={14} />
-              Open events
+              {ta('openEvents')}
             </Link>
           </>
         }
@@ -192,41 +195,41 @@ export function AttendanceClient(): React.ReactElement {
 
       <section aria-labelledby="attendance-totals">
         <h2 id="attendance-totals" className="sr-only">
-          Recent attendance totals
+          {ta('recentTotalsAria')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric
-            label="Recent total"
+            label={ta('recentTotal')}
             value={formatCount(totals.total)}
             icon="users"
             tone="sage"
-            hint="All sessions in view"
+            hint={ta('allSessionsInView')}
           />
           <Metric
-            label="Adults"
+            label={ta('adults')}
             value={formatCount(totals.adults)}
             icon="user"
             tone="sky"
           />
           <Metric
-            label="Children"
+            label={ta('children')}
             value={formatCount(totals.children)}
             icon="users"
             tone="lavender"
           />
           <Metric
-            label="Visitors"
+            label={ta('visitors')}
             value={formatCount(totals.visitors)}
             icon="user-plus"
             tone="peach"
-            hint="Not yet members"
+            hint={ta('notYetMembers')}
           />
         </div>
       </section>
 
       <Panel
-        title="Recent services"
-        subtitle="Open a session to show an attendance QR, record people, then finalize when done."
+        title={ta('recentServices')}
+        subtitle={ta('recentServicesSubtitle')}
         linkHref="/admin/events"
       >
         {loading && events.length === 0 ? (
@@ -238,23 +241,23 @@ export function AttendanceClient(): React.ReactElement {
           <EmptyState
             icon="calendar-check"
             tone="sky"
-            title="No recent attendance"
-            description="Create an event first, then open an attendance session from here."
+            title={ta('noRecent')}
+            description={ta('noRecentBody')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Event</TH>
-                  <TH>Date</TH>
-                  <TH>Sessions</TH>
-                  <TH>Men</TH>
-                  <TH>Women</TH>
-                  <TH>Children</TH>
-                  <TH>Visitors</TH>
-                  <TH>Total</TH>
-                  <TH>Action</TH>
+                  <TH>{ta('event')}</TH>
+                  <TH>{ta('date')}</TH>
+                  <TH>{ta('sessions')}</TH>
+                  <TH>{ta('men')}</TH>
+                  <TH>{ta('women')}</TH>
+                  <TH>{ta('children')}</TH>
+                  <TH>{ta('visitors')}</TH>
+                  <TH>{ta('total')}</TH>
+                  <TH>{ta('action')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -299,7 +302,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="primary"
                               onClick={() => openManage(openSession, ev.title)}
                             >
-                              Show QR
+                              {ta('showQr')}
                             </Button>
                           ) : openSession ? (
                             <Button
@@ -307,7 +310,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="secondary"
                               onClick={() => openManage(openSession, ev.title)}
                             >
-                              Continue
+                              {ta('continue')}
                             </Button>
                           ) : (
                             <Button
@@ -315,7 +318,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="ghost"
                               onClick={() => startOpenSession(ev.id)}
                             >
-                              Open + QR
+                              {ta('openPlusQr')}
                             </Button>
                           )}
                         </div>
@@ -330,8 +333,8 @@ export function AttendanceClient(): React.ReactElement {
       </Panel>
 
       <Panel
-        title="Leadership attendance"
-        subtitle="How consistently each leader is showing up."
+        title={ta('leadershipAttendance')}
+        subtitle={ta('leadershipSubtitle')}
       >
         {statsError ? (
           <div className="rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]">
@@ -343,18 +346,18 @@ export function AttendanceClient(): React.ReactElement {
           <EmptyState
             icon="chart"
             tone="sage"
-            title="No leaders to compare"
-            description="Leadership attendance insights appear once leaders have assignments and attendance history."
+            title={ta('noLeaders')}
+            description={ta('noLeadersBody')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Leader</TH>
-                  <TH>Sessions attended</TH>
-                  <TH>Rate</TH>
-                  <TH>Band</TH>
+                  <TH>{ta('leader')}</TH>
+                  <TH>{ta('sessionsAttended')}</TH>
+                  <TH>{ta('rate')}</TH>
+                  <TH>{ta('band')}</TH>
                 </TR>
               </THead>
               <TBody>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -31,6 +32,8 @@ export function AddParticipationDialog({
   onClose,
   onCreated,
 }: AddParticipationDialogProps): React.ReactElement {
+  const to = useTranslations('AdminOrganisation');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Person[]>([]);
@@ -91,7 +94,7 @@ export function AddParticipationDialog({
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: to('pickPerson') });
       return;
     }
     setFieldErrors({});
@@ -120,7 +123,7 @@ export function AddParticipationDialog({
         setFormError(
           err instanceof Error
             ? err.message
-            : 'Could not add this participation.',
+            : to('couldNotAddParticipation'),
         );
       }
     } finally {
@@ -132,13 +135,13 @@ export function AddParticipationDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Add participation"
-      description={`Add someone to ${unitName}.`}
+      title={to('addParticipation')}
+      description={to('addParticipationDesc', { unitName })}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -146,7 +149,7 @@ export function AddParticipationDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Saving…' : 'Add participation'}
+            {submitting ? tc('saving') : to('addParticipation')}
           </Button>
         </DialogFooter>
       }
@@ -168,9 +171,9 @@ export function AddParticipationDialog({
         ) : null}
 
         <Field
-          label="Person"
+          label={tc('person')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? tc('searching') : tc('typeAtLeast2')}
           error={fieldErrors.personId}
         >
           <Input
@@ -181,7 +184,7 @@ export function AddParticipationDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Search by name…"
+            placeholder={tc('searchByName')}
           />
         </Field>
 
@@ -212,8 +215,8 @@ export function AddParticipationDialog({
         ) : null}
 
         <Field
-          label="Role in unit"
-          hint="Optional — e.g. Leader, Member"
+          label={to('roleInUnit')}
+          hint={to('roleHint')}
           error={fieldErrors.roleInUnit}
         >
           <Input
@@ -224,8 +227,8 @@ export function AddParticipationDialog({
         </Field>
 
         <Field
-          label="Effective from"
-          hint="Optional — YYYY-MM-DD (defaults to today)"
+          label={to('effectiveFrom')}
+          hint={to('effectiveFromHint')}
           error={fieldErrors.effectiveFrom}
         >
           <Input

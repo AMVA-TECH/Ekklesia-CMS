@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useCallback, useState } from 'react';
 import QRCode from 'qrcode';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
@@ -34,6 +36,7 @@ export function AttendanceQrPanel({
   canIssue,
   eventTitle,
 }: AttendanceQrPanelProps): React.ReactElement {
+  const ta = useTranslations('AdminAttendance');
   const [token, setToken] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -83,7 +86,7 @@ export function AttendanceQrPanel({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Could not issue attendance QR.',
+            : ta('couldNotIssueQr'),
       );
     } finally {
       setIssuing(false);
@@ -114,7 +117,7 @@ export function AttendanceQrPanel({
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError('Could not copy the check-in link. Select and copy it manually.');
+      setError(ta('couldNotCopy'));
     }
   };
 
@@ -137,7 +140,7 @@ export function AttendanceQrPanel({
   if (!canIssue && !token) {
     return (
       <p className="text-sm text-muted-foreground">
-        QR check-in is only available while the session is open.
+        {ta('qrOnlyWhileOpen')}
       </p>
     );
   }
@@ -153,11 +156,14 @@ export function AttendanceQrPanel({
             id="attendance-qr-heading"
             className="text-sm font-medium text-foreground"
           >
-            Attendance QR
+            {ta('attendanceQr')}
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Guests scan this code to check in
-            {eventTitle ? ` for ${eventTitle}` : ''}. Valid for 24 hours.
+            {ta('guestsScanHint', {
+              forEvent: eventTitle
+                ? ta('forEvent', { title: eventTitle })
+                : '',
+            })}
           </p>
         </div>
         {canIssue ? (
@@ -169,7 +175,7 @@ export function AttendanceQrPanel({
               void issue();
             }}
           >
-            {issuing ? 'Generating…' : token ? 'New QR' : 'Generate QR'}
+            {issuing ? ta('generating') : token ? ta('newQr') : ta('generateQr')}
           </Button>
         ) : null}
       </div>
@@ -184,7 +190,7 @@ export function AttendanceQrPanel({
       ) : null}
 
       {issuing && !dataUrl ? (
-        <p className="text-sm text-muted-foreground">Generating QR…</p>
+        <p className="text-sm text-muted-foreground">{ta('generatingQr')}</p>
       ) : null}
 
       {dataUrl && checkInUrl ? (
@@ -192,7 +198,7 @@ export function AttendanceQrPanel({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={dataUrl}
-            alt="Attendance check-in QR code"
+            alt={ta('qrAlt')}
             width={280}
             height={280}
             className="h-[180px] w-[180px] shrink-0 rounded-md bg-white p-2 shadow-sm sm:h-[200px] sm:w-[200px]"
@@ -200,15 +206,15 @@ export function AttendanceQrPanel({
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             {expiresAt ? (
               <p className="text-xs text-muted-foreground">
-                Expires {formatDateTime(expiresAt)}
+                {ta('expiresAt', { when: formatDateTime(expiresAt) })}
               </p>
             ) : null}
-            <Field label="Check-in link" hint="Share if someone cannot scan.">
-              <Input readOnly value={checkInUrl} aria-label="Check-in link" />
+            <Field label={ta('checkInLink')} hint={ta('checkInLinkHint')}>
+              <Input readOnly value={checkInUrl} aria-label={ta('checkInLink')} />
             </Field>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="primary" onClick={handleDownload}>
-                Download QR
+                {ta('downloadQr')}
               </Button>
               <Button
                 size="sm"
@@ -217,7 +223,7 @@ export function AttendanceQrPanel({
                   void handleCopy();
                 }}
               >
-                {copied ? 'Copied' : 'Copy link'}
+                {copied ? ta('copied') : ta('copyLink')}
               </Button>
               <Button
                 size="sm"
@@ -226,7 +232,7 @@ export function AttendanceQrPanel({
                   window.open(checkInUrl, '_blank', 'noopener,noreferrer');
                 }}
               >
-                Open check-in
+                {ta('openCheckIn')}
               </Button>
             </div>
           </div>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import Link from 'next/link';
 import {
   useCallback,
@@ -52,6 +54,8 @@ interface PositionDetailClientProps {
 export function PositionDetailClient({
   positionId,
 }: PositionDetailClientProps): React.ReactElement {
+  const tl = useTranslations('AdminLeadership');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const editFormId = useId();
   const [position, setPosition] = useState<LeadershipPosition | null>(null);
@@ -126,7 +130,7 @@ export function PositionDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load this position.',
+            : tl('unableLoadPosition'),
       );
     } finally {
       setLoading(false);
@@ -170,7 +174,7 @@ export function PositionDetailClient({
       });
       push({
         tone: 'success',
-        message: 'Appointment ended. The position may now be vacant.',
+        message: tl('appointmentEnded'),
       });
       void load();
     } catch (err) {
@@ -179,7 +183,7 @@ export function PositionDetailClient({
         message:
           err instanceof ApiError
             ? err.message
-            : 'Could not end this appointment.',
+            : tl('couldNotEndAppointment'),
       });
     } finally {
       setEndingId(null);
@@ -207,7 +211,7 @@ export function PositionDetailClient({
       );
       setPosition(updated);
       setEditing(false);
-      push({ tone: 'success', message: 'Position profile saved.' });
+      push({ tone: 'success', message: tl('positionSaved') });
       void load();
     } catch (err) {
       push({
@@ -215,7 +219,7 @@ export function PositionDetailClient({
         message:
           err instanceof ApiError
             ? err.message
-            : 'Could not save position profile.',
+            : tl('couldNotSavePosition'),
       });
     } finally {
       setSaving(false);
@@ -241,17 +245,17 @@ export function PositionDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              Back to leadership
+              {tl('backToLeadership')}
             </Link>
           }
-          title="Position not found"
-          lede={error ?? 'We could not find this leadership position.'}
+          title={tl('positionNotFound')}
+          lede={error ?? tl('positionNotFoundBody')}
           actions={
             <Link
               href="/admin/leadership"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Back to list
+              {tl('backToList')}
             </Link>
           }
         />
@@ -268,7 +272,7 @@ export function PositionDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            Back to leadership
+            {tl('backToLeadership')}
           </Link>
         }
         title={position.title}
@@ -292,10 +296,10 @@ export function PositionDetailClient({
                   setUnitId(position.organisationalUnitId ?? '');
                 }}
               >
-                Cancel
+                {tc('cancel')}
               </Button>
               <Button type="submit" form={editFormId} loading={saving}>
-                Save changes
+                {tl('saveChanges')}
               </Button>
             </>
           ) : (
@@ -305,13 +309,13 @@ export function PositionDetailClient({
                 iconLeft="edit"
                 onClick={() => setEditing(true)}
               >
-                Edit
+                {tl('edit')}
               </Button>
               <Button
                 iconLeft="user-plus"
                 onClick={() => setAppointOpen(true)}
               >
-                Appoint leader
+                {tl('appointLeader')}
               </Button>
             </>
           )
@@ -323,7 +327,7 @@ export function PositionDetailClient({
         <StatusPill
           tone={activeAppointments.length > 0 ? 'success' : 'warning'}
         >
-          {activeAppointments.length > 0 ? 'Occupied' : 'Vacant'}
+          {activeAppointments.length > 0 ? tl('occupied') : tl('vacant')}
         </StatusPill>
         <StatusPill
           tone={position.status === 'active' ? 'success' : 'neutral'}
@@ -334,7 +338,7 @@ export function PositionDetailClient({
       </div>
 
       {editing ? (
-        <Panel title="Edit position">
+        <Panel title={tl('editPosition')}>
           <form
             id={editFormId}
             onSubmit={(e) => {
@@ -342,7 +346,7 @@ export function PositionDetailClient({
             }}
             className="grid max-w-2xl gap-4 p-4 sm:p-5"
           >
-            <Field label="Title" required>
+            <Field label={tl('title')} required>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -350,7 +354,7 @@ export function PositionDetailClient({
                 required
               />
             </Field>
-            <Field label="Description / responsibilities">
+            <Field label={tl('descriptionResponsibilities')}>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -359,31 +363,31 @@ export function PositionDetailClient({
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Status">
+              <Field label={tl('status')}>
                 <Select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">{tl('active')}</option>
+                  <option value="inactive">{tl('inactive')}</option>
                 </Select>
               </Field>
-              <Field label="Occupancy">
+              <Field label={tl('occupancyPolicy')}>
                 <Select
                   value={occupancyPolicy}
                   onChange={(e) => setOccupancyPolicy(e.target.value)}
                 >
-                  <option value="single">Single occupant</option>
-                  <option value="multiple">Multiple occupants</option>
+                  <option value="single">{tl('singleOccupant')}</option>
+                  <option value="multiple">{tl('multipleOccupants')}</option>
                 </Select>
               </Field>
             </div>
-            <Field label="Reports to">
+            <Field label={tl('reportsTo')}>
               <Select
                 value={reportsTo}
                 onChange={(e) => setReportsTo(e.target.value)}
               >
-                <option value="">None (top-level)</option>
+                <option value="">{tl('noneTopLevel')}</option>
                 {allPositions
                   .filter((p) => p.id !== positionId)
                   .map((p) => (
@@ -393,12 +397,12 @@ export function PositionDetailClient({
                   ))}
               </Select>
             </Field>
-            <Field label="Linked organisational unit">
+            <Field label={tl('linkedOrgUnit')}>
               <Select
                 value={unitId}
                 onChange={(e) => setUnitId(e.target.value)}
               >
-                <option value="">None</option>
+                <option value="">{tl('none')}</option>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name} ({u.kind})
@@ -412,15 +416,15 @@ export function PositionDetailClient({
         <div className="grid gap-6 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Overview</CardTitle>
+              <CardTitle>{tl('overview')}</CardTitle>
             </CardHeader>
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-muted-foreground">Code</dt>
+                <dt className="text-muted-foreground">{tl('code')}</dt>
                 <dd className="font-medium text-foreground">{position.code}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Reports to</dt>
+                <dt className="text-muted-foreground">{tl('reportsTo')}</dt>
                 <dd className="font-medium text-foreground">
                   {reportsToPosition ? (
                     <Link
@@ -430,12 +434,12 @@ export function PositionDetailClient({
                       {reportsToPosition.title}
                     </Link>
                   ) : (
-                    '—'
+                    tl('emDash')
                   )}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Linked unit</dt>
+                <dt className="text-muted-foreground">{tl('linkedUnit')}</dt>
                 <dd className="font-medium text-foreground">
                   {linkedUnit ? (
                     <Link
@@ -445,16 +449,16 @@ export function PositionDetailClient({
                       {linkedUnit.name}
                     </Link>
                   ) : (
-                    '—'
+                    tl('emDash')
                   )}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Occupancy policy</dt>
+                <dt className="text-muted-foreground">{tl('occupancyPolicyLabel')}</dt>
                 <dd className="font-medium text-foreground">
                   {position.occupancyPolicy === 'multiple'
-                    ? 'Multiple occupants'
-                    : 'Single occupant'}
+                    ? tl('multipleOccupants')
+                    : tl('singleOccupant')}
                 </dd>
               </div>
             </dl>
@@ -462,11 +466,11 @@ export function PositionDetailClient({
 
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Responsibilities</CardTitle>
+              <CardTitle>{tl('responsibilities')}</CardTitle>
             </CardHeader>
             <p className="text-sm text-foreground whitespace-pre-wrap">
               {position.description?.trim() ||
-                'No description yet. Use Edit to capture published responsibilities and notes.'}
+                tl('noDescriptionYet')}
             </p>
           </Card>
         </div>
@@ -474,16 +478,16 @@ export function PositionDetailClient({
 
       {directReports.length > 0 ? (
         <Panel
-          title="Direct reports"
-          subtitle={`${directReports.length} position${directReports.length === 1 ? '' : 's'}`}
+          title={tl('directReports')}
+          subtitle={tl('positionsCount', { count: directReports.length })}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Title</TH>
-                  <TH>Code</TH>
-                  <TH>Status</TH>
+                  <TH>{tl('title')}</TH>
+                  <TH>{tl('code')}</TH>
+                  <TH>{tl('status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -516,15 +520,15 @@ export function PositionDetailClient({
       ) : null}
 
       <Panel
-        title="Appointments"
+        title={tl('appointments')}
         subtitle={
           activeAppointments.length === 0
-            ? 'Currently vacant'
-            : `${activeAppointments.length} active`
+            ? tl('currentlyVacant')
+            : tl('activeCount', { count: activeAppointments.length })
         }
         actions={
           <Button size="sm" onClick={() => setAppointOpen(true)}>
-            Appoint leader
+            {tl('appointLeader')}
           </Button>
         }
       >
@@ -532,11 +536,11 @@ export function PositionDetailClient({
           <EmptyState
             icon="users"
             tone="gold"
-            title="No appointments yet"
-            description="Attach a person to this position when their People record exists. Appointing does not grant system roles."
+            title={tl('noAppointmentsYet')}
+            description={tl('noAppointmentsBody')}
             action={
               <Button size="sm" onClick={() => setAppointOpen(true)}>
-                Appoint leader
+                {tl('appointLeader')}
               </Button>
             }
           />
@@ -545,13 +549,13 @@ export function PositionDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Person</TH>
-                  <TH>Kind</TH>
-                  <TH>From</TH>
-                  <TH>To</TH>
-                  <TH>Status</TH>
+                  <TH>{tl('person')}</TH>
+                  <TH>{tl('kind')}</TH>
+                  <TH>{tl('from')}</TH>
+                  <TH>{tl('to')}</TH>
+                  <TH>{tl('status')}</TH>
                   <TH className="w-28">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{tl('actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -581,7 +585,7 @@ export function PositionDetailClient({
                       <TD className="text-muted-foreground">
                         {row.effectiveTo
                           ? formatDate(row.effectiveTo)
-                          : '—'}
+                          : tl('emDash')}
                       </TD>
                       <TD>
                         <StatusPill
@@ -601,7 +605,7 @@ export function PositionDetailClient({
                             disabled={Boolean(endingId)}
                             onClick={() => void handleEndAppointment(row.id)}
                           >
-                            End
+                            {tl('endAppointment')}
                           </Button>
                         ) : null}
                       </TD>
@@ -623,7 +627,7 @@ export function PositionDetailClient({
           push({
             tone: 'success',
             message:
-              'Leader appointed. Assign a system role under Church profile if they need login access.',
+              tl('leaderAppointed'),
           });
           void load();
         }}

@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
@@ -32,6 +34,8 @@ interface EventDetailClientProps {
 export function EventDetailClient({
   eventId,
 }: EventDetailClientProps): React.ReactElement {
+  const te = useTranslations('AdminEvents');
+  const tc = useTranslations('Common');
   const [event, setEvent] = useState<EventRow | null>(null);
   const [types, setTypes] = useState<EventType[]>([]);
   const [sessions, setSessions] = useState<AttendanceSession[]>([]);
@@ -61,7 +65,7 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load attendance sessions.',
+            : te('unableLoadSessions'),
       );
     }
   }, [eventId]);
@@ -83,7 +87,7 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load this event.',
+            : te('unableLoadEvent'),
       );
       setEvent(null);
     } finally {
@@ -118,7 +122,7 @@ export function EventDetailClient({
       const openAny = sessions.find((s) => s.status === 'open');
       if (openAny) {
         setQrError(
-          'An open headcount session already exists. Finalize it first, or continue that session.',
+          te('headcountExists'),
         );
         openManage(openAny);
         return;
@@ -138,7 +142,7 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Could not open attendance QR.',
+            : te('couldNotOpenQr'),
       );
     } finally {
       setQrBusy(false);
@@ -171,17 +175,17 @@ export function EventDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              Back to events
+              {te('backToEvents')}
             </Link>
           }
-          title="Event not found"
-          lede={error ?? 'This event may have been removed.'}
+          title={te('eventNotFound')}
+          lede={error ?? te('eventNotFoundBody')}
           actions={
             <Link
               href="/admin/events"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Back to list
+              {te('backToList')}
             </Link>
           }
         />
@@ -198,7 +202,7 @@ export function EventDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            Back to events
+            {te('backToEvents')}
           </Link>
         }
         title={event.title}
@@ -223,14 +227,14 @@ export function EventDetailClient({
                 void ensureAttendanceQr();
               }}
             >
-              {qrBusy ? 'Opening…' : 'Attendance QR'}
+              {qrBusy ? te('opening') : te('attendanceQr')}
             </Button>
             <Button
               variant="secondary"
               iconLeft="edit"
               onClick={() => setEditOpen(true)}
             >
-              Edit
+              {te('edit')}
             </Button>
             <StatusPill tone={statusTone(event.status)}>
               {titleCase(event.status)}
@@ -244,7 +248,7 @@ export function EventDetailClient({
           <div className="aspect-[3/4] w-full">
             <PosterImage
               url={event.posterUrl}
-              alt={`${event.title} poster`}
+              alt={te('posterAlt', { title: event.title })}
               className="h-full w-full object-cover"
             />
           </div>
@@ -253,41 +257,41 @@ export function EventDetailClient({
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Details</CardTitle>
+              <CardTitle>{te('details')}</CardTitle>
               <Badge tone="neutral">{titleCase(event.status)}</Badge>
             </CardHeader>
             <dl className="space-y-3 text-sm">
-              <Row label="Service date" value={formatDate(event.serviceDate)} />
+              <Row label={te('serviceDate')} value={formatDate(event.serviceDate)} />
               <Row
-                label="Starts at"
-                value={event.startsAt ? formatDateTime(event.startsAt) : '—'}
+                label={te('startsAt')}
+                value={event.startsAt ? formatDateTime(event.startsAt) : te('emDash')}
               />
               <Row
-                label="Ends at"
-                value={event.endsAt ? formatDateTime(event.endsAt) : '—'}
+                label={te('endsAt')}
+                value={event.endsAt ? formatDateTime(event.endsAt) : te('emDash')}
               />
               <Row
-                label="Type"
-                value={event.eventTypeName ?? event.eventTypeCode ?? '—'}
+                label={te('type')}
+                value={event.eventTypeName ?? event.eventTypeCode ?? te('emDash')}
               />
             </dl>
           </Card>
 
-          <Panel title="Description">
+          <Panel title={te('description')}>
             {event.description ? (
               <p className="text-sm text-foreground whitespace-pre-wrap">
                 {event.description}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                No description provided.
+                {te('noDescription')}
               </p>
             )}
           </Panel>
 
           <Panel
-            title="Attendance"
-            subtitle="Generate a QR for guests to scan, record people, then finalize."
+            title={te('attendance')}
+            subtitle={te('attendanceSubtitle')}
           >
             {sessionsError ? (
               <div
@@ -307,7 +311,7 @@ export function EventDetailClient({
             ) : null}
             {sessions.length === 0 ? (
               <p className="mb-3 text-sm text-muted-foreground">
-                No attendance sessions yet for this event.
+                {te('noSessionsYet')}
               </p>
             ) : (
               <ul className="mb-3 divide-y divide-border rounded-md border border-border">
@@ -327,7 +331,9 @@ export function EventDetailClient({
                       </span>
                       <span className="tabular-nums text-muted-foreground">
                         {s.recordCount ?? 0}{' '}
-                        {(s.recordCount ?? 0) === 1 ? 'record' : 'records'}
+                        {(s.recordCount ?? 0) === 1
+                          ? te('recordOne')
+                          : te('recordMany')}
                       </span>
                     </div>
                     <Button
@@ -338,7 +344,7 @@ export function EventDetailClient({
                         setManageOpen(true);
                       }}
                     >
-                      {s.status === 'open' ? 'Continue' : 'View'}
+                      {s.status === 'open' ? te('continueSession') : te('viewSession')}
                     </Button>
                   </li>
                 ))}
@@ -353,20 +359,20 @@ export function EventDetailClient({
                   void ensureAttendanceQr();
                 }}
               >
-                {qrBusy ? 'Opening…' : 'Attendance QR'}
+                {qrBusy ? te('opening') : te('attendanceQr')}
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={() => setOpenSessionOpen(true)}
               >
-                Open session
+                {te('openSession')}
               </Button>
               <Link
                 href="/admin/attendance"
                 className={buttonClassName({ variant: 'secondary', size: 'sm' })}
               >
-                Attendance overview
+                {te('attendanceOverview')}
               </Link>
             </div>
           </Panel>

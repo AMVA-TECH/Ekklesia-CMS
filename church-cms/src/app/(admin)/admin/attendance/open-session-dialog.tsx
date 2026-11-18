@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
@@ -37,6 +39,8 @@ export function OpenSessionDialog({
   onClose,
   onOpened,
 }: OpenSessionDialogProps): React.ReactElement {
+  const ta = useTranslations('AdminAttendance');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [eventId, setEventId] = useState('');
   const [mode, setMode] = useState<AttendanceModeOption>('qr_mixed');
@@ -79,12 +83,12 @@ export function OpenSessionDialog({
     event.preventDefault();
     if (submitting) return;
     if (!eventId) {
-      setFieldErrors({ eventId: 'Choose an event to record attendance for.' });
+      setFieldErrors({ eventId: ta('chooseEvent') });
       return;
     }
     const selected = events.find((e) => e.id === eventId);
     if (!selected) {
-      setFieldErrors({ eventId: 'That event is no longer in the list.' });
+      setFieldErrors({ eventId: ta('eventGone') });
       return;
     }
 
@@ -108,7 +112,7 @@ export function OpenSessionDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not open attendance session.',
+          err instanceof Error ? err.message : ta('couldNotOpenSession'),
         );
       }
     } finally {
@@ -123,13 +127,13 @@ export function OpenSessionDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Open attendance session"
-      description="Start recording who came to this gathering. QR + roll call shows a check-in code you can project or print."
+      title={ta('openSessionTitle')}
+      description={ta('openSessionDesc')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -137,7 +141,7 @@ export function OpenSessionDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Opening…' : 'Open session'}
+            {submitting ? ta('opening') : ta('openSessionBtn')}
           </Button>
         </DialogFooter>
       }
@@ -158,7 +162,7 @@ export function OpenSessionDialog({
           </div>
         ) : null}
 
-        <Field label="Event" required error={fieldErrors.eventId}>
+        <Field label={ta('event')} required error={fieldErrors.eventId}>
           <Select
             data-autofocus
             value={eventId}
@@ -166,7 +170,7 @@ export function OpenSessionDialog({
             onChange={(e) => setEventId(e.target.value)}
           >
             {events.length === 0 ? (
-              <option value="">No recent events</option>
+              <option value="">{ta('noRecentEvents')}</option>
             ) : (
               events.map((ev) => (
                 <option key={ev.id} value={ev.id}>
@@ -177,7 +181,7 @@ export function OpenSessionDialog({
           </Select>
         </Field>
 
-        <Field label="How will you record?" hint={selectedHint} error={fieldErrors.mode}>
+        <Field label={ta('howRecord')} hint={selectedHint} error={fieldErrors.mode}>
           <Select
             value={mode}
             onChange={(e) => setMode(e.target.value as AttendanceModeOption)}

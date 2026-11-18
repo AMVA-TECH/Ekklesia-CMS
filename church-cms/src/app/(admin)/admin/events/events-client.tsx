@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -26,6 +27,8 @@ import { PosterImage } from './poster-image';
  * Ekklesia primitives (no inline global styles, no raw hex).
  */
 export function EventsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const te = useTranslations('AdminEvents');
   const router = useRouter();
   const [types, setTypes] = useState<EventType[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
@@ -50,11 +53,12 @@ export function EventsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load events',
+            : te('unableLoadEvents'),
       );
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -62,11 +66,11 @@ export function EventsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Events"
-        lede="Schedule Sunday services and gatherings, attach a poster, and open any card for the full-size view."
+        title={t('events')}
+        lede={t('eventsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New event
+            {te('newEvent')}
           </Button>
         }
       />
@@ -81,8 +85,8 @@ export function EventsClient(): React.ReactElement {
       ) : null}
 
       <Panel
-        title="Upcoming and recent"
-        subtitle="Most recent first."
+        title={te('upcomingRecent')}
+        subtitle={te('mostRecentFirst')}
         actions={
           <Button
             variant="secondary"
@@ -91,7 +95,7 @@ export function EventsClient(): React.ReactElement {
             onClick={load}
             disabled={loading}
           >
-            Refresh
+            {te('refresh')}
           </Button>
         }
       >
@@ -105,15 +109,15 @@ export function EventsClient(): React.ReactElement {
           <EmptyState
             icon="calendar"
             tone="sky"
-            title="No events yet"
-            description="Add your first Sunday service or gathering to get started."
+            title={te('noEventsYet')}
+            description={te('noEventsBody')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setCreateOpen(true)}
               >
-                New event
+                {te('newEvent')}
               </Button>
             }
           />
@@ -143,6 +147,7 @@ export function EventsClient(): React.ReactElement {
 }
 
 function EventCard({ event }: { event: EventRow }): React.ReactElement {
+  const te = useTranslations('AdminEvents');
   return (
     <Link
       href={`/admin/events/${event.id}`}
@@ -152,7 +157,7 @@ function EventCard({ event }: { event: EventRow }): React.ReactElement {
         <div className="aspect-[4/3] w-full bg-surface-muted">
           <PosterImage
             url={event.posterUrl}
-            alt={`${event.title} poster`}
+            alt={te('posterAlt', { title: event.title })}
             className="h-full w-full object-cover"
             emptyIcon="image"
           />
@@ -168,7 +173,10 @@ function EventCard({ event }: { event: EventRow }): React.ReactElement {
             {Number(event.serviceDate.slice(8, 10))}
           </span>
           <span className="text-xs font-medium uppercase tracking-wide">
-            {new Date(`${event.serviceDate}T00:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+            {new Date(`${event.serviceDate}T00:00:00`).toLocaleDateString(
+              undefined,
+              { month: 'long', year: 'numeric' },
+            )}
           </span>
         </div>
       )}

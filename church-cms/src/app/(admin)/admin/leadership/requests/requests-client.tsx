@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -37,6 +38,9 @@ interface AppointmentRequest {
 type Deciding = { request: AppointmentRequest; action: 'approve' | 'reject' };
 
 export function AppointmentRequestsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tc = useTranslations('Common');
+  const tl = useTranslations('AdminLeadership');
   const requests = useApiList<AppointmentRequest>('/api/v1/appointment-requests');
   const positions = useApiList<LeadershipPosition>('/api/v1/positions?limit=200');
   const names = usePeopleNames(requests.items.map((r) => r.personId));
@@ -51,19 +55,19 @@ export function AppointmentRequestsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/leadership">Leadership</Link>}
-        title="Appointment requests"
-        lede="Unit leaders propose someone for a position; a leader with appointment rights approves (creating the appointment) or rejects it."
+        eyebrow={<Link href="/admin/leadership">{t('leadership')}</Link>}
+        title={t('appointmentRequests')}
+        lede={t('appointmentRequestsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            Propose appointment
+            {tl('proposeAppointment')}
           </Button>
         }
       />
 
       <Panel
-        title="Pending requests"
-        subtitle={requests.loading ? 'Loading…' : `${requests.items.length} waiting`}
+        title={tl('pendingRequests')}
+        subtitle={requests.loading ? tc('loading') : tl('waitingCount', { count: requests.items.length })}
         flush
       >
         <ListState
@@ -72,16 +76,16 @@ export function AppointmentRequestsClient(): React.ReactElement {
           forbidden={requests.forbidden}
           isEmpty={requests.items.length === 0}
           onRetry={() => void requests.reload()}
-          empty={{ icon: 'user-plus', title: 'No pending appointment requests' }}
+          empty={{ icon: 'user-plus', title: tl('noPendingRequests') }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Person</TH>
-                  <TH>Position</TH>
-                  <TH>Reason</TH>
-                  <TH className="text-right">Decision</TH>
+                  <TH>{tl('person')}</TH>
+                  <TH>{tl('position')}</TH>
+                  <TH>{tl('reason')}</TH>
+                  <TH className="text-right">{tl('decision')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -94,10 +98,10 @@ export function AppointmentRequestsClient(): React.ReactElement {
                     </TD>
                     <TD className="text-sm">
                       <Link href={`/admin/leadership/${r.positionId}`} className="hover:underline">
-                        {positionById.get(r.positionId)?.title ?? 'Position'}
+                        {positionById.get(r.positionId)?.title ?? tl('position')}
                       </Link>
                     </TD>
-                    <TD className="max-w-xs text-sm text-muted-foreground">{r.reason ?? '—'}</TD>
+                    <TD className="max-w-xs text-sm text-muted-foreground">{r.reason ?? tl('emDash')}</TD>
                     <TD className="text-right">
                       <div className="inline-flex gap-2">
                         <Button
@@ -105,14 +109,14 @@ export function AppointmentRequestsClient(): React.ReactElement {
                           iconLeft="check"
                           onClick={() => setDeciding({ request: r, action: 'approve' })}
                         >
-                          Approve
+                          {tl('approve')}
                         </Button>
                         <Button
                           size="sm"
                           variant="secondary"
                           onClick={() => setDeciding({ request: r, action: 'reject' })}
                         >
-                          Reject
+                          {tl('reject')}
                         </Button>
                       </div>
                     </TD>
@@ -137,7 +141,7 @@ export function AppointmentRequestsClient(): React.ReactElement {
       {deciding ? (
         <DecideDialog
           deciding={deciding}
-          personName={names[deciding.request.personId] ?? 'this person'}
+          personName={names[deciding.request.personId] ?? tl('thisPerson')}
           positionTitle={positionById.get(deciding.request.positionId)?.title ?? 'the position'}
           onClose={() => setDeciding(null)}
           onDone={() => {
@@ -159,19 +163,20 @@ function ProposeDialog({
   onClose: () => void;
   onDone: () => void;
 }): React.ReactElement {
+  const tl = useTranslations('AdminLeadership');
   const [positionId, setPositionId] = useState('');
   const [person, setPerson] = useState<Person | null>(null);
   const [reason, setReason] = useState('');
   const [effectiveFrom, setEffectiveFrom] = useState('');
   return (
     <FormDialog
-      title="Propose appointment"
-      submitLabel="Send request"
+      title={tl('proposeAppointment')}
+      submitLabel={tl('sendRequest')}
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!positionId) e.positionId = 'Choose a position.';
-        if (!person) e.personId = 'Pick a person.';
+        if (!positionId) e.positionId = tl('choosePosition');
+        if (!person) e.personId = tl('pickAPerson');
         return e;
       }}
       onSubmit={async () => {
@@ -193,9 +198,9 @@ function ProposeDialog({
     >
       {(errors) => (
         <>
-          <Field label="Position" required error={errors.positionId}>
+          <Field label={tl('position')} required error={errors.positionId}>
             <Select data-autofocus value={positionId} onChange={(e) => setPositionId(e.target.value)}>
-              <option value="">Choose…</option>
+              <option value="">{tl('chooseEllipsis')}</option>
               {positions.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.title}
@@ -204,10 +209,10 @@ function ProposeDialog({
             </Select>
           </Field>
           <PersonPicker required value={person} onChange={setPerson} error={errors.personId} />
-          <Field label="Start date" hint="Optional." error={errors.effectiveFrom}>
+          <Field label={tl('startDate')} hint={tl('optionalHint')} error={errors.effectiveFrom}>
             <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
           </Field>
-          <Field label="Reason" error={errors.reason}>
+          <Field label={tl('reason')} error={errors.reason}>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={1000} />
           </Field>
         </>
@@ -229,18 +234,19 @@ function DecideDialog({
   onClose: () => void;
   onDone: () => void;
 }): React.ReactElement {
+  const tl = useTranslations('AdminLeadership');
   const approve = deciding.action === 'approve';
   const [note, setNote] = useState('');
   const [effectiveFrom, setEffectiveFrom] = useState('');
   return (
     <FormDialog
-      title={approve ? 'Approve appointment' : 'Reject request'}
+      title={approve ? tl('approveAppointment') : tl('rejectRequest')}
       description={
         approve
-          ? `${personName} will be appointed as ${positionTitle}.`
-          : `${personName} will not be appointed as ${positionTitle}.`
+          ? tl('willBeAppointed', { person: personName, position: positionTitle })
+          : tl('willNotBeAppointed', { person: personName, position: positionTitle })
       }
-      submitLabel={approve ? 'Approve' : 'Reject'}
+      submitLabel={approve ? tl('approve') : tl('reject')}
       submitVariant={approve ? 'primary' : 'destructive'}
       size="sm"
       onClose={onClose}
@@ -259,11 +265,11 @@ function DecideDialog({
       {(errors) => (
         <>
           {approve ? (
-            <Field label="Effective from" hint="Defaults to the requested date or today." error={errors.effectiveFrom}>
+            <Field label={tl('effectiveFrom')} hint={tl('effectiveFromHint')} error={errors.effectiveFrom}>
               <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
             </Field>
           ) : null}
-          <Field label="Note" error={errors.note}>
+          <Field label={tl('note')} error={errors.note}>
             <Textarea data-autofocus value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={1000} />
           </Field>
         </>

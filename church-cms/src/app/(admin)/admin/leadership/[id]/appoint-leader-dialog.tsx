@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
@@ -33,6 +35,8 @@ export function AppointLeaderDialog({
   onClose,
   onCreated,
 }: AppointLeaderDialogProps): React.ReactElement {
+  const tl = useTranslations('AdminLeadership');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Person[]>([]);
@@ -97,11 +101,11 @@ export function AppointLeaderDialog({
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: tl('pickPerson') });
       return;
     }
     if (!effectiveFrom.trim()) {
-      setFieldErrors({ effectiveFrom: 'Start date is required.' });
+      setFieldErrors({ effectiveFrom: tl('startRequired') });
       return;
     }
     setFieldErrors({});
@@ -133,7 +137,7 @@ export function AppointLeaderDialog({
         setFormError(
           err instanceof Error
             ? err.message
-            : 'Could not appoint this person.',
+            : tl('couldNotAppoint'),
         );
       }
     } finally {
@@ -145,8 +149,8 @@ export function AppointLeaderDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Appoint leader"
-      description={`Attach a person to ${positionTitle}. This does not grant system login permissions — assign roles separately under Church profile.`}
+      title={tl('appointLeader')}
+      description={tl('appointDescription', { title: positionTitle })}
       size="md"
       footer={
         <DialogFooter>
@@ -155,10 +159,10 @@ export function AppointLeaderDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Appoint'}
+            {submitting ? tl('saving') : tl('appoint')}
           </Button>
         </DialogFooter>
       }
@@ -180,9 +184,9 @@ export function AppointLeaderDialog({
         ) : null}
 
         <Field
-          label="Person"
+          label={tl('person')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? tc('searching') : tc('typeAtLeast2')}
           error={fieldErrors.personId}
         >
           <Input
@@ -193,7 +197,7 @@ export function AppointLeaderDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Search by name…"
+            placeholder={tc('searchByName')}
           />
         </Field>
 
@@ -223,20 +227,20 @@ export function AppointLeaderDialog({
           </ul>
         ) : null}
 
-        <Field label="Appointment kind" error={fieldErrors.appointmentKind}>
+        <Field label={tl('appointmentKind')} error={fieldErrors.appointmentKind}>
           <Select
             value={appointmentKind}
             onChange={(e) =>
               setAppointmentKind(e.target.value as 'substantive' | 'acting')
             }
           >
-            <option value="substantive">Substantive</option>
-            <option value="acting">Acting / temporary</option>
+            <option value="substantive">{tl('substantive')}</option>
+            <option value="acting">{tl('acting')}</option>
           </Select>
         </Field>
 
         <Field
-          label="Effective from"
+          label={tl('effectiveFrom')}
           required
           error={fieldErrors.effectiveFrom}
         >
@@ -248,12 +252,12 @@ export function AppointLeaderDialog({
           />
         </Field>
 
-        <Field label="Notes" error={fieldErrors.notes}>
+        <Field label={tl('notes')} error={fieldErrors.notes}>
           <Input
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             maxLength={2000}
-            placeholder="Optional"
+            placeholder={tl('optional')}
           />
         </Field>
       </form>
