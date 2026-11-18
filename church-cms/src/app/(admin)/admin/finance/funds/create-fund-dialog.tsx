@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -18,17 +19,15 @@ interface CreateFundDialogProps {
   onCreated: (fund: Fund) => void;
 }
 
-const FUND_TYPES = [
-  { value: 'unrestricted', label: 'Unrestricted (general)' },
-  { value: 'restricted', label: 'Restricted' },
-  { value: 'designated', label: 'Designated' },
-];
+const FUND_TYPE_VALUES = ['unrestricted', 'restricted', 'designated'] as const;
 
 export function CreateFundDialog({
   open,
   onClose,
   onCreated,
 }: CreateFundDialogProps): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -36,6 +35,19 @@ export function CreateFundDialog({
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
+
+  const fundTypeLabel = (value: string): string => {
+    switch (value) {
+      case 'unrestricted':
+        return tf('fundTypeUnrestricted');
+      case 'restricted':
+        return tf('fundTypeRestricted');
+      case 'designated':
+        return tf('fundTypeDesignated');
+      default:
+        return value;
+    }
+  };
 
   const reset = (): void => {
     setCode('');
@@ -87,7 +99,7 @@ export function CreateFundDialog({
         setFormError(body?.error ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create fund.',
+          err instanceof Error ? err.message : tf('couldNotCreateFund'),
         );
       }
       setSubmitting(false);
@@ -98,8 +110,8 @@ export function CreateFundDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New fund"
-      description="Funds categorise giving — e.g. a general fund for weekly offerings and a project fund for a building campaign."
+      title={tf('newFundTitle')}
+      description={tf('newFundDesc')}
       size="sm"
       footer={
         <DialogFooter>
@@ -108,10 +120,10 @@ export function CreateFundDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Create fund'}
+            {submitting ? tf('saving') : tf('createFund')}
           </Button>
         </DialogFooter>
       }
@@ -133,34 +145,34 @@ export function CreateFundDialog({
         ) : null}
 
         <Field
-          label="Code"
+          label={tf('code')}
           required
-          hint="Short identifier — letters, digits, underscore. Shown in ledgers."
+          hint={tf('codeHint')}
           error={fieldErrors.code}
         >
           <Input
             data-autofocus
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="GENERAL"
+            placeholder={tf('codePlaceholder')}
             maxLength={50}
           />
         </Field>
 
-        <Field label="Name" required error={fieldErrors.name}>
+        <Field label={tf('name')} required error={fieldErrors.name}>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="General Fund"
+            placeholder={tf('namePlaceholderFund')}
             maxLength={200}
           />
         </Field>
 
-        <Field label="Type" error={fieldErrors.fundType}>
+        <Field label={tf('type')} error={fieldErrors.fundType}>
           <Select value={fundType} onChange={(e) => setFundType(e.target.value)}>
-            {FUND_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {FUND_TYPE_VALUES.map((value) => (
+              <option key={value} value={value}>
+                {fundTypeLabel(value)}
               </option>
             ))}
           </Select>

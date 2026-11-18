@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   buttonClassName,
@@ -30,6 +31,8 @@ import { asList } from '../../_lib/list';
  * opens into the fuller list screen.
  */
 export function FinanceOverviewClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
   const [offerings, setOfferings] = useState<Offering[]>([]);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [pledges, setPledges] = useState<Pledge[]>([]);
@@ -53,29 +56,30 @@ export function FinanceOverviewClient(): React.ReactElement {
       setOfferings(asList(offRes.value));
     } else {
       setOfferings([]);
-      nextErrors.push(apiErrorMessage(offRes.reason, 'offerings'));
+      nextErrors.push(apiErrorMessage(offRes.reason, tf('labelOfferings'), tf));
     }
     if (fundRes.status === 'fulfilled') {
       setFunds(asList(fundRes.value));
     } else {
       setFunds([]);
-      nextErrors.push(apiErrorMessage(fundRes.reason, 'funds'));
+      nextErrors.push(apiErrorMessage(fundRes.reason, tf('labelFunds'), tf));
     }
     if (pledgeRes.status === 'fulfilled') {
       setPledges(asList(pledgeRes.value));
     } else {
       setPledges([]);
-      nextErrors.push(apiErrorMessage(pledgeRes.reason, 'pledges'));
+      nextErrors.push(apiErrorMessage(pledgeRes.reason, tf('labelPledges'), tf));
     }
     if (unpaidRes.status === 'fulfilled') {
       setUnpaidPledges(asList(unpaidRes.value));
     } else {
       setUnpaidPledges([]);
-      nextErrors.push(apiErrorMessage(unpaidRes.reason, 'unpaid pledges'));
+      nextErrors.push(apiErrorMessage(unpaidRes.reason, tf('labelUnpaidPledges'), tf));
     }
 
     setErrors(nextErrors);
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -97,8 +101,8 @@ export function FinanceOverviewClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Finance"
-        lede="A calm overview of giving — offerings, funds, and open pledges. Drill in for the full ledger."
+        title={t('finance')}
+        lede={t('financeLede')}
         actions={
           <>
             <Link
@@ -106,14 +110,14 @@ export function FinanceOverviewClient(): React.ReactElement {
               className={buttonClassName({ variant: 'secondary' })}
             >
               <Icon name="coin" size={14} />
-              Offerings
+              {tf('offerings')}
             </Link>
             <Link
               href="/admin/finance/funds"
               className={buttonClassName({ variant: 'primary' })}
             >
               <Icon name="briefcase" size={14} />
-              Funds
+              {tf('funds')}
             </Link>
           </>
         }
@@ -129,48 +133,48 @@ export function FinanceOverviewClient(): React.ReactElement {
 
       <section aria-labelledby="finance-metrics">
         <h2 id="finance-metrics" className="sr-only">
-          Giving metrics
+          {tf('givingMetrics')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric
-            label="Recent offerings"
+            label={tf('recentOfferings')}
             value={loading ? '—' : formatMoney(offeringsTotal, currency)}
             icon="coin"
             tone="peach"
             href="/admin/finance/offerings"
-            hint="Last 50 recorded"
+            hint={tf('last50Recorded')}
           />
           <Metric
-            label="Active funds"
+            label={tf('activeFunds')}
             value={loading ? '—' : formatCount(funds.filter((f) => f.status === 'active').length)}
             icon="briefcase"
             tone="gold"
             href="/admin/finance/funds"
-            hint={`${funds.length} total`}
+            hint={tf('fundsTotal', { count: funds.length })}
           />
           <Metric
-            label="Pledge total"
+            label={tf('pledgeTotal')}
             value={loading ? '—' : formatMoney(pledgeTotal, currency)}
             icon="hand"
             tone="sage"
             href="/admin/finance/pledges"
-            hint={`${pledges.length} pledges`}
+            hint={tf('pledgesCount', { count: pledges.length })}
           />
           <Metric
-            label="Still owed"
+            label={tf('stillOwed')}
             value={loading ? '—' : formatMoney(unpaidTotal, currency)}
             icon="alert-circle"
             tone="neutral"
             href="/admin/finance/pledges"
-            hint={`${unpaidPledges.length} open`}
+            hint={tf('openCount', { count: unpaidPledges.length })}
           />
         </div>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel
-          title="Recent offerings"
-          subtitle="Most recent first."
+          title={tf('recentOfferings')}
+          subtitle={tf('recentOfferingsSubtitle')}
           linkHref="/finance/offerings"
         >
           {loading ? (
@@ -179,8 +183,8 @@ export function FinanceOverviewClient(): React.ReactElement {
             <EmptyState
               icon="coin"
               tone="peach"
-              title="No offerings recorded"
-              description="Record a Sunday collection and it'll show up here."
+              title={tf('noOfferingsRecorded')}
+              description={tf('noOfferingsOverviewBody')}
               action={
                 <Link
                   href="/admin/finance/offerings"
@@ -189,7 +193,7 @@ export function FinanceOverviewClient(): React.ReactElement {
                     size: 'sm',
                   })}
                 >
-                  Record offering
+                  {tf('recordOffering')}
                 </Link>
               }
             />
@@ -211,11 +215,11 @@ export function FinanceOverviewClient(): React.ReactElement {
                   </div>
                   {o.postedAt ? (
                     <StatusPill tone="success" hideDot>
-                      Posted
+                      {tf('posted')}
                     </StatusPill>
                   ) : (
                     <StatusPill tone="pending" hideDot>
-                      Draft
+                      {tf('draft')}
                     </StatusPill>
                   )}
                 </li>
@@ -225,8 +229,8 @@ export function FinanceOverviewClient(): React.ReactElement {
         </Panel>
 
         <Panel
-          title="Funds"
-          subtitle="Where giving is directed."
+          title={tf('funds')}
+          subtitle={tf('fundsPanelSubtitle')}
           linkHref="/finance/funds"
         >
           {loading ? (
@@ -235,14 +239,14 @@ export function FinanceOverviewClient(): React.ReactElement {
             <EmptyState
               icon="briefcase"
               tone="gold"
-              title="No funds yet"
-              description="Create your first fund (e.g. general, missions) to categorise offerings."
+              title={tf('noFundsYet')}
+              description={tf('noFundsOverviewBody')}
               action={
                 <Link
                   href="/admin/finance/funds"
                   className={buttonClassName({ variant: 'primary', size: 'sm' })}
                 >
-                  New fund
+                  {tf('newFund')}
                 </Link>
               }
             />
@@ -251,10 +255,10 @@ export function FinanceOverviewClient(): React.ReactElement {
               <Table>
                 <THead>
                   <TR noHover>
-                    <TH>Code</TH>
-                    <TH>Name</TH>
-                    <TH>Type</TH>
-                    <TH>Status</TH>
+                    <TH>{tf('code')}</TH>
+                    <TH>{tf('name')}</TH>
+                    <TH>{tf('type')}</TH>
+                    <TH>{tf('status')}</TH>
                   </TR>
                 </THead>
                 <TBody>
@@ -269,7 +273,7 @@ export function FinanceOverviewClient(): React.ReactElement {
                         <StatusPill
                           tone={f.status === 'active' ? 'success' : 'neutral'}
                         >
-                          {titleCase(f.status)}
+                          {f.status === 'active' ? tf('statusActive') : titleCase(f.status)}
                         </StatusPill>
                       </TD>
                     </TR>
@@ -282,8 +286,8 @@ export function FinanceOverviewClient(): React.ReactElement {
       </div>
 
       <Panel
-        title="Open pledges"
-        subtitle="Pledges that haven't been fully received yet."
+        title={tf('openPledges')}
+        subtitle={tf('openPledgesSubtitle')}
         linkHref="/finance/pledges"
       >
         {loading ? (
@@ -292,19 +296,19 @@ export function FinanceOverviewClient(): React.ReactElement {
           <EmptyState
             icon="check-circle"
             tone="sage"
-            title="All pledges are up to date"
-            description="Nothing outstanding. We'll surface open pledges here when they arrive."
+            title={tf('allPledgesUpToDate')}
+            description={tf('allPledgesUpToDateBody')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Amount</TH>
-                  <TH>Applied</TH>
-                  <TH>Still owed</TH>
-                  <TH>Due</TH>
-                  <TH>Status</TH>
+                  <TH>{tf('amount')}</TH>
+                  <TH>{tf('applied')}</TH>
+                  <TH>{tf('stillOwed')}</TH>
+                  <TH>{tf('due')}</TH>
+                  <TH>{tf('status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -330,7 +334,7 @@ export function FinanceOverviewClient(): React.ReactElement {
                     </TD>
                     <TD>
                       <StatusPill tone={pledgeStatusTone(p.status)}>
-                        {titleCase(p.status)}
+                        {pledgeStatusLabel(p.status, tf)}
                       </StatusPill>
                     </TD>
                   </TR>
@@ -359,10 +363,29 @@ function pledgeStatusTone(
   }
 }
 
-function apiErrorMessage(reason: unknown, label: string): string {
-  if (reason instanceof ApiError) {
-    return `${label}: ${reason.status} ${reason.message}`;
+type FinanceT = (key: string, values?: Record<string, string | number>) => string;
+
+function pledgeStatusLabel(status: string, tf: FinanceT): string {
+  switch (status) {
+    case 'open':
+      return tf('statusOpen');
+    case 'partial':
+      return tf('statusPartial');
+    case 'fulfilled':
+      return tf('statusFulfilled');
+    case 'cancelled':
+      return tf('statusCancelled');
+    default:
+      return titleCase(status);
   }
-  if (reason instanceof Error) return `${label}: ${reason.message}`;
-  return `${label}: unavailable`;
+}
+
+function apiErrorMessage(reason: unknown, label: string, tf: FinanceT): string {
+  if (reason instanceof ApiError) {
+    return tf('loadErrorLabel', { label, detail: `${reason.status} ${reason.message}` });
+  }
+  if (reason instanceof Error) {
+    return tf('loadErrorLabel', { label, detail: reason.message });
+  }
+  return tf('loadErrorLabel', { label, detail: tf('unavailable') });
 }

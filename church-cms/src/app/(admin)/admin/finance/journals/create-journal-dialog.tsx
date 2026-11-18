@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import { Button, Field, Input, Select } from '@/app/_ekklesia/ui';
 import type { Fund } from '../../../_lib/api-types';
@@ -41,6 +42,7 @@ export function CreateJournalDialog({
   onClose: () => void;
   onCreated: () => void;
 }): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
   const [yearId, setYearId] = useState(years[0]?.id ?? '');
   const [entryNumber, setEntryNumber] = useState('');
   const [journalDate, setJournalDate] = useState(todayLocalIso);
@@ -57,19 +59,19 @@ export function CreateJournalDialog({
 
   return (
     <FormDialog
-      title="New journal"
-      description="Saved as a draft. Post it from the list once it balances."
-      submitLabel="Save draft"
+      title={tf('newJournalTitle')}
+      description={tf('newJournalDesc')}
+      submitLabel={tf('saveDraft')}
       size="lg"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!yearId) e.financialYearId = 'Create or open a financial year first.';
-        if (!entryNumber.trim()) e.entryNumber = 'Enter an entry number, e.g. JV-0001.';
-        if (lines.some((l) => !l.accountId)) e.lines = 'Every line needs an account.';
+        if (!yearId) e.financialYearId = tf('createOrOpenYear');
+        if (!entryNumber.trim()) e.entryNumber = tf('enterEntryNumber');
+        if (lines.some((l) => !l.accountId)) e.lines = tf('everyLineNeedsAccount');
         else if (lines.some((l) => (minor(l.debit) > 0) === (minor(l.credit) > 0)))
-          e.lines = 'Each line needs either a debit or a credit amount.';
-        else if (!balanced) e.lines = 'Debits and credits must be equal.';
+          e.lines = tf('eachLineDebitOrCredit');
+        else if (!balanced) e.lines = tf('debitsCreditsEqual');
         return e;
       }}
       onSubmit={async () => {
@@ -95,9 +97,9 @@ export function CreateJournalDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Financial year" required error={errors.financialYearId}>
+            <Field label={tf('financialYear')} required error={errors.financialYearId}>
               <Select value={yearId} onChange={(e) => setYearId(e.target.value)}>
-                {years.length === 0 ? <option value="">No open year</option> : null}
+                {years.length === 0 ? <option value="">{tf('noOpenYear')}</option> : null}
                 {years.map((y) => (
                   <option key={y.id} value={y.id}>
                     {y.label}
@@ -105,7 +107,7 @@ export function CreateJournalDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Entry number" required error={errors.entryNumber}>
+            <Field label={tf('entryNumber')} required error={errors.entryNumber}>
               <Input
                 data-autofocus
                 value={entryNumber}
@@ -114,7 +116,7 @@ export function CreateJournalDialog({
                 maxLength={50}
               />
             </Field>
-            <Field label="Date" required error={errors.journalDate}>
+            <Field label={tf('date')} required error={errors.journalDate}>
               <Input
                 type="date"
                 value={journalDate}
@@ -122,23 +124,23 @@ export function CreateJournalDialog({
               />
             </Field>
           </div>
-          <Field label="Memo" error={errors.memo}>
+          <Field label={tf('memo')} error={errors.memo}>
             <Input value={memo} onChange={(e) => setMemo(e.target.value)} maxLength={500} />
           </Field>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium text-foreground">Lines</legend>
+            <legend className="mb-1 text-sm font-medium text-foreground">{tf('lines')}</legend>
             {lines.map((l, i) => (
               <div
                 key={l.key}
                 className="grid gap-2 rounded-md border border-border p-2 sm:grid-cols-[2fr_1.2fr_1fr_1fr_auto]"
               >
                 <Select
-                  aria-label={`Line ${i + 1} account`}
+                  aria-label={tf('lineAccountAria', { n: i + 1 })}
                   value={l.accountId}
                   onChange={(e) => update(l.key, { accountId: e.target.value })}
                 >
-                  <option value="">Account…</option>
+                  <option value="">{tf('accountEllipsis')}</option>
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
                       {accountLabel(a)}
@@ -146,11 +148,11 @@ export function CreateJournalDialog({
                   ))}
                 </Select>
                 <Select
-                  aria-label={`Line ${i + 1} fund`}
+                  aria-label={tf('lineFundAria', { n: i + 1 })}
                   value={l.fundId}
                   onChange={(e) => update(l.key, { fundId: e.target.value })}
                 >
-                  <option value="">No fund</option>
+                  <option value="">{tf('noFund')}</option>
                   {funds.map((f) => (
                     <option key={f.id} value={f.id}>
                       {f.name}
@@ -158,16 +160,16 @@ export function CreateJournalDialog({
                   ))}
                 </Select>
                 <Input
-                  aria-label={`Line ${i + 1} debit`}
+                  aria-label={tf('lineDebitAria', { n: i + 1 })}
                   inputMode="decimal"
-                  placeholder="Debit"
+                  placeholder={tf('debit')}
                   value={l.debit}
                   onChange={(e) => update(l.key, { debit: e.target.value, credit: '' })}
                 />
                 <Input
-                  aria-label={`Line ${i + 1} credit`}
+                  aria-label={tf('lineCreditAria', { n: i + 1 })}
                   inputMode="decimal"
-                  placeholder="Credit"
+                  placeholder={tf('credit')}
                   value={l.credit}
                   onChange={(e) => update(l.key, { credit: e.target.value, debit: '' })}
                 />
@@ -175,7 +177,7 @@ export function CreateJournalDialog({
                   variant="ghost"
                   size="sm"
                   iconLeft="trash"
-                  aria-label={`Remove line ${i + 1}`}
+                  aria-label={tf('removeLineAria', { n: i + 1 })}
                   disabled={lines.length <= 2}
                   onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}
                 />
@@ -188,7 +190,7 @@ export function CreateJournalDialog({
                 iconLeft="plus"
                 onClick={() => setLines((ls) => [...ls, blankLine()])}
               >
-                Add line
+                {tf('addLine')}
               </Button>
               <p
                 className={
@@ -197,8 +199,11 @@ export function CreateJournalDialog({
                     : 'text-sm text-muted-foreground'
                 }
               >
-                Debits {formatMoney(debits)} · Credits {formatMoney(credits)}
-                {balanced ? ' · Balanced' : ''}
+                {tf('debitsCreditsBalance', {
+                  debits: formatMoney(debits),
+                  credits: formatMoney(credits),
+                })}
+                {balanced ? tf('balanced') : ''}
               </p>
             </div>
             {errors.lines ? (

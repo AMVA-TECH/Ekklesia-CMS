@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -19,7 +20,7 @@ import {
   TR,
 } from '@/app/_ekklesia/ui';
 import { FormDialog, ListState, useRowAction } from '../../../_components/kit';
-import { formatDate, titleCase } from '../../../_lib/format';
+import { formatDate } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import {
   ACCOUNT_TYPES,
@@ -29,11 +30,30 @@ import {
 } from '../_lib/finance-types';
 
 export function AccountsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
   const accounts = useApiList<Account>('/api/v1/accounts');
   const years = useApiList<FinancialYear>('/api/v1/financial-years');
   const [dialog, setDialog] = useState<'account' | 'year' | null>(null);
   const [closing, setClosing] = useState<FinancialYear | null>(null);
   const { busyKey, run } = useRowAction();
+
+  const accountTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'asset':
+        return tf('accountTypeAsset');
+      case 'liability':
+        return tf('accountTypeLiability');
+      case 'equity':
+        return tf('accountTypeEquity');
+      case 'income':
+        return tf('accountTypeIncome');
+      case 'expense':
+        return tf('accountTypeExpense');
+      default:
+        return type;
+    }
+  };
 
   const grouped = useMemo(
     () =>
@@ -53,16 +73,16 @@ export function AccountsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Accounts & years"
-        lede="The chart of accounts every journal, offering and expense posts to, and the financial years they fall in."
+        title={t('accounts')}
+        lede={t('accountsLede')}
       />
 
       <Panel
-        title="Financial years"
-        subtitle="Journals can only be posted into an open year."
+        title={tf('financialYears')}
+        subtitle={tf('financialYearsSubtitle')}
         actions={
           <Button size="sm" iconLeft="plus" onClick={() => setDialog('year')}>
-            New year
+            {tf('newYear')}
           </Button>
         }
         flush
@@ -75,19 +95,19 @@ export function AccountsClient(): React.ReactElement {
           onRetry={() => void years.reload()}
           empty={{
             icon: 'calendar',
-            title: 'No financial years yet',
-            description: 'Create the current year before recording journals.',
+            title: tf('noFinancialYearsYet'),
+            description: tf('noFinancialYearsBody'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Year</TH>
-                  <TH>Starts</TH>
-                  <TH>Ends</TH>
-                  <TH>Status</TH>
-                  <TH className="text-right">Actions</TH>
+                  <TH>{tf('year')}</TH>
+                  <TH>{tf('starts')}</TH>
+                  <TH>{tf('ends')}</TH>
+                  <TH>{tf('status')}</TH>
+                  <TH className="text-right">{tf('actions')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -98,7 +118,7 @@ export function AccountsClient(): React.ReactElement {
                     <TD className="text-sm">{formatDate(y.endsOn)}</TD>
                     <TD>
                       <StatusPill tone={y.status === 'open' ? 'success' : 'neutral'}>
-                        {titleCase(y.status)}
+                        {y.status === 'open' ? tf('statusOpen') : tf('statusClosed')}
                       </StatusPill>
                     </TD>
                     <TD className="text-right">
@@ -110,7 +130,7 @@ export function AccountsClient(): React.ReactElement {
                           disabled={busyKey !== null}
                           onClick={() => setClosing(y)}
                         >
-                          Close year
+                          {tf('closeYear')}
                         </Button>
                       ) : null}
                     </TD>
@@ -123,11 +143,15 @@ export function AccountsClient(): React.ReactElement {
       </Panel>
 
       <Panel
-        title="Chart of accounts"
-        subtitle={accounts.loading ? 'Loading…' : `${accounts.items.length} accounts`}
+        title={tf('chartOfAccounts')}
+        subtitle={
+          accounts.loading
+            ? tf('loading')
+            : tf('accountsCount', { count: accounts.items.length })
+        }
         actions={
           <Button size="sm" iconLeft="plus" onClick={() => setDialog('account')}>
-            New account
+            {tf('newAccount')}
           </Button>
         }
         flush
@@ -140,19 +164,18 @@ export function AccountsClient(): React.ReactElement {
           onRetry={() => void accounts.reload()}
           empty={{
             icon: 'wallet',
-            title: 'No accounts yet',
-            description:
-              'Add at least a bank/cash asset account and an offerings income account.',
+            title: tf('noAccountsYet'),
+            description: tf('noAccountsBody'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Code</TH>
-                  <TH>Name</TH>
-                  <TH>Parent</TH>
-                  <TH>Status</TH>
+                  <TH>{tf('code')}</TH>
+                  <TH>{tf('name')}</TH>
+                  <TH>{tf('parent')}</TH>
+                  <TH>{tf('status')}</TH>
                 </TR>
               </THead>
               {grouped.map((g) => (
@@ -162,7 +185,7 @@ export function AccountsClient(): React.ReactElement {
                       colSpan={4}
                       className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                     >
-                      {titleCase(g.type)}
+                      {accountTypeLabel(g.type)}
                     </TD>
                   </TR>
                   {g.rows.map((a) => (
@@ -174,7 +197,7 @@ export function AccountsClient(): React.ReactElement {
                       </TD>
                       <TD>
                         <StatusPill tone={a.status === 'active' ? 'success' : 'neutral'}>
-                          {titleCase(a.status)}
+                          {a.status === 'active' ? tf('statusActive') : a.status}
                         </StatusPill>
                       </TD>
                     </TR>
@@ -207,9 +230,9 @@ export function AccountsClient(): React.ReactElement {
       ) : null}
       {closing ? (
         <FormDialog
-          title={`Close ${closing.label}?`}
-          description="No more journals can be posted into a closed year. This cannot be undone from the app."
-          submitLabel="Close year"
+          title={tf('closeYearTitle', { label: closing.label })}
+          description={tf('closeYearDesc')}
+          submitLabel={tf('closeYear')}
           submitVariant="destructive"
           size="sm"
           onClose={() => setClosing(null)}
@@ -220,7 +243,7 @@ export function AccountsClient(): React.ReactElement {
               year.id,
               () =>
                 apiFetch(`/api/v1/financial-years/${year.id}/close`, { method: 'POST' }),
-              { success: `${year.label} closed`, failure: 'Could not close the year' },
+              { success: tf('yearClosed', { label: year.label }), failure: tf('couldNotCloseYear') },
             );
             if (ok) void years.reload();
           }}
@@ -241,22 +264,40 @@ function CreateAccountDialog({
   onClose: () => void;
   onCreated: () => void;
 }): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [accountType, setAccountType] = useState<string>('asset');
   const [parentId, setParentId] = useState('');
   const parents = accounts.filter((a) => a.accountType === accountType);
 
+  const accountTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'asset':
+        return tf('accountTypeAsset');
+      case 'liability':
+        return tf('accountTypeLiability');
+      case 'equity':
+        return tf('accountTypeEquity');
+      case 'income':
+        return tf('accountTypeIncome');
+      case 'expense':
+        return tf('accountTypeExpense');
+      default:
+        return type;
+    }
+  };
+
   return (
     <FormDialog
-      title="New account"
-      submitLabel="Create account"
+      title={tf('newAccountTitle')}
+      submitLabel={tf('createAccount')}
       size="sm"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!code.trim()) e.code = 'Enter a code, e.g. 1000.';
-        if (!name.trim()) e.name = 'Enter a name.';
+        if (!code.trim()) e.code = tf('enterCode');
+        if (!name.trim()) e.name = tf('enterName');
         return e;
       }}
       onSubmit={async () => {
@@ -274,24 +315,24 @@ function CreateAccountDialog({
     >
       {(errors) => (
         <>
-          <Field label="Code" required error={errors.code}>
+          <Field label={tf('code')} required error={errors.code}>
             <Input
               data-autofocus
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="1000"
+              placeholder={tf('codePlaceholderAccount')}
               maxLength={50}
             />
           </Field>
-          <Field label="Name" required error={errors.name}>
+          <Field label={tf('name')} required error={errors.name}>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Cash at bank"
+              placeholder={tf('namePlaceholderAccount')}
               maxLength={200}
             />
           </Field>
-          <Field label="Type" error={errors.accountType}>
+          <Field label={tf('type')} error={errors.accountType}>
             <Select
               value={accountType}
               onChange={(e) => {
@@ -299,16 +340,16 @@ function CreateAccountDialog({
                 setParentId('');
               }}
             >
-              {ACCOUNT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {titleCase(t)}
+              {ACCOUNT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {accountTypeLabel(type)}
                 </option>
               ))}
             </Select>
           </Field>
-          <Field label="Parent account" hint="Optional grouping." error={errors.parentId}>
+          <Field label={tf('parentAccount')} hint={tf('parentAccountHint')} error={errors.parentId}>
             <Select value={parentId} onChange={(e) => setParentId(e.target.value)}>
-              <option value="">None</option>
+              <option value="">{tf('none')}</option>
               {parents.map((a) => (
                 <option key={a.id} value={a.id}>
                   {accountLabel(a)}
@@ -329,22 +370,23 @@ function CreateYearDialog({
   onClose: () => void;
   onCreated: () => void;
 }): React.ReactElement {
+  const tf = useTranslations('AdminFinance');
   const [label, setLabel] = useState('');
   const [startsOn, setStartsOn] = useState('');
   const [endsOn, setEndsOn] = useState('');
 
   return (
     <FormDialog
-      title="New financial year"
-      submitLabel="Create year"
+      title={tf('newYearTitle')}
+      submitLabel={tf('createYear')}
       size="sm"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!label.trim()) e.label = 'Enter a label, e.g. FY2027.';
-        if (!startsOn) e.startsOn = 'Choose a start date.';
-        if (!endsOn) e.endsOn = 'Choose an end date.';
-        if (startsOn && endsOn && endsOn <= startsOn) e.endsOn = 'End must be after the start.';
+        if (!label.trim()) e.label = tf('enterLabel');
+        if (!startsOn) e.startsOn = tf('chooseStartDate');
+        if (!endsOn) e.endsOn = tf('chooseEndDate');
+        if (startsOn && endsOn && endsOn <= startsOn) e.endsOn = tf('endAfterStart');
         return e;
       }}
       onSubmit={async () => {
@@ -357,20 +399,20 @@ function CreateYearDialog({
     >
       {(errors) => (
         <>
-          <Field label="Label" required error={errors.label}>
+          <Field label={tf('label')} required error={errors.label}>
             <Input
               data-autofocus
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="FY2027"
+              placeholder={tf('labelPlaceholder')}
               maxLength={50}
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Starts on" required error={errors.startsOn}>
+            <Field label={tf('startsOn')} required error={errors.startsOn}>
               <Input type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
             </Field>
-            <Field label="Ends on" required error={errors.endsOn}>
+            <Field label={tf('endsOn')} required error={errors.endsOn}>
               <Input type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
             </Field>
           </div>

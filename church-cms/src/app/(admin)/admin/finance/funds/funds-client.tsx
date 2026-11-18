@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -24,6 +25,9 @@ import { titleCase } from '../../../_lib/format';
 import { CreateFundDialog } from './create-fund-dialog';
 
 export function FundsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const tf = useTranslations('AdminFinance');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,11 +47,12 @@ export function FundsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load funds.',
+            : tf('unableLoadFunds'),
       );
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useLoadEffect(load);
@@ -55,18 +60,18 @@ export function FundsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Funds"
-        lede="How giving is categorised — general offerings, designated projects, and restricted funds."
+        title={t('funds')}
+        lede={t('fundsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New fund
+            {tf('newFund')}
           </Button>
         }
       />
 
       <Panel
-        title="All funds"
-        subtitle={error ?? `${funds.length} total`}
+        title={tf('allFunds')}
+        subtitle={error ?? tf('fundsCountTotal', { count: funds.length })}
         flush
       >
         {error ? (
@@ -74,7 +79,7 @@ export function FundsClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                Try again
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -87,15 +92,15 @@ export function FundsClient(): React.ReactElement {
           <EmptyState
             icon="briefcase"
             tone="gold"
-            title="No funds yet"
-            description="Add a general fund to start, then add project-specific funds as needed."
+            title={tf('noFundsYet')}
+            description={tf('noFundsBody')}
             action={
               <Button
                 iconLeft="plus"
                 size="sm"
                 onClick={() => setCreateOpen(true)}
               >
-                New fund
+                {tf('newFund')}
               </Button>
             }
           />
@@ -104,10 +109,10 @@ export function FundsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Code</TH>
-                  <TH>Name</TH>
-                  <TH>Type</TH>
-                  <TH>Status</TH>
+                  <TH>{tf('code')}</TH>
+                  <TH>{tf('name')}</TH>
+                  <TH>{tf('type')}</TH>
+                  <TH>{tf('status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -122,7 +127,7 @@ export function FundsClient(): React.ReactElement {
                       <StatusPill
                         tone={f.status === 'active' ? 'success' : 'neutral'}
                       >
-                        {titleCase(f.status)}
+                        {f.status === 'active' ? tf('statusActive') : titleCase(f.status)}
                       </StatusPill>
                     </TD>
                   </TR>
@@ -139,8 +144,8 @@ export function FundsClient(): React.ReactElement {
         onCreated={(f) => {
           push({
             tone: 'success',
-            title: 'Fund created',
-            message: `${f.name} is active.`,
+            title: tf('fundCreated'),
+            message: tf('fundActiveMessage', { name: f.name }),
           });
           setCreateOpen(false);
           void load();
