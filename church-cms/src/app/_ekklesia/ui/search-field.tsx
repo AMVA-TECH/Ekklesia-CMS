@@ -1,12 +1,13 @@
 'use client';
 
 import { forwardRef, useId, type InputHTMLAttributes } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon } from '../icons';
 import { cn } from './utils';
 
 /** Props for `<SearchField>`. */
 export interface SearchFieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  /** Accessible label — defaults to "Search". Shown as placeholder if `placeholder` omitted. */
+  /** Accessible label — defaults to translated "Search". Shown as placeholder if `placeholder` omitted. */
   label?: string;
   /** Compact height. */
   dense?: boolean;
@@ -22,16 +23,18 @@ export interface SearchFieldProps extends InputHTMLAttributes<HTMLInputElement> 
  */
 export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
   function SearchField(
-    { label = 'Search', placeholder, dense = false, className, id, onClear, value, ...rest },
+    { label, placeholder, dense = false, className, id, onClear, value, ...rest },
     ref,
   ) {
+    const t = useTranslations('Common');
+    const resolvedLabel = label ?? t('search');
     const reactId = useId();
     const inputId = id ?? `search-${reactId}`;
     const hasValue = value !== undefined && value !== '';
     return (
       <div className={cn('relative block w-full', className)}>
         <label htmlFor={inputId} className="sr-only">
-          {label}
+          {resolvedLabel}
         </label>
         <Icon
           name="search"
@@ -43,7 +46,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
           ref={ref}
           type="search"
           value={value}
-          placeholder={placeholder ?? label}
+          placeholder={placeholder ?? resolvedLabel}
           className={cn(
             'block w-full rounded-md border border-border bg-surface pl-9 pr-9 text-base',
             dense ? 'h-10' : 'h-11',
@@ -57,7 +60,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
           <button
             type="button"
             onClick={onClear}
-            aria-label="Clear search"
+            aria-label={t('clearSearch')}
             className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
           >
             <Icon name="close" size={14} />

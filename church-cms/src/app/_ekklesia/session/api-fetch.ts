@@ -19,12 +19,23 @@ const DEV_HEADERS_STORAGE_KEY = 'ek-dev-headers';
 export class ApiError extends Error {
   readonly status: number;
   readonly body: unknown;
+  /** Stable problem+json `code` when the API returned one (translate via ApiErrors). */
+  readonly code?: string;
+  /** Server `detail` when present (may be English; prefer `code` for UI). */
+  readonly detail?: string;
 
-  constructor(message: string, status: number, body: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    body: unknown,
+    options?: { code?: string; detail?: string },
+  ) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.body = body;
+    this.code = options?.code;
+    this.detail = options?.detail;
   }
 }
 
@@ -132,16 +143,35 @@ export async function apiFetch<T = unknown>(
 
 async function buildApiError(res: Response): Promise<ApiError> {
   const body = await safeJson(res);
+  const problem =
+    body && typeof body === 'object'
+      ? (body as {
+          error?: unknown;
+          message?: unknown;
+          detail?: unknown;
+          title?: unknown;
+          code?: unknown;
+        })
+      : null;
+  const code =
+    problem && typeof problem.code === 'string' ? problem.code : undefined;
+  const detail =
+    problem && typeof problem.detail === 'string'
+      ? problem.detail
+      : problem && typeof problem.title === 'string'
+        ? problem.title
+        : undefined;
   const message =
-    (body && typeof body === 'object' && 'error' in body
-      ? String((body as { error: unknown }).error)
+    (problem && typeof problem.error === 'string'
+      ? problem.error
       : undefined) ||
-    (body && typeof body === 'object' && 'message' in body
-      ? String((body as { message: unknown }).message)
+    (problem && typeof problem.message === 'string'
+      ? problem.message
       : undefined) ||
+    detail ||
     res.statusText ||
     `Request failed (${res.status})`;
-  return new ApiError(message, res.status, body);
+  return new ApiError(message, res.status, body, { code, detail });
 }
 
 async function safeJson(res: Response): Promise<unknown> {

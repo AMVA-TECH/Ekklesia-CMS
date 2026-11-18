@@ -1,4 +1,7 @@
+'use client';
+
 import type { AnchorHTMLAttributes } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from './utils';
 
 /** Props for `<SkipLink>`. */
@@ -19,6 +22,7 @@ export function SkipLink({
   children,
   ...rest
 }: SkipLinkProps): React.ReactElement {
+  const t = useTranslations('Common');
   return (
     <a
       href={`#${targetId}`}
@@ -30,7 +34,7 @@ export function SkipLink({
       )}
       {...rest}
     >
-      {children ?? 'Skip to main content'}
+      {children ?? t('skipToContent')}
     </a>
   );
 }

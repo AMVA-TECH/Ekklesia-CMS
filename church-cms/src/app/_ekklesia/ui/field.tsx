@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Children,
   cloneElement,
@@ -7,6 +9,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from './utils';
 
 /** Props for `<Field>` form row wrapper. */
@@ -56,6 +59,7 @@ export function Field({
   children,
   ...rest
 }: FieldProps): React.ReactElement {
+  const t = useTranslations('Common');
   const reactId = useId();
   const controlId = htmlFor ?? idProp ?? `field-${reactId}`;
   const hintId = hint ? `${controlId}-hint` : undefined;
@@ -91,7 +95,9 @@ export function Field({
               *
             </span>
           ) : null}
-          {required ? <span className="sr-only"> (required)</span> : null}
+          {required ? (
+            <span className="sr-only"> ({t('required')})</span>
+          ) : null}
         </label>
         {labelAccessory ? (
           <span className="text-xs text-muted-foreground">{labelAccessory}</span>

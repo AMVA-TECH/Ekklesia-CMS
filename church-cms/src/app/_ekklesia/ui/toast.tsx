@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import { useIsClient } from './hooks';
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
@@ -134,6 +135,7 @@ function ToastItem({
   toast: Toast;
   onDismiss: (id: string) => void;
 }): React.ReactElement {
+  const t = useTranslations('Common');
   const duration = toast.duration ?? 5000;
   useEffect(() => {
     if (!duration) return;
@@ -160,7 +162,7 @@ function ToastItem({
       <button
         type="button"
         onClick={() => onDismiss(toast.id)}
-        aria-label="Dismiss notification"
+        aria-label={t('dismissNotification')}
         className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-sm text-current/80 hover:text-current focus-ring"
       >
         <Icon name="close" size={14} />
