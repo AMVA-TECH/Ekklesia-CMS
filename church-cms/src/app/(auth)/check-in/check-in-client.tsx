@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import { Button, Field, Input } from '@/app/_ekklesia/ui';
 
@@ -18,6 +19,7 @@ interface CheckInResult {
  * Posts to the public `POST /api/v1/attendance/check-ins` endpoint.
  */
 export function CheckInClient(): React.ReactElement {
+  const t = useTranslations('CheckIn');
   const formId = useId();
   const searchParams = useSearchParams();
   const token = useMemo(
@@ -40,11 +42,11 @@ export function CheckInClient(): React.ReactElement {
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
     if (!token) {
-      setFormError('This check-in link is missing its code. Ask an usher for a fresh QR.');
+      setFormError(t('errorMissingToken'));
       return;
     }
     if (!trimmedName && !trimmedPhone) {
-      setFormError('Enter your name or phone so we can record you.');
+      setFormError(t('errorIdentity'));
       return;
     }
 
@@ -68,7 +70,7 @@ export function CheckInClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Check-in did not go through. Please try again or see an usher.',
+            : t('errorGeneric'),
       );
     } finally {
       inFlight.current = false;
@@ -80,11 +82,10 @@ export function CheckInClient(): React.ReactElement {
     return (
       <div className="flex flex-col gap-3">
         <h1 className="font-[family-name:var(--font-scripture)] text-2xl font-semibold tracking-tight">
-          Check in
+          {t('missingTokenTitle')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Scan the attendance QR at the gathering, or ask an usher for help.
-          This page needs a valid check-in code in the link.
+          {t('missingTokenBody')}
         </p>
       </div>
     );
@@ -94,11 +95,10 @@ export function CheckInClient(): React.ReactElement {
     return (
       <div className="flex flex-col gap-3" role="status">
         <h1 className="font-[family-name:var(--font-scripture)] text-2xl font-semibold tracking-tight">
-          You’re checked in
+          {t('doneTitle')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Thanks — your attendance for this gathering has been recorded. You
-          can close this page.
+          {t('doneBody')}
         </p>
       </div>
     );
@@ -108,10 +108,10 @@ export function CheckInClient(): React.ReactElement {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="font-[family-name:var(--font-scripture)] text-2xl font-semibold tracking-tight">
-          Check in
+          {t('title')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tell us who you are so we can mark you present.
+          {t('subtitle')}
         </p>
       </div>
 
@@ -131,24 +131,24 @@ export function CheckInClient(): React.ReactElement {
           </div>
         ) : null}
 
-        <Field label="Your name" hint="Preferred if you are visiting.">
+        <Field label={t('nameLabel')} hint={t('nameHint')}>
           <Input
             data-autofocus
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Ada Noah"
+            placeholder={t('namePlaceholder')}
             disabled={submitting}
           />
         </Field>
 
-        <Field label="Phone" hint="Optional — helps match an existing record.">
+        <Field label={t('phoneLabel')} hint={t('phoneHint')}>
           <Input
             type="tel"
             autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g. +254…"
+            placeholder={t('phonePlaceholder')}
             disabled={submitting}
           />
         </Field>
@@ -159,7 +159,7 @@ export function CheckInClient(): React.ReactElement {
           disabled={submitting || done}
           className="w-full"
         >
-          {submitting ? 'Checking in…' : 'Check in'}
+          {submitting ? t('submitting') : t('submit')}
         </Button>
       </form>
     </div>
