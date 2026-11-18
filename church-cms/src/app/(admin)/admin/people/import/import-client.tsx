@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -42,9 +43,8 @@ const TEMPLATE =
   'displayName,fullName,phone,email,dob,locale\n' +
   'Amani,Amani Juma,+255712345678,amani@example.com,1990-04-12,sw\n';
 
-const STEPS = ['Upload', 'Check', 'Review', 'Import'] as const;
-
 export function ImportClient(): React.ReactElement {
+  const tp = useTranslations('AdminPeople');
   const { push } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [job, setJob] = useState<ImportJob | null>(null);
@@ -52,6 +52,13 @@ export function ImportClient(): React.ReactElement {
   const [strategy, setStrategy] = useState<'skip_conflicts' | 'update'>('skip_conflicts');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const steps = [
+    tp('stepUpload'),
+    tp('stepCheck'),
+    tp('stepReview'),
+    tp('stepImport'),
+  ] as const;
 
   const step = !job
     ? 0
@@ -67,7 +74,7 @@ export function ImportClient(): React.ReactElement {
     try {
       await fn();
     } catch (err) {
-      setError(errorMessage(err, 'The import step failed.'));
+      setError(errorMessage(err, tp('importStepFailed')));
     } finally {
       setBusy(false);
     }
@@ -103,8 +110,11 @@ export function ImportClient(): React.ReactElement {
       setJob(result.job);
       push({
         tone: 'success',
-        title: 'Import complete',
-        message: `${result.job.summary?.created ?? 0} added, ${result.job.summary?.updated ?? 0} updated.`,
+        title: tp('importCompleteToast'),
+        message: tp('importCompleteToastMsg', {
+          created: result.job.summary?.created ?? 0,
+          updated: result.job.summary?.updated ?? 0,
+        }),
       });
     });
 
@@ -121,13 +131,13 @@ export function ImportClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/people">People</Link>}
-        title="Import members"
-        lede="Add many people at once from Excel. Nothing is saved until you confirm the final step."
+        eyebrow={<Link href="/admin/people">{tp('peopleEyebrow')}</Link>}
+        title={tp('importTitle')}
+        lede={tp('importLede')}
       />
 
-      <ol className="flex flex-wrap gap-2" aria-label="Import progress">
-        {STEPS.map((label, i) => (
+      <ol className="flex flex-wrap gap-2" aria-label={tp('importProgressAria')}>
+        {steps.map((label, i) => (
           <li key={label}>
             <StatusPill tone={i < step ? 'success' : i === step ? 'pending' : 'neutral'}>
               {i + 1}. {label}
@@ -139,22 +149,17 @@ export function ImportClient(): React.ReactElement {
       {error ? <InlineAlert>{error}</InlineAlert> : null}
 
       {step === 0 ? (
-        <Panel title="1. Upload a CSV file">
+        <Panel title={tp('uploadPanelTitle')}>
           <div className="flex flex-col gap-4 text-sm">
-            <p className="text-muted-foreground">
-              In Excel choose <strong>File → Save As → CSV (UTF-8)</strong>. Use one row per person with
-              these column headers: <code>displayName</code> (required), <code>fullName</code>,{' '}
-              <code>phone</code> (international format, e.g. +255712345678), <code>email</code>,{' '}
-              <code>dob</code> (YYYY-MM-DD) and <code>locale</code> (sw or en). Up to 5,000 rows.
-            </p>
+            <p className="text-muted-foreground">{tp('uploadInstructions')}</p>
             <a
               href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`}
               download="ekklesia-members-template.csv"
               className={buttonClassName({ variant: 'secondary', size: 'sm', className: 'self-start' })}
             >
-              Download template
+              {tp('downloadTemplate')}
             </a>
-            <Field label="CSV file" required>
+            <Field label={tp('csvFile')} required>
               <input
                 type="file"
                 accept=".csv,text/csv"
@@ -163,7 +168,7 @@ export function ImportClient(): React.ReactElement {
               />
             </Field>
             <Button className="self-start" disabled={!file} loading={busy} onClick={() => void upload()}>
-              Upload and check
+              {tp('uploadAndCheck')}
             </Button>
           </div>
         </Panel>
@@ -171,21 +176,21 @@ export function ImportClient(): React.ReactElement {
 
       {job && step >= 1 ? (
         <div className="grid gap-3 sm:grid-cols-4">
-          <Metric label="Rows" value={String(s.total ?? job.rowCount)} icon="file" tone="neutral" />
-          <Metric label="Ready" value={String(s.ok ?? 0)} icon="check-circle" tone="sage" />
-          <Metric label="Already exist" value={String(s.conflict ?? 0)} icon="users" tone="gold" />
-          <Metric label="Errors" value={String(s.error ?? 0)} icon="alert-circle" tone="peach" />
+          <Metric label={tp('metricRows')} value={String(s.total ?? job.rowCount)} icon="file" tone="neutral" />
+          <Metric label={tp('metricReady')} value={String(s.ok ?? 0)} icon="check-circle" tone="sage" />
+          <Metric label={tp('metricAlreadyExist')} value={String(s.conflict ?? 0)} icon="users" tone="gold" />
+          <Metric label={tp('metricErrors')} value={String(s.error ?? 0)} icon="alert-circle" tone="peach" />
         </div>
       ) : null}
 
       {job && step === 2 ? (
         <>
           <Panel
-            title="Rows needing attention"
+            title={tp('rowsNeedingAttention')}
             subtitle={
               problems.length === 0
-                ? 'Every row is ready to import.'
-                : 'Errors are skipped. Conflicts match an existing person by phone or email.'
+                ? tp('everyRowReady')
+                : tp('errorsSkippedConflicts')
             }
             flush
           >
@@ -194,24 +199,24 @@ export function ImportClient(): React.ReactElement {
                 <Table>
                   <THead>
                     <TR noHover>
-                      <TH>Row</TH>
-                      <TH>Name</TH>
-                      <TH>Status</TH>
-                      <TH>Problem</TH>
+                      <TH>{tp('colRow')}</TH>
+                      <TH>{tp('colName')}</TH>
+                      <TH>{tp('colStatus')}</TH>
+                      <TH>{tp('colProblem')}</TH>
                     </TR>
                   </THead>
                   <TBody>
                     {problems.slice(0, 200).map((r) => (
                       <TR key={r.id}>
                         <TD className="tabular-nums">{r.rowNumber}</TD>
-                        <TD>{String(r.payload.displayName ?? r.payload.name ?? '—')}</TD>
+                        <TD>{String(r.payload.displayName ?? r.payload.name ?? tp('dash'))}</TD>
                         <TD>
                           <StatusPill tone={r.status === 'error' ? 'danger' : 'warning'}>
-                            {r.status === 'error' ? 'Error' : 'Already exists'}
+                            {r.status === 'error' ? tp('rowError') : tp('rowAlreadyExists')}
                           </StatusPill>
                         </TD>
                         <TD className="text-sm text-muted-foreground">
-                          {(r.errorCode ?? '').replaceAll('_', ' ') || '—'}
+                          {(r.errorCode ?? '').replaceAll('_', ' ') || tp('dash')}
                         </TD>
                       </TR>
                     ))}
@@ -221,23 +226,28 @@ export function ImportClient(): React.ReactElement {
             ) : null}
           </Panel>
 
-          <Panel title="4. Import">
+          <Panel title={tp('importStepTitle')}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <Field label="People who already exist">
+              <Field label={tp('peopleWhoExist')}>
                 <Select
                   value={strategy}
                   onChange={(e) => setStrategy(e.target.value as 'skip_conflicts' | 'update')}
                 >
-                  <option value="skip_conflicts">Skip them</option>
-                  <option value="update">Update their details</option>
+                  <option value="skip_conflicts">{tp('skipThem')}</option>
+                  <option value="update">{tp('updateTheirDetails')}</option>
                 </Select>
               </Field>
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={reset} disabled={busy}>
-                  Start over
+                  {tp('startOver')}
                 </Button>
                 <Button loading={busy} disabled={(s.ok ?? 0) + (s.conflict ?? 0) === 0} onClick={() => void commit()}>
-                  Import {s.ok ?? 0} {strategy === 'update' ? `+ update ${s.conflict ?? 0}` : ''}
+                  {strategy === 'update'
+                    ? tp('importCountWithUpdate', {
+                        ok: s.ok ?? 0,
+                        conflict: s.conflict ?? 0,
+                      })
+                    : tp('importCount', { ok: s.ok ?? 0 })}
                 </Button>
               </div>
             </div>
@@ -246,18 +256,21 @@ export function ImportClient(): React.ReactElement {
       ) : null}
 
       {job && step === 3 ? (
-        <Panel title="Import complete">
+        <Panel title={tp('importComplete')}>
           <div className="flex flex-col gap-3 text-sm">
             <p>
-              Added <strong>{s.created ?? 0}</strong>, updated <strong>{s.updated ?? 0}</strong>, skipped{' '}
-              <strong>{s.skipped ?? 0}</strong>.
+              {tp('importCompleteSummary', {
+                created: s.created ?? 0,
+                updated: s.updated ?? 0,
+                skipped: s.skipped ?? 0,
+              })}
             </p>
             <div className="flex gap-2">
               <Link href="/admin/people" className={buttonClassName({ size: 'sm' })}>
-                View people
+                {tp('viewPeople')}
               </Link>
               <Button size="sm" variant="secondary" onClick={reset}>
-                Import another file
+                {tp('importAnother')}
               </Button>
             </div>
           </div>

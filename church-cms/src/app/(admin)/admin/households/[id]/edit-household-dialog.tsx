@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, normalizePhoneE164 } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -26,6 +27,8 @@ export function EditHouseholdDialog({
   onClose,
   onSaved,
 }: EditHouseholdDialogProps): React.ReactElement {
+  const th = useTranslations('AdminHouseholds');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [label, setLabel] = useState(household.label);
   const [sharedAddress, setSharedAddress] = useState(
@@ -66,7 +69,7 @@ export function EditHouseholdDialog({
     event.preventDefault();
     if (submitting) return;
     if (!label.trim()) {
-      setFieldErrors({ label: 'Please enter a household label.' });
+      setFieldErrors({ label: th('labelRequired') });
       return;
     }
     const phone = emergencyContactPhone.trim()
@@ -74,7 +77,7 @@ export function EditHouseholdDialog({
       : '';
     if (phone && !/^\+[1-9]\d{6,14}$/.test(phone)) {
       setFieldErrors({
-        emergencyContactPhone: 'Use E.164 format, e.g. +255712345678.',
+        emergencyContactPhone: th('phoneFormatError'),
       });
       return;
     }
@@ -106,7 +109,7 @@ export function EditHouseholdDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not save household.',
+          err instanceof Error ? err.message : th('couldNotSave'),
         );
       }
     } finally {
@@ -118,13 +121,13 @@ export function EditHouseholdDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Edit household"
-      description="Update the household label, address, and emergency contact."
+      title={th('editTitle')}
+      description={th('editDesc')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -132,7 +135,7 @@ export function EditHouseholdDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'check'}
           >
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? th('saving') : th('saveChanges')}
           </Button>
         </DialogFooter>
       }
@@ -153,7 +156,7 @@ export function EditHouseholdDialog({
           </div>
         ) : null}
 
-        <Field label="Label" required error={fieldErrors.label}>
+        <Field label={th('label')} required error={fieldErrors.label}>
           <Input
             data-autofocus
             value={label}
@@ -162,7 +165,7 @@ export function EditHouseholdDialog({
           />
         </Field>
 
-        <Field label="Shared address" error={fieldErrors.sharedAddress}>
+        <Field label={th('sharedAddress')} error={fieldErrors.sharedAddress}>
           <Input
             value={sharedAddress}
             onChange={(e) => setSharedAddress(e.target.value)}
@@ -171,7 +174,7 @@ export function EditHouseholdDialog({
         </Field>
 
         <Field
-          label="Emergency contact name"
+          label={th('emergencyContactName')}
           error={fieldErrors.emergencyContactName}
         >
           <Input
@@ -182,8 +185,8 @@ export function EditHouseholdDialog({
         </Field>
 
         <Field
-          label="Emergency contact phone"
-          hint="E.164, e.g. +255712345678"
+          label={th('emergencyContactPhone')}
+          hint={th('emergencyPhoneHintShort')}
           error={fieldErrors.emergencyContactPhone}
         >
           <Input

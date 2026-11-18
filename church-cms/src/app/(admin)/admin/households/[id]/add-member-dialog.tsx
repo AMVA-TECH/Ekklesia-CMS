@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -38,6 +39,8 @@ export function AddMemberDialog({
   onClose,
   onSaved,
 }: AddMemberDialogProps): React.ReactElement {
+  const th = useTranslations('AdminHouseholds');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Person[]>([]);
@@ -95,11 +98,28 @@ export function AddMemberDialog({
     onClose();
   };
 
+  const relationshipLabel = (value: (typeof RELATIONSHIPS)[number]): string => {
+    switch (value) {
+      case 'member':
+        return th('relMember');
+      case 'spouse':
+        return th('relSpouse');
+      case 'parent':
+        return th('relParent');
+      case 'guardian':
+        return th('relGuardian');
+      case 'other':
+        return th('relOther');
+      default:
+        return value;
+    }
+  };
+
   const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: th('pickPerson') });
       return;
     }
     setFieldErrors({});
@@ -122,7 +142,7 @@ export function AddMemberDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not add this member.',
+          err instanceof Error ? err.message : th('couldNotAddMember'),
         );
       }
     } finally {
@@ -136,13 +156,13 @@ export function AddMemberDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Add household member"
-      description="Search the people directory and link someone to this household."
+      title={th('addMemberTitle')}
+      description={th('addMemberDesc')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -150,7 +170,7 @@ export function AddMemberDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Saving…' : 'Add member'}
+            {submitting ? th('saving') : th('addMember')}
           </Button>
         </DialogFooter>
       }
@@ -172,9 +192,9 @@ export function AddMemberDialog({
         ) : null}
 
         <Field
-          label="Search people"
+          label={th('searchPeople')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? th('searching') : th('typeAtLeast2')}
           error={fieldErrors.personId}
         >
           <Input
@@ -185,7 +205,7 @@ export function AddMemberDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Name…"
+            placeholder={th('nameEllipsis')}
           />
         </Field>
 
@@ -222,11 +242,11 @@ export function AddMemberDialog({
 
         {selected ? (
           <p className="text-xs text-muted-foreground">
-            Selected: <span className="font-medium text-foreground">{selected.displayName}</span>
+            {th('selected', { name: selected.displayName })}
           </p>
         ) : null}
 
-        <Field label="Relationship" error={fieldErrors.relationship}>
+        <Field label={th('relationship')} error={fieldErrors.relationship}>
           <Select
             value={relationship}
             onChange={(e) =>
@@ -235,7 +255,7 @@ export function AddMemberDialog({
           >
             {RELATIONSHIPS.map((r) => (
               <option key={r} value={r}>
-                {r.charAt(0).toUpperCase() + r.slice(1)}
+                {relationshipLabel(r)}
               </option>
             ))}
           </Select>
@@ -248,7 +268,7 @@ export function AddMemberDialog({
             onChange={(e) => setIsPrimaryContact(e.target.checked)}
             className="h-4 w-4 rounded-sm border-border text-foreground focus-ring"
           />
-          Primary household contact
+          {th('primaryHouseholdContact')}
         </label>
       </form>
     </Dialog>

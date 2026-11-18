@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
 import {
@@ -29,6 +30,9 @@ import { CreateHouseholdDialog } from './create-household-dialog';
 const PAGE_SIZE = 25;
 
 export function HouseholdsClient(): React.ReactElement {
+  const t = useTranslations('AdminPages');
+  const th = useTranslations('AdminHouseholds');
+  const tc = useTranslations('Common');
   const { push } = useToast();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -76,12 +80,12 @@ export function HouseholdsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load households',
+            : th('unableLoadHouseholds'),
       );
     } finally {
       setLoading(false);
     }
-  }, [cursor, debouncedSearch]);
+  }, [cursor, debouncedSearch, th]);
 
   useLoadEffect(load);
 
@@ -105,11 +109,11 @@ export function HouseholdsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Households"
-        lede="Families and groups sharing a home or a primary contact. Add a household when a family wants to be contacted as one."
+        title={t('households')}
+        lede={t('householdsLede')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New household
+            {th('newHousehold')}
           </Button>
         }
       />
@@ -117,8 +121,8 @@ export function HouseholdsClient(): React.ReactElement {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="max-w-md flex-1">
           <SearchField
-            label="Search households"
-            placeholder="Search by label"
+            label={th('searchHouseholds')}
+            placeholder={th('searchByLabel')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onClear={() => setSearch('')}
@@ -127,10 +131,10 @@ export function HouseholdsClient(): React.ReactElement {
         <p className="text-xs text-muted-foreground">
           {loading ? (
             <span className="inline-flex items-center gap-2">
-              <Spinner size="xs" label="Loading" /> Loading…
+              <Spinner size="xs" label={th('loading')} /> {th('loadingEllipsis')}
             </span>
           ) : (
-            `${households.length} shown`
+            th('shownCount', { count: households.length })
           )}
         </p>
       </div>
@@ -138,13 +142,11 @@ export function HouseholdsClient(): React.ReactElement {
       <Panel
         title={
           debouncedSearch
-            ? `Results for "${debouncedSearch}"`
-            : 'All households'
+            ? th('resultsFor', { query: debouncedSearch })
+            : th('allHouseholds')
         }
         subtitle={
-          error
-            ? 'We couldn\'t load households.'
-            : 'Grouped by label.'
+          error ? th('loadErrorSubtitle') : th('groupedByLabel')
         }
         flush
       >
@@ -153,7 +155,7 @@ export function HouseholdsClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                Try again
+                {tc('retry')}
               </Button>
             </div>
           </div>
@@ -166,11 +168,11 @@ export function HouseholdsClient(): React.ReactElement {
           <EmptyState
             icon="building"
             tone="peach"
-            title={debouncedSearch ? 'No matches' : 'No households yet'}
+            title={debouncedSearch ? th('noMatches') : th('noHouseholdsYet')}
             description={
               debouncedSearch
-                ? 'Try another label, or clear the search.'
-                : 'Add the first family to start grouping members.'
+                ? th('noMatchesDesc')
+                : th('noHouseholdsYetDesc')
             }
             action={
               <Button
@@ -178,7 +180,7 @@ export function HouseholdsClient(): React.ReactElement {
                 iconLeft="plus"
                 onClick={() => setCreateOpen(true)}
               >
-                New household
+                {th('newHousehold')}
               </Button>
             }
           />
@@ -187,10 +189,10 @@ export function HouseholdsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Household</TH>
-                  <TH>Members</TH>
-                  <TH>Children</TH>
-                  <TH>Emergency contact</TH>
+                  <TH>{th('colHousehold')}</TH>
+                  <TH>{th('colMembers')}</TH>
+                  <TH>{th('colChildren')}</TH>
+                  <TH>{th('colEmergency')}</TH>
                   <TH className="w-10" />
                 </TR>
               </THead>
@@ -232,14 +234,14 @@ export function HouseholdsClient(): React.ReactElement {
                         </span>
                       ) : (
                         <span className="text-xs text-muted-foreground">
-                          Not set
+                          {th('notSet')}
                         </span>
                       )}
                     </TD>
                     <TD className="text-right">
                       <Link
                         href={`/admin/households/${h.id}`}
-                        aria-label={`Open ${h.label}`}
+                        aria-label={th('openHouseholdAria', { label: h.label })}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
                       >
                         <Icon name="chevron-right" size={16} />
@@ -268,8 +270,8 @@ export function HouseholdsClient(): React.ReactElement {
         onCreated={(h) => {
           push({
             tone: 'success',
-            title: 'Household added',
-            message: `${h.label} is on your list.`,
+            title: th('householdAdded'),
+            message: th('householdAddedMessage', { label: h.label }),
           });
           setCreateOpen(false);
           void load();

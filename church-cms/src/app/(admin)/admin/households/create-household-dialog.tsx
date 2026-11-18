@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -28,6 +29,8 @@ export function CreateHouseholdDialog({
   onClose,
   onCreated,
 }: CreateHouseholdDialogProps): React.ReactElement {
+  const th = useTranslations('AdminHouseholds');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [label, setLabel] = useState('');
   const [address, setAddress] = useState('');
@@ -93,7 +96,7 @@ export function CreateHouseholdDialog({
         setFormError(body?.error ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create this household.',
+          err instanceof Error ? err.message : th('couldNotCreate'),
         );
       }
       setSubmitting(false);
@@ -104,8 +107,8 @@ export function CreateHouseholdDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New household"
-      description="Just a label and optional shared contact details to get started. You can link people once it's created."
+      title={th('createTitle')}
+      description={th('createDesc')}
       size="md"
       footer={
         <DialogFooter>
@@ -114,10 +117,10 @@ export function CreateHouseholdDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Create household'}
+            {submitting ? th('saving') : th('createHousehold')}
           </Button>
         </DialogFooter>
       }
@@ -139,9 +142,9 @@ export function CreateHouseholdDialog({
         ) : null}
 
         <Field
-          label="Label"
+          label={th('label')}
           required
-          hint="e.g. 'The Noah household' or 'Mwakimi family'."
+          hint={th('labelHint')}
           error={fieldErrors.label}
         >
           <Input
@@ -153,8 +156,8 @@ export function CreateHouseholdDialog({
         </Field>
 
         <Field
-          label="Shared address"
-          hint="Used in pastoral visits and emergency contact."
+          label={th('sharedAddress')}
+          hint={th('sharedAddressHint')}
           error={fieldErrors.sharedAddress}
         >
           <Textarea
@@ -166,7 +169,7 @@ export function CreateHouseholdDialog({
         </Field>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Emergency contact name" error={fieldErrors.emergencyContactName}>
+          <Field label={th('emergencyContactName')} error={fieldErrors.emergencyContactName}>
             <Input
               value={emergencyName}
               onChange={(e) => setEmergencyName(e.target.value)}
@@ -174,14 +177,14 @@ export function CreateHouseholdDialog({
             />
           </Field>
           <Field
-            label="Emergency phone"
-            hint="E.164 format, e.g. +255712345678"
+            label={th('emergencyPhone')}
+            hint={th('phoneHintE164')}
             error={fieldErrors.emergencyContactPhone}
           >
             <Input
               type="tel"
               inputMode="tel"
-              placeholder="+255…"
+              placeholder={th('phonePlaceholder')}
               value={emergencyPhone}
               onChange={(e) => setEmergencyPhone(e.target.value)}
             />
