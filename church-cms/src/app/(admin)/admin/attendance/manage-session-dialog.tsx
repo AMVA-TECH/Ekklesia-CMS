@@ -117,7 +117,7 @@ export function ManageSessionDialog({
     } finally {
       setLoadingRecords(false);
     }
-  }, []);
+  }, [ta]);
 
   // Reset the dialog when it opens or the session changes — adjusted during
   // render (React's prop-change pattern) instead of in an effect.

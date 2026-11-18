@@ -31,7 +31,6 @@ import type { Project } from '../project-types';
 
 export function ProjectDetailClient({ projectId }: { projectId: string }): React.ReactElement {
   const tp = useTranslations('AdminProjects');
-  const tc = useTranslations('Common');
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<'assign' | 'contribute' | null>(null);
@@ -44,7 +43,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
     } catch (err) {
       setError(errorMessage(err, tp('unableLoad')));
     }
-  }, [projectId]);
+  }, [projectId, tp]);
   useLoadEffect(load);
 
   const names = usePeopleNames([

@@ -146,7 +146,7 @@ export function UnitDetailClient({
     } finally {
       setLoading(false);
     }
-  }, [unitId]);
+  }, [unitId, to]);
 
   useLoadEffect(load);
 

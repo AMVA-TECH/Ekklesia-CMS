@@ -119,7 +119,7 @@ export function AttendanceClient(): React.ReactElement {
             : ta('leadershipUnavailable'),
       );
     }
-  }, []);
+  }, [ta]);
 
   useLoadEffect(load);
 

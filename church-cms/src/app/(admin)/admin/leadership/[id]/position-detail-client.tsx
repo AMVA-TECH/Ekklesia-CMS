@@ -135,7 +135,7 @@ export function PositionDetailClient({
     } finally {
       setLoading(false);
     }
-  }, [positionId]);
+  }, [positionId, tl]);
 
   useLoadEffect(load);
 

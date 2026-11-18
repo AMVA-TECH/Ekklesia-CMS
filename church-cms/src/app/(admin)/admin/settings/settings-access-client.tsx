@@ -142,7 +142,7 @@ export function SettingsAccessClient(): React.ReactElement {
     } finally {
       setAccessLoading(false);
     }
-  }, []);
+  }, [ts]);
 
   useLoadEffect(loadAccess);
 

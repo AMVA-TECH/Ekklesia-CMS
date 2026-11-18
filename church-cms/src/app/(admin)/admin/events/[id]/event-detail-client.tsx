@@ -35,7 +35,6 @@ export function EventDetailClient({
   eventId,
 }: EventDetailClientProps): React.ReactElement {
   const te = useTranslations('AdminEvents');
-  const tc = useTranslations('Common');
   const [event, setEvent] = useState<EventRow | null>(null);
   const [types, setTypes] = useState<EventType[]>([]);
   const [sessions, setSessions] = useState<AttendanceSession[]>([]);
@@ -68,7 +67,7 @@ export function EventDetailClient({
             : te('unableLoadSessions'),
       );
     }
-  }, [eventId]);
+  }, [eventId, te]);
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -93,7 +92,7 @@ export function EventDetailClient({
     } finally {
       setLoading(false);
     }
-  }, [eventId, loadSessions]);
+  }, [eventId, loadSessions, te]);
 
   useLoadEffect(load);
 

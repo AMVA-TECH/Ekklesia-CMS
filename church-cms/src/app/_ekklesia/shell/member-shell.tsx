@@ -59,7 +59,6 @@ export function MemberShell({
   footerProps,
   children,
 }: MemberShellProps): React.ReactElement {
-  const t = useTranslations('Common');
   const [drawerOpen, setDrawerOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">

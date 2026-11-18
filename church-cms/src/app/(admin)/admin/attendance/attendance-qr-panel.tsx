@@ -91,7 +91,7 @@ export function AttendanceQrPanel({
     } finally {
       setIssuing(false);
     }
-  }, [canIssue, renderQr, sessionId]);
+  }, [canIssue, renderQr, sessionId, ta]);
 
   // Clear the previous QR when the session (or permission) changes —
   // adjusted during render rather than in the issuing effect.

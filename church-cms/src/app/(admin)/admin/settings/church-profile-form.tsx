@@ -283,7 +283,7 @@ export function ChurchProfileForm(): React.ReactElement {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [ts]);
 
   useLoadEffect(load);
 

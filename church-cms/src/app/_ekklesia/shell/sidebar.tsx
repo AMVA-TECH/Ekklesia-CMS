@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Icon } from '../icons';
@@ -10,13 +15,35 @@ import { RoleNav, type NavGroup } from './role-nav';
 
 const STORAGE_KEY = 'ek-sidebar-collapsed';
 
-function readInitialCollapsed(): boolean {
-  if (typeof window === 'undefined') return false;
+const collapsedListeners = new Set<() => void>();
+
+function readCollapsed(): boolean {
   try {
     return window.localStorage.getItem(STORAGE_KEY) === '1';
   } catch {
     return false;
   }
+}
+
+function subscribeCollapsed(onStoreChange: () => void): () => void {
+  collapsedListeners.add(onStoreChange);
+  const onStorage = (event: StorageEvent): void => {
+    if (event.key === STORAGE_KEY || event.key === null) onStoreChange();
+  };
+  window.addEventListener('storage', onStorage);
+  return () => {
+    collapsedListeners.delete(onStoreChange);
+    window.removeEventListener('storage', onStorage);
+  };
+}
+
+function writeCollapsed(next: boolean): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
+  } catch {
+    /* ignore quota / private mode */
+  }
+  for (const listener of collapsedListeners) listener();
 }
 
 /** Props for `<Sidebar>` (desktop rail). */
@@ -39,13 +66,13 @@ export function Sidebar({
   footer,
 }: SidebarProps): React.ReactElement {
   const t = useTranslations('Common');
-  // Always start expanded on server + first client paint so localStorage
-  // cannot mismatch SSR HTML (hydration).
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    setCollapsed(readInitialCollapsed());
-  }, []);
+  // External store keeps SSR (expanded) and client localStorage in sync
+  // without setState-in-effect hydration cascades.
+  const collapsed = useSyncExternalStore(
+    subscribeCollapsed,
+    readCollapsed,
+    () => false,
+  );
 
   // The admin rail is long; keep the current page's link in view so deep
   // pages (e.g. Settings → Audit log) don't open with their item hidden.
@@ -57,15 +84,7 @@ export function Sidebar({
   }, [pathname, collapsed]);
 
   const toggle = (): void => {
-    setCollapsed((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
+    writeCollapsed(!collapsed);
   };
 
   return (
