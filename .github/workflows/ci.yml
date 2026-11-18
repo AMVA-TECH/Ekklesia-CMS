@@ -21,17 +21,28 @@ jobs:
       run:
         working-directory: church-cms
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: church-cms/package.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: church-cms/pnpm-lock.yaml
+
+      # setup-node's built-in pnpm cache resolves the store from the repo
+      # root, not church-cms/, and its post step failed the job when that
+      # path did not exist. Resolve the store here and cache it explicitly.
+      - name: Resolve pnpm store
+        id: pnpm-store
+        run: echo "dir=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.dir }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('church-cms/pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
 
       - run: pnpm install --frozen-lockfile
 
