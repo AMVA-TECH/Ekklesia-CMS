@@ -102,11 +102,15 @@ function toCorrectionResponse(row: {
   resolvedByUserId: string | null;
   resolvedAt: Date | null;
   createdAt: Date;
+  serviceDate?: string | null;
+  eventTitle?: string | null;
 }) {
   return {
     id: row.id,
     personId: row.personId,
     sessionId: row.sessionId,
+    serviceDate: row.serviceDate ?? null,
+    eventTitle: row.eventTitle ?? null,
     requestedPresence: row.requestedPresence,
     status: row.status,
     note: row.note,
@@ -764,10 +768,11 @@ export async function getMyAttendance(ctx: Ctx, query: MyAttendanceQuery) {
   const db = getDb();
   const { from, to } = resolveAttendanceWindow(query);
 
-  const [serviceDates, presenceRows, noticeDates] = await Promise.all([
+  const [serviceDates, presenceRows, noticeDates, sessionByDate] = await Promise.all([
     repo.listFinalizedServiceDates(db, ctx, from, to),
     repo.listPersonPresenceByDate(db, ctx, personId, from, to),
     repo.listPersonAbsenceNoticeDates(db, ctx, personId, from, to),
+    repo.listFinalizedSessionIdsByDate(db, ctx, from, to),
   ]);
 
   const presentByDate = new Map(presenceRows.map((r) => [r.serviceDate, r.present]));
@@ -779,6 +784,8 @@ export async function getMyAttendance(ctx: Ctx, query: MyAttendanceQuery) {
     return {
       serviceDate,
       status: present ? ('present' as const) : notice ? ('notice' as const) : ('absent' as const),
+      // Lets the member ask for a correction on a day marked missed.
+      sessionId: sessionByDate.get(serviceDate) ?? null,
     };
   });
 
