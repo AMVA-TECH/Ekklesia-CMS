@@ -28,7 +28,7 @@ Legend: **Pass** / **Fail** / **Blocked** / **Deferred (known gap)**
 | 17 | Excel member import (validate → preview → commit) | `/imports/members`, validate, preview, commit | | UI `/admin/people/import` (CSV saved from Excel) |
 | 18 | Portal self-edit (phone/email/photo/language/directory opt-in) | `GET/PATCH /people/me` | | Portal UI polish TBD |
 | 19 | Opt-in directory (name + photo + ministry only) | `GET /directory` | | |
-| 20 | UI English + Swahili | Not started | Deferred | |
+| 20 | UI English + Swahili | Phases 0–6 complete (full UI sweep; ~2050 catalog keys; CI parity) | Pass | See `docs/I18N.md`; run `pnpm i18n:check` |
 | 21 | Cross-church isolation (other tenant → 404) | RLS + service tests; re-run on pilot DB | | |
 | 22 | RBAC matrix matches product docs for exercised endpoints | Seed roles (`church_administrator`, `member`, `finance_officer`) + permission checks; `GET /roles`, role-assignments | | See API_PATH_ALIASES.md for actor IDs |
 | 23 | Audit of high-impact actions visible/queryable | `GET /audit-events` (`audit:read`); metadata sanitized | | UI `/admin/audit` |
