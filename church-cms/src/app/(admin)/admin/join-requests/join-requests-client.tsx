@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import { PageHeader, Button, StatusPill } from '@/app/_ekklesia/ui';
 
@@ -25,6 +26,8 @@ type DecideResult = {
 };
 
 export function JoinRequestsClient() {
+  const t = useTranslations('AdminPages');
+  const tj = useTranslations('AdminJoinRequests');
   const [items, setItems] = useState<JoinRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [issued, setIssued] = useState<DecideResult['member'] | null>(null);
@@ -34,9 +37,9 @@ export function JoinRequestsClient() {
     apiFetch<{ items: JoinRequest[] }>('/api/v1/join-requests?status=pending')
       .then((res) => setItems(res.items))
       .catch((err: unknown) =>
-        setError(err instanceof ApiError ? err.message : 'Failed to load'),
+        setError(err instanceof ApiError ? err.message : tj('failedToLoad')),
       );
-  }, []);
+  }, [tj]);
 
   useEffect(() => {
     reload();
@@ -58,7 +61,7 @@ export function JoinRequestsClient() {
       if (res.member) setIssued(res.member);
       reload();
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : 'Decision failed');
+      setError(err instanceof ApiError ? err.message : tj('decisionFailed'));
     } finally {
       setBusyId(null);
     }
@@ -67,31 +70,30 @@ export function JoinRequestsClient() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Join requests"
-        lede="Approve to attach the person to your church and issue a member PIN for Sign in."
+        title={t('joinRequests')}
+        lede={t('joinRequestsLede')}
       />
 
       {error ? <p className="text-destructive">{error}</p> : null}
 
       {issued ? (
         <div className="rounded-lg border border-border bg-surface p-4">
-          <p className="font-medium">Member credentials issued (once)</p>
+          <p className="font-medium">{tj('credentialsIssued')}</p>
           <p>
             {issued.phoneE164}
             {issued.email ? ` · ${issued.email}` : ''}
           </p>
           <p>
-            PIN: <code>{issued.initialPin}</code>
+            {tj('pinLabel')} <code>{issued.initialPin}</code>
           </p>
           <p className="text-sm text-muted-foreground">
-            Share securely for Sign in (phone + PIN). Attachment unlocks this
-            church’s services. PIN is not stored in audit logs.
+            {tj('credentialsHint')}
           </p>
         </div>
       ) : null}
 
       {items.length === 0 ? (
-        <p className="text-muted-foreground">No pending join requests.</p>
+        <p className="text-muted-foreground">{tj('noPending')}</p>
       ) : (
         <ul className="space-y-3">
           {items.map((item) => (
@@ -102,10 +104,18 @@ export function JoinRequestsClient() {
               <div>
                 <p className="font-medium">{item.displayName}</p>
                 <p className="text-sm text-muted-foreground">
-                  {item.phoneE164 ?? '—'}
+                  {item.phoneE164 ?? tj('dash')}
                   {item.email ? ` · ${item.email}` : ''}
                 </p>
-                <StatusPill tone="pending">{item.status}</StatusPill>
+                <StatusPill tone="pending">
+                  {item.status === 'pending'
+                    ? tj('statusPending')
+                    : item.status === 'approved'
+                      ? tj('statusApproved')
+                      : item.status === 'rejected'
+                        ? tj('statusRejected')
+                        : item.status}
+                </StatusPill>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -114,7 +124,7 @@ export function JoinRequestsClient() {
                   disabled={busyId === item.id}
                   onClick={() => void decide(item.id, 'approved')}
                 >
-                  Approve
+                  {tj('approve')}
                 </Button>
                 <Button
                   type="button"
@@ -123,7 +133,7 @@ export function JoinRequestsClient() {
                   disabled={busyId === item.id}
                   onClick={() => void decide(item.id, 'rejected')}
                 >
-                  Reject
+                  {tj('reject')}
                 </Button>
               </div>
             </li>

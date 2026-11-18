@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import {
   Button,
@@ -29,6 +30,8 @@ export function CreateMembershipDialog({
   onClose,
   onCreated,
 }: CreateMembershipDialogProps): React.ReactElement {
+  const tm = useTranslations('AdminMemberships');
+  const tc = useTranslations('Common');
   const formId = useId();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Person[]>([]);
@@ -88,11 +91,37 @@ export function CreateMembershipDialog({
     onClose();
   };
 
+  const typeLabel = (value: (typeof TYPES)[number]): string => {
+    switch (value) {
+      case 'individual':
+        return tm('typeIndividual');
+      case 'household':
+        return tm('typeHousehold');
+      case 'family':
+        return tm('typeFamily');
+      default:
+        return value;
+    }
+  };
+
+  const statusLabel = (value: (typeof STATUSES)[number]): string => {
+    switch (value) {
+      case 'visitor':
+        return tm('statusVisitor');
+      case 'active':
+        return tm('statusActive');
+      case 'inactive':
+        return tm('statusInactive');
+      default:
+        return value;
+    }
+  };
+
   const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: tm('pickPerson') });
       return;
     }
     setFieldErrors({});
@@ -119,7 +148,7 @@ export function CreateMembershipDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create membership.',
+          err instanceof Error ? err.message : tm('couldNotCreate'),
         );
       }
     } finally {
@@ -131,13 +160,13 @@ export function CreateMembershipDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Add membership"
-      description="Start a membership journey for someone already in your people directory."
+      title={tm('createTitle')}
+      description={tm('createDesc')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
@@ -145,7 +174,7 @@ export function CreateMembershipDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Saving…' : 'Create membership'}
+            {submitting ? tm('saving') : tm('createMembership')}
           </Button>
         </DialogFooter>
       }
@@ -167,9 +196,9 @@ export function CreateMembershipDialog({
         ) : null}
 
         <Field
-          label="Person"
+          label={tm('person')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? tm('searching') : tm('typeAtLeast2')}
           error={fieldErrors.personId}
         >
           <Input
@@ -180,7 +209,7 @@ export function CreateMembershipDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Search by name…"
+            placeholder={tm('searchByName')}
           />
         </Field>
 
@@ -211,21 +240,21 @@ export function CreateMembershipDialog({
         ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Type" error={fieldErrors.membershipType}>
+          <Field label={tm('type')} error={fieldErrors.membershipType}>
             <Select
               value={membershipType}
               onChange={(e) =>
                 setMembershipType(e.target.value as (typeof TYPES)[number])
               }
             >
-              {TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
+              {TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {typeLabel(type)}
                 </option>
               ))}
             </Select>
           </Field>
-          <Field label="Starting status" error={fieldErrors.status}>
+          <Field label={tm('startingStatus')} error={fieldErrors.status}>
             <Select
               value={status}
               onChange={(e) =>
@@ -234,7 +263,7 @@ export function CreateMembershipDialog({
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {statusLabel(s)}
                 </option>
               ))}
             </Select>
@@ -242,8 +271,8 @@ export function CreateMembershipDialog({
         </div>
 
         <Field
-          label="Effective from"
-          hint="Optional — YYYY-MM-DD (defaults to today)"
+          label={tm('effectiveFrom')}
+          hint={tm('effectiveFromHint')}
           error={fieldErrors.effectiveFrom}
         >
           <Input
