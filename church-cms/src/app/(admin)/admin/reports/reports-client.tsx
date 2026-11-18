@@ -17,7 +17,7 @@ import { errorMessage } from '../../_lib/errors';
 import { formatDateTime, titleCase } from '../../_lib/format';
 import { useApiList } from '../../_lib/use-api-list';
 import { ReportData } from './report-data';
-import { t } from '@/app/_ekklesia/i18n/core';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface CatalogueEntry {
   id: string;
@@ -43,10 +43,10 @@ interface Filters {
 }
 
 const AUDIENCE_LABEL: Record<string, string> = {
-  senior_pastor_pastoral: 'Pastoral oversight',
-  church_administrator_pogs: 'Administration',
-  unit_leaders: 'Ministries & units',
-  finance: 'Finance',
+  senior_pastor_pastoral: tk('Pastoral oversight'),
+  church_administrator_pogs: tk('Administration'),
+  unit_leaders: tk('Ministries & units'),
+  finance: tk('Finance'),
 };
 
 const needsUnit = (id: string): boolean => /^R-UNIT-0[134]$/.test(id);
@@ -130,7 +130,7 @@ export function ReportsClient({
                 {groups.map(([audience, rows]) => (
                   <div key={audience}>
                     <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {AUDIENCE_LABEL[audience] ?? titleCase(audience)}
+                      {AUDIENCE_LABEL[audience] ? t(AUDIENCE_LABEL[audience]) : titleCase(audience)}
                     </p>
                     <ul>
                       {rows.map((r) => (

@@ -4,6 +4,10 @@
  * keys use Title Case on every word.
  */
 export const swReports: Record<string, string> = {
+  // Report groups
+  'Pastoral oversight': 'Usimamizi wa kichungaji',
+  Administration: 'Utawala',
+  'Ministries & units': 'Huduma na vitengo',
   // Report catalogue
   'Church pulse': 'Hali ya kanisa',
   'Attendance overview': 'Muhtasari wa mahudhurio',
