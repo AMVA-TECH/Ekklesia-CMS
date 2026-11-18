@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError, apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -27,7 +28,23 @@ import {
 
 type Filter = 'upcoming' | 'all';
 
+const MONTH_KEYS = [
+  'monthJan',
+  'monthFeb',
+  'monthMar',
+  'monthApr',
+  'monthMay',
+  'monthJun',
+  'monthJul',
+  'monthAug',
+  'monthSep',
+  'monthOct',
+  'monthNov',
+  'monthDec',
+] as const;
+
 export function MemberEventsClient(): React.ReactElement {
+  const t = useTranslations('MemberEvents');
   const [filter, setFilter] = useState<Filter>('upcoming');
   const [events, setEvents] = useState<MemberEvent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +67,9 @@ export function MemberEventsClient(): React.ReactElement {
       .catch((e: unknown) => {
         if (cancelled) return;
         if (e instanceof ApiError) {
-          setError(e.message || 'We could not load events just now.');
+          setError(e.message || t('loadFailDefault'));
         } else {
-          setError('Check your connection and try again.');
+          setError(t('connection'));
         }
       })
       .finally(() => {
@@ -61,7 +78,7 @@ export function MemberEventsClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [filter]);
+  }, [filter, t]);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -81,10 +98,7 @@ export function MemberEventsClient(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Events"
-        lede="Services, gatherings, and special moments from your church."
-      />
+      <PageHeader title={t('title')} lede={t('lede')} />
 
       <Tabs
         value={filter}
@@ -97,17 +111,17 @@ export function MemberEventsClient(): React.ReactElement {
         }}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabList aria-label="Event range">
-            <Tab value="upcoming">Upcoming</Tab>
-            <Tab value="all">All</Tab>
+          <TabList aria-label={t('eventRangeAria')}>
+            <Tab value="upcoming">{t('upcoming')}</Tab>
+            <Tab value="all">{t('all')}</Tab>
           </TabList>
           <div className="sm:w-72">
             <SearchField
-              label="Search events"
+              label={t('searchLabel')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onClear={() => setSearch('')}
-              placeholder="Search by name or type"
+              placeholder={t('searchPlaceholder')}
             />
           </div>
         </div>
@@ -122,14 +136,12 @@ export function MemberEventsClient(): React.ReactElement {
               icon="calendar"
               tone="sky"
               title={
-                filter === 'upcoming'
-                  ? 'Nothing on the calendar yet'
-                  : 'No events found'
+                filter === 'upcoming' ? t('emptyUpcoming') : t('emptySearch')
               }
               description={
                 filter === 'upcoming'
-                  ? 'When your church schedules the next service or gathering, it will show up here.'
-                  : 'Try a different search, or switch to “Upcoming”.'
+                  ? t('emptyUpcomingBody')
+                  : t('emptySearchBody')
               }
             />
           ) : (
@@ -148,6 +160,7 @@ export function MemberEventsClient(): React.ReactElement {
 }
 
 function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
+  const t = useTranslations('MemberEvents');
   const time = formatEventTime(event.startsAt);
   return (
     <Link
@@ -175,9 +188,7 @@ function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
       <div className="flex min-w-0 flex-1 items-start gap-3 p-4">
         <div className="flex w-14 shrink-0 flex-col items-center rounded-md border border-border bg-surface px-1 py-1.5 text-center sm:hidden">
           <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            {event.serviceDate.slice(5, 7) === '01'
-              ? 'Jan'
-              : monthShort(event.serviceDate)}
+            {monthShort(event.serviceDate, t)}
           </span>
           <span className="text-lg font-semibold leading-none text-foreground">
             {Number(event.serviceDate.slice(8, 10))}
@@ -192,10 +203,10 @@ function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
             {time ? <span> · {time}</span> : null}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {event.status === 'cancelled' ? <Badge tone="peach">Cancelled</Badge> : null}
-            <Badge tone="sky">
-              {event.eventTypeName ?? 'Gathering'}
-            </Badge>
+            {event.status === 'cancelled' ? (
+              <Badge tone="peach">{t('cancelled')}</Badge>
+            ) : null}
+            <Badge tone="sky">{event.eventTypeName ?? t('gathering')}</Badge>
             <Badge tone="neutral">
               {formatRelativeToToday(event.serviceDate)}
             </Badge>
@@ -211,13 +222,13 @@ function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
   );
 }
 
-function monthShort(iso: string): string {
+function monthShort(
+  iso: string,
+  t: ReturnType<typeof useTranslations<'MemberEvents'>>,
+): string {
   const m = Number(iso.slice(5, 7));
-  return (
-    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][
-      m - 1
-    ] ?? ''
-  );
+  const key = MONTH_KEYS[m - 1];
+  return key ? t(key) : '';
 }
 
 function EventListSkeleton(): React.ReactElement {
@@ -240,11 +251,12 @@ function EventListSkeleton(): React.ReactElement {
 }
 
 function ErrorCard({ message }: { message: string }): React.ReactElement {
+  const t = useTranslations('MemberEvents');
   return (
     <Card padding="lg" className="flex flex-col items-start gap-3">
       <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--danger-ink)]">
         <Icon name="alert-circle" size={16} />
-        We couldn&apos;t load events
+        {t('loadFailTitle')}
       </div>
       <p className="text-sm text-muted-foreground">{message}</p>
       <Button
@@ -252,7 +264,7 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
         iconLeft="refresh"
         onClick={() => window.location.reload()}
       >
-        Try again
+        {t('tryAgain')}
       </Button>
     </Card>
   );

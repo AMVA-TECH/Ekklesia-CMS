@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ApiError, apiFetch, useSession } from '@/app/_ekklesia/session';
 import {
@@ -37,6 +38,9 @@ const EMPTY_FORM: FormState = {
 };
 
 export function ProfileClient(): React.ReactElement {
+  const t = useTranslations('Profile');
+  const tLocale = useTranslations('Locale');
+  const tShell = useTranslations('MemberShell');
   const { user, church } = useSession();
   const { push } = useToast();
   const [person, setPerson] = useState<MemberPerson | null>(null);
@@ -80,13 +84,11 @@ export function ProfileClient(): React.ReactElement {
         } else {
           const reason = personResult.reason;
           if (reason instanceof ApiError && reason.status === 404) {
-            setLoadError(
-              'We could not find your profile. Please talk to your church office.',
-            );
+            setLoadError(t('notFound'));
           } else if (reason instanceof ApiError) {
             setLoadError(reason.message);
           } else {
-            setLoadError('Check your connection and try again.');
+            setLoadError(t('connection'));
           }
         }
 
@@ -105,7 +107,7 @@ export function ProfileClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const dirty = useMemo(
     () =>
@@ -120,11 +122,11 @@ export function ProfileClient(): React.ReactElement {
     const next: typeof fieldErrors = {};
     const phone = form.phone.trim();
     if (phone && !/^\+[1-9]\d{6,14}$/.test(phone)) {
-      next.phone = 'Use the international format, e.g. +255 7XX XXX XXX.';
+      next.phone = t('phoneInvalid');
     }
     const email = form.email.trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      next.email = 'That email does not look right.';
+      next.email = t('emailInvalid');
     }
     setFieldErrors(next);
     return Object.keys(next).length === 0;
@@ -153,18 +155,18 @@ export function ProfileClient(): React.ReactElement {
       setOriginal(form);
       push({
         tone: 'success',
-        title: 'Saved',
-        message: 'Your profile has been updated.',
+        title: t('savedTitle'),
+        message: t('savedBody'),
       });
     } catch (e) {
       if (e instanceof ApiError) {
         push({
           tone: 'danger',
-          title: 'We couldn’t save your changes',
-          message: e.message || 'Try again in a moment.',
+          title: t('saveFailTitle'),
+          message: e.message || t('saveFailBody'),
         });
       } else {
-        push({ tone: 'danger', message: 'Check your connection and try again.' });
+        push({ tone: 'danger', message: t('connection') });
       }
     } finally {
       setSubmitting(false);
@@ -180,7 +182,7 @@ export function ProfileClient(): React.ReactElement {
       <EmptyState
         icon="user"
         tone="peach"
-        title="Profile unavailable"
+        title={t('unavailable')}
         description={loadError}
       />
     );
@@ -191,8 +193,8 @@ export function ProfileClient(): React.ReactElement {
       <EmptyState
         icon="user"
         tone="peach"
-        title="Profile not set up yet"
-        description="Your church office will finish setting up your profile soon."
+        title={t('notSetup')}
+        description={t('notSetupBody')}
       />
     );
   }
@@ -200,13 +202,12 @@ export function ProfileClient(): React.ReactElement {
   const displayName =
     person.fullName && person.fullName.trim().length > 0
       ? person.fullName
-      : person.displayName || user?.displayName || 'You';
+      : person.displayName || user?.displayName || tShell('you');
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="My profile" lede="How your church reaches you and what we share." />
+      <PageHeader title={t('title')} lede={t('lede')} />
 
-      {/* Hero summary */}
       <Card padding="lg" className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <Avatar name={displayName} size="xl" tone="brand" />
         <div className="min-w-0 flex-1">
@@ -214,7 +215,7 @@ export function ProfileClient(): React.ReactElement {
             {displayName}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground truncate">
-            {church?.name ?? 'Your church'}
+            {church?.name ?? t('yourChurch')}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {membership ? (
@@ -225,7 +226,7 @@ export function ProfileClient(): React.ReactElement {
                 {titleize(membership.membershipType)}
               </StatusPill>
             ) : (
-              <Badge tone="neutral">Member in progress</Badge>
+              <Badge tone="neutral">{t('memberInProgress')}</Badge>
             )}
             {user?.locale ? (
               <Badge tone="neutral">
@@ -237,17 +238,9 @@ export function ProfileClient(): React.ReactElement {
         </div>
       </Card>
 
-      {/* Edit form */}
-      <Panel
-        title="Contact details"
-        subtitle="We’ll use these to send reminders and important notices."
-      >
+      <Panel title={t('contactTitle')} subtitle={t('contactSubtitle')}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-          <Field
-            label="Phone"
-            hint="We send reminders by text."
-            error={fieldErrors.phone}
-          >
+          <Field label={t('phone')} hint={t('phoneHint')} error={fieldErrors.phone}>
             <Input
               type="tel"
               inputMode="tel"
@@ -258,7 +251,7 @@ export function ProfileClient(): React.ReactElement {
             />
           </Field>
 
-          <Field label="Email" hint="Used for occasional updates." error={fieldErrors.email}>
+          <Field label={t('email')} hint={t('emailHint')} error={fieldErrors.email}>
             <Input
               type="email"
               inputMode="email"
@@ -272,10 +265,7 @@ export function ProfileClient(): React.ReactElement {
             />
           </Field>
 
-          <Field
-            label="Preferred language"
-            hint="Which language should we use when we message you?"
-          >
+          <Field label={t('language')} hint={t('languageHint')}>
             <Select
               value={form.preferredLocale}
               onChange={(e) =>
@@ -285,15 +275,12 @@ export function ProfileClient(): React.ReactElement {
                 })
               }
             >
-              <option value="en">English</option>
-              <option value="sw">Kiswahili</option>
+              <option value="en">{tLocale('en')}</option>
+              <option value="sw">{tLocale('sw')}</option>
             </Select>
           </Field>
 
-          <Field
-            label="Church directory"
-            hint="When on, other members can see your name in the church directory."
-          >
+          <Field label={t('directory')} hint={t('directoryHint')}>
             <label className="flex items-start gap-3 rounded-md border border-border bg-surface px-3 py-3 text-sm">
               <input
                 type="checkbox"
@@ -305,10 +292,10 @@ export function ProfileClient(): React.ReactElement {
               />
               <span>
                 <span className="font-medium text-foreground">
-                  Let other members see me in the directory
+                  {t('directoryOptIn')}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  Giving records, attendance, and notes are never shared.
+                  {t('directoryPrivacy')}
                 </span>
               </span>
             </label>
@@ -316,7 +303,7 @@ export function ProfileClient(): React.ReactElement {
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Button type="submit" loading={submitting} disabled={!dirty || submitting}>
-              {dirty ? 'Save changes' : 'All saved'}
+              {dirty ? t('saveChanges') : t('allSaved')}
             </Button>
             {dirty ? (
               <Button
@@ -327,39 +314,32 @@ export function ProfileClient(): React.ReactElement {
                   setFieldErrors({});
                 }}
               >
-                Discard
+                {t('discard')}
               </Button>
             ) : null}
           </div>
         </form>
       </Panel>
 
-      <Panel
-        title="Account & safety"
-        subtitle="How you sign in and protect your account."
-      >
+      <Panel title={t('accountTitle')} subtitle={t('accountSubtitle')}>
         <div className="flex flex-col gap-3">
           <AccountFact
             icon="phone"
-            label="Primary phone"
+            label={t('primaryPhone')}
             value={
               person.contacts.find((c) => c.channel === 'phone' && c.isPrimary)
-                ?.value ?? user?.phoneE164 ?? 'Not on file'
+                ?.value ?? user?.phoneE164 ?? t('notOnFile')
             }
           />
           <AccountFact
             icon="mail"
-            label="Primary email"
+            label={t('primaryEmail')}
             value={
               person.contacts.find((c) => c.channel === 'email' && c.isPrimary)
-                ?.value ?? user?.email ?? 'Not on file'
+                ?.value ?? user?.email ?? t('notOnFile')
             }
           />
-          <AccountFact
-            icon="key"
-            label="PIN"
-            value="Hidden — ask your church office to reset it"
-          />
+          <AccountFact icon="key" label={t('pin')} value={t('pinHidden')} />
         </div>
       </Panel>
 
@@ -372,11 +352,8 @@ export function ProfileClient(): React.ReactElement {
             <Icon name="shield" size={18} />
           </span>
           <div>
-            <CardTitle>Your information is private</CardTitle>
-            <CardSubtitle>
-              We never share your details with other churches. Giving, attendance,
-              and pastoral notes are always private to you and your church team.
-            </CardSubtitle>
+            <CardTitle>{t('privacyTitle')}</CardTitle>
+            <CardSubtitle>{t('privacyBody')}</CardSubtitle>
           </div>
         </div>
       </Card>

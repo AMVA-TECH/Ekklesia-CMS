@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError, apiFetch } from '@/app/_ekklesia/session';
 import {
@@ -22,6 +23,7 @@ import type { MyAttendance } from '../_shared/api-types';
 import { formatServiceDate } from '../_shared/formatters';
 
 export function AttendanceClient(): React.ReactElement {
+  const t = useTranslations('MemberAttendance');
   const [data, setData] = useState<MyAttendance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function AttendanceClient(): React.ReactElement {
         } else if (e instanceof ApiError) {
           setError(e.message);
         } else {
-          setError('Check your connection and try again.');
+          setError(t('connection'));
         }
       })
       .finally(() => {
@@ -50,18 +52,21 @@ export function AttendanceClient(): React.ReactElement {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
-  const bandCopy = useMemo(() => bandNarrative(data?.band), [data?.band]);
+  const bandCopy = useMemo(() => bandNarrative(data?.band, t), [data?.band, t]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="My attendance"
-        lede="A gentle record of your Sundays and services — only visible to you."
+        title={t('title')}
+        lede={t('lede')}
         actions={
-          <Link href="/attendance/family" className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
-            Family &amp; away notices
+          <Link
+            href="/attendance/family"
+            className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+          >
+            {t('familyAwayLink')}
           </Link>
         }
       />
@@ -72,8 +77,8 @@ export function AttendanceClient(): React.ReactElement {
         <EmptyState
           icon="calendar-check"
           tone="sky"
-          title="Attendance isn’t tracked for you yet"
-          description="When your church starts recording attendance for your services, your record will show here."
+          title={t('notTracked')}
+          description={t('notTrackedBody')}
         />
       ) : error ? (
         <ErrorCard message={error} />
@@ -81,20 +86,20 @@ export function AttendanceClient(): React.ReactElement {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <Metric
-              label="Services held"
+              label={t('servicesHeld')}
               value={data.sessionsHeld.toString()}
               icon="calendar"
               tone="sky"
               hint={`${formatServiceDate(data.from)} – ${formatServiceDate(data.to)}`}
             />
             <Metric
-              label="Present"
+              label={t('present')}
               value={data.presentCount.toString()}
               icon="check-circle"
               tone="sage"
             />
             <Metric
-              label="Attendance rate"
+              label={t('attendanceRate')}
               value={data.rate !== null ? `${Math.round(data.rate * 100)}%` : '—'}
               icon="chart"
               tone="gold"
@@ -114,8 +119,9 @@ export function AttendanceClient(): React.ReactElement {
               {data.noticeCount > 0 ? (
                 <p className="mt-2 inline-flex">
                   <Badge tone="lavender">
-                    {data.noticeCount} absence{' '}
-                    {data.noticeCount === 1 ? 'note' : 'notes'} sent
+                    {data.noticeCount === 1
+                      ? t('absenceNote', { count: data.noticeCount })
+                      : t('absenceNotes', { count: data.noticeCount })}
                   </Badge>
                 </p>
               ) : null}
@@ -123,15 +129,15 @@ export function AttendanceClient(): React.ReactElement {
           </Card>
 
           <Panel
-            title="Service history"
-            subtitle="The last few services on your record."
+            title={t('serviceHistory')}
+            subtitle={t('serviceHistorySubtitle')}
           >
             {data.calendar.length === 0 ? (
               <EmptyState
                 icon="calendar-check"
                 tone="sky"
-                title="No services recorded yet"
-                description="Your attendance will fill in here once services start being recorded."
+                title={t('noServices')}
+                description={t('noServicesBody')}
               />
             ) : (
               <ul className="flex flex-col divide-y divide-border">
@@ -156,12 +162,12 @@ export function AttendanceClient(): React.ReactElement {
                             {formatServiceDate(entry.serviceDate)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {statusLabel(entry.status)}
+                            {statusLabel(entry.status, t)}
                           </p>
                         </div>
                       </div>
                       <StatusPill tone={statusPillTone(entry.status)}>
-                        {statusLabel(entry.status)}
+                        {statusLabel(entry.status, t)}
                       </StatusPill>
                     </li>
                   ))}
@@ -189,6 +195,7 @@ function AttendanceSkeleton(): React.ReactElement {
 }
 
 function ErrorCard({ message }: { message: string }): React.ReactElement {
+  const t = useTranslations('MemberAttendance');
   return (
     <Card padding="lg" className="flex items-start gap-3">
       <Icon
@@ -197,14 +204,19 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
         className="mt-0.5 text-[color:var(--danger-ink)]"
       />
       <div>
-        <CardTitle>We couldn’t load your attendance</CardTitle>
+        <CardTitle>{t('loadFail')}</CardTitle>
         <CardSubtitle>{message}</CardSubtitle>
       </div>
     </Card>
   );
 }
 
-function bandNarrative(band: string | undefined): {
+type AttendanceT = ReturnType<typeof useTranslations<'MemberAttendance'>>;
+
+function bandNarrative(
+  band: string | undefined,
+  t: AttendanceT,
+): {
   title: string;
   message: string;
   icon: Parameters<typeof Icon>[0]['name'];
@@ -213,40 +225,36 @@ function bandNarrative(band: string | undefined): {
   switch (band) {
     case 'strong':
       return {
-        title: 'Steady and present',
-        message:
-          'You’re showing up — your church family sees it, and it strengthens them too.',
+        title: t('steady'),
+        message: t('steadyBody'),
         icon: 'heart',
         toneClass: 'tone-sage',
       };
     case 'steady':
       return {
-        title: 'Keeping in rhythm',
-        message:
-          'You’ve been attending regularly. Keep walking at a pace that fits your life.',
+        title: t('rhythm'),
+        message: t('rhythmBody'),
         icon: 'check-circle',
         toneClass: 'tone-sky',
       };
     case 'light':
       return {
-        title: 'We’ve missed you',
-        message:
-          'It has been a little while between services. We’d love to see you when you’re able.',
+        title: t('missed'),
+        message: t('missedBody'),
         icon: 'heart',
         toneClass: 'tone-peach',
       };
     case 'absent':
       return {
-        title: 'Hoping to welcome you back',
-        message:
-          'We haven’t seen you in a while. Reach out to your pastor if there’s anything we can pray for.',
+        title: t('welcomeBack'),
+        message: t('welcomeBackBody'),
         icon: 'alert',
         toneClass: 'tone-lavender',
       };
     default:
       return {
-        title: 'Your attendance',
-        message: 'Here is a quiet look at your recent services.',
+        title: t('yourAttendance'),
+        message: t('defaultBody'),
         icon: 'calendar-check',
         toneClass: 'tone-sky',
       };
@@ -267,10 +275,13 @@ function statusIcon(
   return 'minus';
 }
 
-function statusLabel(status: 'present' | 'absent' | 'notice'): string {
-  if (status === 'present') return 'Present';
-  if (status === 'notice') return 'Absence noted';
-  return 'Away';
+function statusLabel(
+  status: 'present' | 'absent' | 'notice',
+  t: AttendanceT,
+): string {
+  if (status === 'present') return t('statusPresent');
+  if (status === 'notice') return t('statusNotice');
+  return t('statusAway');
 }
 
 function statusPillTone(status: 'present' | 'absent' | 'notice'): StatusTone {

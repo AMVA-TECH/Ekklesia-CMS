@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ApiError,
   apiFetch,
@@ -16,6 +17,7 @@ import {
   type BottomNavItem,
   type NavGroup,
 } from '@/app/_ekklesia/shell';
+import { LocaleSwitcher } from '@/app/_ekklesia/i18n/locale-switcher';
 import {
   Avatar,
   BrandMark,
@@ -28,6 +30,7 @@ import {
   ToastProvider,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
+import { syncLocaleCookie } from '@/i18n/sync-locale-cookie';
 
 /** Shape returned by `/api/v1/auth/me`. */
 interface AuthMeResponse {
@@ -58,56 +61,13 @@ interface AuthMeResponse {
   authMode: string;
 }
 
-const BOTTOM_ITEMS: readonly BottomNavItem[] = [
-  { label: 'Home', href: '/home', icon: 'home' },
-  { label: 'Community', href: '/community', icon: 'users' },
-  { label: 'Events', href: '/events', icon: 'calendar' },
-  { label: 'Profile', href: '/profile', icon: 'user' },
-];
-
-// Desktop top bar (lg+): Profile and Notifications live in the avatar menu.
-const DESKTOP_ITEMS: readonly BottomNavItem[] = [
-  { label: 'Home', href: '/home', icon: 'home' },
-  { label: 'Events', href: '/events', icon: 'calendar' },
-  { label: 'Community', href: '/community', icon: 'users' },
-  { label: 'Giving', href: '/giving', icon: 'hand' },
-  { label: 'Projects', href: '/projects', icon: 'briefcase' },
-  { label: 'Attendance', href: '/attendance', icon: 'calendar-check' },
-];
-
-const DRAWER_GROUPS: readonly NavGroup[] = [
-  {
-    label: 'Me',
-    items: [
-      { label: 'Home', href: '/home', icon: 'home', hint: 'What is happening this week' },
-      { label: 'My profile', href: '/profile', icon: 'user', hint: 'Contact details & preferences' },
-      { label: 'My attendance', href: '/attendance', icon: 'calendar-check', hint: 'Sundays and services' },
-    ],
-  },
-  {
-    label: 'Participation',
-    items: [
-      { label: 'Events', href: '/events', icon: 'calendar', hint: 'Browse and register' },
-      { label: 'Community', href: '/community', icon: 'users', hint: 'Ministries & groups' },
-      { label: 'Giving', href: '/giving', icon: 'hand', hint: 'Pledges & offerings' },
-      { label: 'Projects', href: '/projects', icon: 'briefcase', hint: 'Volunteer for church projects' },
-    ],
-  },
-  {
-    label: 'Settings',
-    items: [
-      { label: 'Notifications', href: '/notifications', icon: 'bell', hint: 'How we reach you' },
-    ],
-  },
-];
-
 /**
  * Convert the raw `/api/v1/auth/me` payload into the UI `Session` contract.
  */
-function toSession(me: AuthMeResponse): Session {
+function toSession(me: AuthMeResponse, youLabel: string, yourChurchLabel: string): Session {
   const user: SessionUser = {
     id: me.actor.userAccountId,
-    displayName: resolveDisplayName(me),
+    displayName: resolveDisplayName(me, youLabel),
     email: me.actor.email ?? undefined,
     phoneE164: me.actor.phoneE164 ?? undefined,
     locale: me.locale ?? undefined,
@@ -115,7 +75,7 @@ function toSession(me: AuthMeResponse): Session {
   const activeChurch: SessionChurch | null = me.church?.id
     ? {
         id: me.church.id,
-        name: me.church.name ?? 'Your church',
+        name: me.church.name ?? yourChurchLabel,
         slug: me.church.slug ?? undefined,
         logoMediaId: me.church.logoMediaId ?? null,
         logoUrl: me.church.logoUrl ?? null,
@@ -130,13 +90,13 @@ function toSession(me: AuthMeResponse): Session {
   };
 }
 
-function resolveDisplayName(me: AuthMeResponse): string {
+function resolveDisplayName(me: AuthMeResponse, youLabel: string): string {
   if (me.actor.email) {
     const localPart = me.actor.email.split('@')[0];
-    return localPart ? titleize(localPart) : 'You';
+    return localPart ? titleize(localPart) : youLabel;
   }
   if (me.actor.phoneE164) return me.actor.phoneE164;
-  return 'You';
+  return youLabel;
 }
 
 function titleize(s: string): string {
@@ -160,6 +120,9 @@ interface MemberShellMountProps {
  * breaks client navigation ("Could not validate instant navigation").
  */
 export function MemberShellMount({ children }: MemberShellMountProps): React.ReactElement {
+  const tNav = useTranslations('MemberNav');
+  const tShell = useTranslations('MemberShell');
+  const tCommon = useTranslations('Common');
   const router = useRouter();
   const pathname = usePathname() ?? '/home';
   const [session, setSession] = useState<Session | null>(null);
@@ -169,6 +132,77 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
   const [redirecting, setRedirecting] = useState(false);
   const redirectedRef = useRef(false);
 
+  const bottomItems = useMemo<readonly BottomNavItem[]>(
+    () => [
+      { label: tNav('home'), href: '/home', icon: 'home' },
+      { label: tNav('community'), href: '/community', icon: 'users' },
+      { label: tNav('events'), href: '/events', icon: 'calendar' },
+      { label: tNav('profile'), href: '/profile', icon: 'user' },
+    ],
+    [tNav],
+  );
+
+  const desktopItems = useMemo<readonly BottomNavItem[]>(
+    () => [
+      { label: tNav('home'), href: '/home', icon: 'home' },
+      { label: tNav('events'), href: '/events', icon: 'calendar' },
+      { label: tNav('community'), href: '/community', icon: 'users' },
+      { label: tNav('giving'), href: '/giving', icon: 'hand' },
+      { label: tNav('projects'), href: '/projects', icon: 'briefcase' },
+      { label: tNav('attendance'), href: '/attendance', icon: 'calendar-check' },
+    ],
+    [tNav],
+  );
+
+  const drawerGroups = useMemo<readonly NavGroup[]>(
+    () => [
+      {
+        label: tNav('groupMe'),
+        items: [
+          { label: tNav('home'), href: '/home', icon: 'home', hint: tNav('hintHome') },
+          { label: tNav('myProfile'), href: '/profile', icon: 'user', hint: tNav('hintProfile') },
+          {
+            label: tNav('myAttendance'),
+            href: '/attendance',
+            icon: 'calendar-check',
+            hint: tNav('hintAttendance'),
+          },
+        ],
+      },
+      {
+        label: tNav('groupParticipation'),
+        items: [
+          { label: tNav('events'), href: '/events', icon: 'calendar', hint: tNav('hintEvents') },
+          {
+            label: tNav('community'),
+            href: '/community',
+            icon: 'users',
+            hint: tNav('hintCommunity'),
+          },
+          { label: tNav('giving'), href: '/giving', icon: 'hand', hint: tNav('hintGiving') },
+          {
+            label: tNav('projects'),
+            href: '/projects',
+            icon: 'briefcase',
+            hint: tNav('hintProjects'),
+          },
+        ],
+      },
+      {
+        label: tNav('groupSettings'),
+        items: [
+          {
+            label: tNav('notifications'),
+            href: '/notifications',
+            icon: 'bell',
+            hint: tNav('hintNotifications'),
+          },
+        ],
+      },
+    ],
+    [tNav],
+  );
+
   useEffect(() => {
     let alive = true;
 
@@ -176,7 +210,14 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
       try {
         const me = await apiFetch<AuthMeResponse>('/api/v1/auth/me');
         if (!alive) return;
-        setSession(toSession(me));
+        setSession(toSession(me, tShell('you'), tShell('yourChurch')));
+        // Profile locale is source of truth when signed in.
+        const localeChanged = await syncLocaleCookie(me.locale);
+        if (!alive) return;
+        if (localeChanged) {
+          window.location.reload();
+          return;
+        }
         setRedirecting(false);
         setLoading(false);
       } catch (e) {
@@ -193,9 +234,9 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
           return;
         }
         if (e instanceof ApiError) {
-          setLoadError(e.message || 'We could not load your account right now.');
+          setLoadError(e.message || tShell('loadAccount'));
         } else {
-          setLoadError('Check your connection and try again.');
+          setLoadError(tShell('loadConnection'));
         }
       }
     })();
@@ -205,7 +246,7 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
     };
     // `attempt` lets the user retry on a transient error.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt]);
+  }, [attempt, router, tShell]);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -221,13 +262,14 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
     (loading || redirecting || Boolean(loadError));
 
   const churchName = session?.church?.name ?? undefined;
-  const displayName = session?.user.displayName ?? 'You';
+  const displayName = session?.user.displayName ?? tShell('you');
 
   const topbarEnd = (
     <>
+      <LocaleSwitcher tone="light" persistProfile />
       <Link
         href="/notifications"
-        aria-label="Notification settings"
+        aria-label={tNav('notificationSettings')}
         className="inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
       >
         <Icon name="bell" size={18} />
@@ -237,7 +279,7 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
         trigger={
           <button
             type="button"
-            aria-label="Account"
+            aria-label={tNav('account')}
             className="inline-flex items-center gap-2 rounded-md px-1.5 py-1 text-sm font-medium text-foreground hover:bg-surface-muted focus-ring"
           >
             <Avatar name={displayName} size="sm" />
@@ -252,14 +294,14 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
         ) : null}
         <MenuSeparator />
         <MenuItem icon="user" onClick={() => router.push('/profile')}>
-          My profile
+          {tNav('myProfile')}
         </MenuItem>
         <MenuItem icon="bell" onClick={() => router.push('/notifications')}>
-          Notifications
+          {tNav('notifications')}
         </MenuItem>
         <MenuSeparator />
         <MenuItem icon="logout" onClick={() => void handleSignOut()} destructive>
-          Sign out
+          {tNav('signOut')}
         </MenuItem>
       </Menu>
     </>
@@ -274,7 +316,7 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
               <BrandMark size={40} withWordmark={false} variant="logo" surface="light" />
               {loadError ? (
                 <>
-                  <h1 className="text-xl font-semibold text-foreground">We hit a bump</h1>
+                  <h1 className="text-xl font-semibold text-foreground">{tShell('bumpTitle')}</h1>
                   <p className="max-w-sm text-sm">{loadError}</p>
                   <Button
                     onClick={() => {
@@ -284,30 +326,30 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
                     }}
                     iconLeft="refresh"
                   >
-                    Try again
+                    {tShell('tryAgain')}
                   </Button>
                   <Link
                     href="/sign-in"
                     className="text-sm underline-offset-2 hover:text-foreground hover:underline focus-ring rounded-sm"
                   >
-                    Sign in again
+                    {tShell('signInAgain')}
                   </Link>
                 </>
               ) : redirecting ? (
                 <>
-                  <Spinner size="md" label="Redirecting to sign in" />
-                  <p className="text-sm">Taking you to sign in…</p>
+                  <Spinner size="md" label={tShell('redirecting')} />
+                  <p className="text-sm">{tShell('redirecting')}</p>
                   <Link
                     href={`/sign-in?redirect=${encodeURIComponent(pathname || '/home')}`}
                     className="text-sm underline-offset-2 hover:text-foreground hover:underline focus-ring rounded-sm"
                   >
-                    Continue to sign in
+                    {tShell('continueSignIn')}
                   </Link>
                 </>
               ) : (
                 <>
-                  <Spinner size="md" label="Loading your church home" />
-                  <p className="text-sm">Loading your church home…</p>
+                  <Spinner size="md" label={tShell('loadingHome')} />
+                  <p className="text-sm">{tShell('loadingHome')}</p>
                 </>
               )}
             </div>
@@ -318,15 +360,15 @@ export function MemberShellMount({ children }: MemberShellMountProps): React.Rea
           </div>
         ) : (
           <MemberShell
-            drawerGroups={DRAWER_GROUPS}
-            bottomItems={BOTTOM_ITEMS}
-            desktopItems={DESKTOP_ITEMS}
+            drawerGroups={drawerGroups}
+            bottomItems={bottomItems}
+            desktopItems={desktopItems}
             topbarEnd={topbarEnd}
             churchName={churchName}
             footerProps={{
               tagline: (
                 <>
-                  <span className="font-semibold text-foreground">Ekklesia</span>
+                  <span className="font-semibold text-foreground">{tCommon('appName')}</span>
                   {churchName ? <> · {churchName}</> : null}
                 </>
               ),

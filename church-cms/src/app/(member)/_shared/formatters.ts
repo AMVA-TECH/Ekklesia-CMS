@@ -83,10 +83,13 @@ export function timeOfDayGreeting(now = new Date()): string {
 }
 
 /** Take the first word of a display name (for a warm, non-awkward salute). */
-export function firstName(displayName: string | null | undefined): string {
-  if (!displayName) return 'friend';
+export function firstName(
+  displayName: string | null | undefined,
+  fallback = 'friend',
+): string {
+  if (!displayName) return fallback;
   const first = displayName.trim().split(/\s+/u)[0];
-  if (!first || first.length < 2) return 'friend';
+  if (!first || first.length < 2) return fallback;
   return first;
 }
 
