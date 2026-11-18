@@ -3,6 +3,7 @@ import type { Ctx } from '@/platform/auth';
 import type { Db } from '@/platform/db/client';
 import { newId } from '@/platform/db/ids';
 import { participations } from '@/modules/ministries/db-schema';
+import { people } from '@/modules/people/db-schema';
 import {
   announcementAudiences,
   announcements,
@@ -62,6 +63,28 @@ export async function findTemplateByCodeChannelLocale(
     )
     .limit(1);
   return row ?? null;
+}
+
+/** All locale bodies for a template code + channel (for per-recipient dispatch). */
+export async function listTemplateBodiesByCodeChannel(
+  db: Db,
+  ctx: Ctx,
+  input: { code: string; channel: string },
+): Promise<Array<{ locale: string; body: string }>> {
+  return db
+    .select({
+      locale: messageTemplates.locale,
+      body: messageTemplates.body,
+    })
+    .from(messageTemplates)
+    .where(
+      and(
+        eq(messageTemplates.churchId, ctx.churchId),
+        eq(messageTemplates.code, input.code),
+        eq(messageTemplates.channel, input.channel),
+        isNull(messageTemplates.deletedAt),
+      ),
+    );
 }
 
 export async function insertTemplate(
@@ -523,6 +546,27 @@ export async function listPendingDeliveries(db: Db, ctx: Ctx, jobId: string, lim
     .orderBy(asc(messageDeliveries.createdAt))
     .limit(limit);
   return { job, rows };
+}
+
+/** preferredLocale for blast recipients (missing ids omitted). */
+export async function mapPeoplePreferredLocales(
+  db: Db,
+  personIds: string[],
+): Promise<Map<string, string>> {
+  const unique = [...new Set(personIds.filter(Boolean))];
+  const out = new Map<string, string>();
+  if (unique.length === 0) return out;
+  const rows = await db
+    .select({
+      id: people.id,
+      preferredLocale: people.preferredLocale,
+    })
+    .from(people)
+    .where(and(inArray(people.id, unique), isNull(people.deletedAt)));
+  for (const row of rows) {
+    out.set(row.id, row.preferredLocale);
+  }
+  return out;
 }
 
 export async function markDeliverySent(

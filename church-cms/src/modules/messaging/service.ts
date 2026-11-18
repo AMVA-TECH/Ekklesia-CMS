@@ -35,6 +35,7 @@ import type {
   UpdatePreferencesBody,
   UpdateTemplateBody,
 } from './schemas';
+import { resolveOutboundBody } from './outbound-locale';
 import { slugifyTemplateCode } from './template-code';
 import * as repo from './repository';
 
@@ -562,11 +563,47 @@ export async function dispatchMessageJob(ctx: Ctx, jobId: string) {
   let sent = 0;
   let failed = 0;
 
+  // When the job came from a template, send each recipient the locale variant
+  // matching their preferredLocale (fallback: church/request locale → job body).
+  const bodiesByLocale = new Map<string, string>();
+  if (job.templateId) {
+    const template = await repo.getTemplate(db, ctx, job.templateId);
+    if (template) {
+      const variants = await repo.listTemplateBodiesByCodeChannel(db, ctx, {
+        code: template.code,
+        channel: template.channel,
+      });
+      for (const variant of variants) {
+        if (variant.body?.trim()) {
+          bodiesByLocale.set(variant.locale, variant.body);
+        }
+      }
+    }
+  }
+  const localesByPerson =
+    bodiesByLocale.size > 0
+      ? await repo.mapPeoplePreferredLocales(
+          db,
+          rows.map((r) => r.personId).filter((id): id is string => Boolean(id)),
+        )
+      : new Map<string, string>();
+
   for (const delivery of rows) {
+    const body =
+      bodiesByLocale.size > 0
+        ? resolveOutboundBody({
+            preferredLocale: delivery.personId
+              ? localesByPerson.get(delivery.personId)
+              : undefined,
+            churchLocale: ctx.locale,
+            jobBody: job.body,
+            bodiesByLocale,
+          })
+        : job.body;
     const result = await adapter.send({
       channel: job.channel,
       to: delivery.toAddress,
-      body: job.body,
+      body,
       idempotencyKey: delivery.id,
     });
     if (result.ok) {
