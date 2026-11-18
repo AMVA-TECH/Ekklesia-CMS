@@ -25,6 +25,7 @@ import {
   formatLongDate,
   formatRelativeToToday,
 } from '../../_shared/formatters';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface MemberRegistration {
   id: string;
@@ -78,11 +79,11 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
         } else {
           const reason = eventResult.reason;
           if (reason instanceof ApiError && reason.status === 404) {
-            setLoadError('This event is not available.');
+            setLoadError(t('This event is not available.'));
           } else if (reason instanceof ApiError) {
             setLoadError(reason.message);
           } else {
-            setLoadError('We could not load this event.');
+            setLoadError(t('We could not load this event.'));
           }
           return;
         }
@@ -126,16 +127,16 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
         { method: 'POST', json: {} },
       );
       setRegistration({ kind: 'registered', registration: created });
-      push({ tone: 'success', title: 'You’re in!', message: 'We saved your spot.' });
+      push({ tone: 'success', title: t('You’re in!'), message: t('We saved your spot.') });
     } catch (e) {
       if (e instanceof ApiError) {
         push({
           tone: 'danger',
-          title: 'We couldn’t register you',
-          message: e.message || 'Try again in a moment.',
+          title: t('We couldn’t register you'),
+          message: e.message || t('Try again in a moment.'),
         });
       } else {
-        push({ tone: 'danger', message: 'Check your connection and try again.' });
+        push({ tone: 'danger', message: t('Check your connection and try again.') });
       }
     } finally {
       setSubmitting(false);
@@ -155,17 +156,17 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
       );
       push({
         tone: 'neutral',
-        message: 'Your spot has been cancelled. You can register again later.',
+        message: t('Your spot has been cancelled. You can register again later.'),
       });
     } catch (e) {
       if (e instanceof ApiError) {
         push({
           tone: 'danger',
-          title: 'We couldn’t cancel',
-          message: e.message || 'Try again in a moment.',
+          title: t('We couldn’t cancel'),
+          message: e.message || t('Try again in a moment.'),
         });
       } else {
-        push({ tone: 'danger', message: 'Check your connection and try again.' });
+        push({ tone: 'danger', message: t('Check your connection and try again.') });
       }
     } finally {
       setSubmitting(false);
@@ -185,19 +186,19 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
           iconLeft="arrow-left"
           onClick={() => router.push('/events')}
         >
-          Back to events
+          {t('Back to events')}
         </Button>
         <EmptyState
           icon="calendar"
           tone="sky"
-          title="Event not found"
-          description={loadError ?? 'We could not find that event.'}
+          title={t('Event not found')}
+          description={loadError ?? t('We could not find that event.')}
           action={
             <Link
               href="/events"
               className="inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-2 hover:underline focus-ring rounded-sm"
             >
-              Browse all events
+              {t('Browse all events')}
             </Link>
           }
         />
@@ -218,7 +219,7 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
           size="sm"
           onClick={() => router.push('/events')}
         >
-          Back to events
+          {t('Back to events')}
         </Button>
       </div>
 
@@ -242,7 +243,7 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
       )}
 
       <PageHeader
-        eyebrow={event.eventTypeName ?? 'Church gathering'}
+        eyebrow={event.eventTypeName ?? t('Church gathering')}
         title={event.title}
         lede={event.description ?? undefined}
       />
@@ -266,12 +267,12 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
             </p>
           </div>
         </div>
-        {isCancelled ? <StatusPill tone="danger">Cancelled</StatusPill> : null}
+        {isCancelled ? <StatusPill tone="danger">{t('Cancelled')}</StatusPill> : null}
       </Card>
 
       <section aria-labelledby="event-registration">
         <h2 id="event-registration" className="sr-only">
-          Your attendance
+          {t('Your attendance')}
         </h2>
         <Card padding="lg" className="flex flex-col gap-4">
           {isCancelled ? (
@@ -283,9 +284,9 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
                 <Icon name="alert" size={18} />
               </span>
               <div>
-                <CardTitle>This event has been cancelled</CardTitle>
+                <CardTitle>{t('This event has been cancelled')}</CardTitle>
                 <CardSubtitle>
-                  Please contact your church office if you have questions.
+                  {t('Please contact your church office if you have questions.')}
                 </CardSubtitle>
               </div>
             </div>
@@ -299,9 +300,9 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
                   <Icon name="check-circle" size={20} />
                 </span>
                 <div>
-                  <CardTitle>You&rsquo;re registered</CardTitle>
+                  <CardTitle>{t('You’re registered')}</CardTitle>
                   <CardSubtitle>
-                    We&rsquo;re looking forward to seeing you.
+                    {t('We’re looking forward to seeing you.')}
                   </CardSubtitle>
                 </div>
               </div>
@@ -311,7 +312,7 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
                   onClick={() => setConfirmOpen(true)}
                   loading={submitting}
                 >
-                  Cancel my spot
+                  {t('Cancel my spot')}
                 </Button>
               </div>
             </>
@@ -325,15 +326,15 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
                   <Icon name="refresh" size={18} />
                 </span>
                 <div>
-                  <CardTitle>Changed your mind?</CardTitle>
+                  <CardTitle>{t('Changed your mind?')}</CardTitle>
                   <CardSubtitle>
-                    Your previous registration was cancelled — you can sign up again.
+                    {t('Your previous registration was cancelled — you can sign up again.')}
                   </CardSubtitle>
                 </div>
               </div>
               <div>
                 <Button onClick={() => void handleRegister()} loading={submitting}>
-                  Register again
+                  {t('Register again')}
                 </Button>
               </div>
             </>
@@ -347,15 +348,15 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
                   <Icon name="hand" size={20} />
                 </span>
                 <div>
-                  <CardTitle>Save your spot</CardTitle>
+                  <CardTitle>{t('Save your spot')}</CardTitle>
                   <CardSubtitle>
-                    Let your church know you&rsquo;re planning to come.
+                    {t('Let your church know you’re planning to come.')}
                   </CardSubtitle>
                 </div>
               </div>
               <div>
                 <Button onClick={() => void handleRegister()} loading={submitting}>
-                  Register for this event
+                  {t('Register for this event')}
                 </Button>
               </div>
             </>
@@ -369,7 +370,7 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
             id="event-about"
             className="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
           >
-            About this event
+            {t('About this event')}
           </h2>
           <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {event.description}
@@ -386,8 +387,8 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
       <Dialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        title="Cancel your spot?"
-        description="You can register again later as long as there's still room."
+        title={t('Cancel your spot?')}
+        description={t('You can register again later as long as there\'s still room.')}
         footer={
           <DialogFooter>
             <Button
@@ -395,20 +396,20 @@ export function EventDetailClient({ eventId }: { eventId: string }): React.React
               onClick={() => setConfirmOpen(false)}
               disabled={submitting}
             >
-              Keep my spot
+              {t('Keep my spot')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => void handleCancel()}
               loading={submitting}
             >
-              Yes, cancel
+              {t('Yes, cancel')}
             </Button>
           </DialogFooter>
         }
       >
         <p className="text-sm text-muted-foreground">
-          We&rsquo;ll let your church know you&apos;re no longer planning to come.
+          {t('We’ll let your church know you\'re no longer planning to come.')}
         </p>
       </Dialog>
     </div>

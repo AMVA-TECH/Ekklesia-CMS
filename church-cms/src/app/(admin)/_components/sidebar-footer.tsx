@@ -3,6 +3,7 @@
 import { Icon } from '@/app/_ekklesia/icons';
 import { useRole, useSession } from '@/app/_ekklesia/session';
 import { Avatar } from '@/app/_ekklesia/ui';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const ROLE_PRIORITY = [
   'church_administrator',
@@ -46,12 +47,12 @@ export function SidebarFooter(): React.ReactElement | null {
     primary?.label?.trim() ||
     (primary?.code ? ROLE_FALLBACK_LABELS[primary.code] : null) ||
     primary?.code?.replaceAll('_', ' ') ||
-    'Member';
+    t('Member');
 
   const displayName =
     user.displayName?.trim() ||
     user.email?.split('@')[0] ||
-    'Signed in';
+    t('Signed in');
 
   const showAdmin = isChurchAdministrator || isPlatformOperator;
 
@@ -80,7 +81,7 @@ export function SidebarFooter(): React.ReactElement | null {
           </p>
           {showAdmin ? (
             <span className="shrink-0 rounded-md bg-[color:var(--sidebar-active-bg)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-active-accent)] ring-1 ring-inset ring-[color:var(--sidebar-active-border)]">
-              Admin
+              {t('Admin')}
             </span>
           ) : null}
         </div>

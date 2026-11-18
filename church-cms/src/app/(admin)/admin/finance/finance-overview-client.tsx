@@ -23,6 +23,7 @@ import { Icon } from '@/app/_ekklesia/icons';
 import type { Fund, Offering, Pledge } from '../../_lib/api-types';
 import { formatCount, formatDate, formatMoney, titleCase } from '../../_lib/format';
 import { asList } from '../../_lib/list';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /**
  * Finance landing page — a calm overview that lets administrators see the
@@ -97,8 +98,8 @@ export function FinanceOverviewClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Finance"
-        lede="A calm overview of giving — offerings, funds, and open pledges. Drill in for the full ledger."
+        title={t('Finance')}
+        lede={t('A calm overview of giving — offerings, funds, and open pledges. Drill in for the full ledger.')}
         actions={
           <>
             <Link
@@ -106,14 +107,14 @@ export function FinanceOverviewClient(): React.ReactElement {
               className={buttonClassName({ variant: 'secondary' })}
             >
               <Icon name="coin" size={14} />
-              Offerings
+              {t('Offerings')}
             </Link>
             <Link
               href="/admin/finance/funds"
               className={buttonClassName({ variant: 'primary' })}
             >
               <Icon name="briefcase" size={14} />
-              Funds
+              {t('Funds')}
             </Link>
           </>
         }
@@ -129,48 +130,48 @@ export function FinanceOverviewClient(): React.ReactElement {
 
       <section aria-labelledby="finance-metrics">
         <h2 id="finance-metrics" className="sr-only">
-          Giving metrics
+          {t('Giving metrics')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric
-            label="Recent offerings"
+            label={t('Recent offerings')}
             value={loading ? '—' : formatMoney(offeringsTotal, currency)}
             icon="coin"
             tone="peach"
             href="/admin/finance/offerings"
-            hint="Last 50 recorded"
+            hint={t('Last 50 recorded')}
           />
           <Metric
-            label="Active funds"
+            label={t('Active funds')}
             value={loading ? '—' : formatCount(funds.filter((f) => f.status === 'active').length)}
             icon="briefcase"
             tone="gold"
             href="/admin/finance/funds"
-            hint={`${funds.length} total`}
+            hint={t('{0} total', funds.length)}
           />
           <Metric
-            label="Pledge total"
+            label={t('Pledge total')}
             value={loading ? '—' : formatMoney(pledgeTotal, currency)}
             icon="hand"
             tone="sage"
             href="/admin/finance/pledges"
-            hint={`${pledges.length} pledges`}
+            hint={t('{0} pledges', pledges.length)}
           />
           <Metric
-            label="Still owed"
+            label={t('Still owed')}
             value={loading ? '—' : formatMoney(unpaidTotal, currency)}
             icon="alert-circle"
             tone="neutral"
             href="/admin/finance/pledges"
-            hint={`${unpaidPledges.length} open`}
+            hint={t('{0} open', unpaidPledges.length)}
           />
         </div>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel
-          title="Recent offerings"
-          subtitle="Most recent first."
+          title={t('Recent offerings')}
+          subtitle={t('Most recent first.')}
           linkHref="/finance/offerings"
         >
           {loading ? (
@@ -179,8 +180,8 @@ export function FinanceOverviewClient(): React.ReactElement {
             <EmptyState
               icon="coin"
               tone="peach"
-              title="No offerings recorded"
-              description="Record a Sunday collection and it'll show up here."
+              title={t('No offerings recorded')}
+              description={t('Record a Sunday collection and it\'ll show up here.')}
               action={
                 <Link
                   href="/admin/finance/offerings"
@@ -189,7 +190,7 @@ export function FinanceOverviewClient(): React.ReactElement {
                     size: 'sm',
                   })}
                 >
-                  Record offering
+                  {t('Record offering')}
                 </Link>
               }
             />
@@ -211,11 +212,11 @@ export function FinanceOverviewClient(): React.ReactElement {
                   </div>
                   {o.postedAt ? (
                     <StatusPill tone="success" hideDot>
-                      Posted
+                      {t('Posted')}
                     </StatusPill>
                   ) : (
                     <StatusPill tone="pending" hideDot>
-                      Draft
+                      {t('Draft')}
                     </StatusPill>
                   )}
                 </li>
@@ -225,8 +226,8 @@ export function FinanceOverviewClient(): React.ReactElement {
         </Panel>
 
         <Panel
-          title="Funds"
-          subtitle="Where giving is directed."
+          title={t('Funds')}
+          subtitle={t('Where giving is directed.')}
           linkHref="/finance/funds"
         >
           {loading ? (
@@ -235,14 +236,14 @@ export function FinanceOverviewClient(): React.ReactElement {
             <EmptyState
               icon="briefcase"
               tone="gold"
-              title="No funds yet"
-              description="Create your first fund (e.g. general, missions) to categorise offerings."
+              title={t('No funds yet')}
+              description={t('Create your first fund (e.g. general, missions) to categorise offerings.')}
               action={
                 <Link
                   href="/admin/finance/funds"
                   className={buttonClassName({ variant: 'primary', size: 'sm' })}
                 >
-                  New fund
+                  {t('New fund')}
                 </Link>
               }
             />
@@ -251,10 +252,10 @@ export function FinanceOverviewClient(): React.ReactElement {
               <Table>
                 <THead>
                   <TR noHover>
-                    <TH>Code</TH>
-                    <TH>Name</TH>
-                    <TH>Type</TH>
-                    <TH>Status</TH>
+                    <TH>{t('Code')}</TH>
+                    <TH>{t('Name')}</TH>
+                    <TH>{t('Type')}</TH>
+                    <TH>{t('Status')}</TH>
                   </TR>
                 </THead>
                 <TBody>
@@ -282,8 +283,8 @@ export function FinanceOverviewClient(): React.ReactElement {
       </div>
 
       <Panel
-        title="Open pledges"
-        subtitle="Pledges that haven't been fully received yet."
+        title={t('Open pledges')}
+        subtitle={t('Pledges that haven\'t been fully received yet.')}
         linkHref="/finance/pledges"
       >
         {loading ? (
@@ -292,19 +293,19 @@ export function FinanceOverviewClient(): React.ReactElement {
           <EmptyState
             icon="check-circle"
             tone="sage"
-            title="All pledges are up to date"
-            description="Nothing outstanding. We'll surface open pledges here when they arrive."
+            title={t('All pledges are up to date')}
+            description={t('Nothing outstanding. We\'ll surface open pledges here when they arrive.')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Amount</TH>
-                  <TH>Applied</TH>
-                  <TH>Still owed</TH>
-                  <TH>Due</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Amount')}</TH>
+                  <TH>{t('Applied')}</TH>
+                  <TH>{t('Still owed')}</TH>
+                  <TH>{t('Due')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>

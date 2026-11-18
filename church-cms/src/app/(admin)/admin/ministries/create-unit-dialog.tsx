@@ -12,6 +12,7 @@ import {
   Textarea,
 } from '@/app/_ekklesia/ui';
 import type { OrganisationalUnit } from '../../_lib/api-types';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface CreateUnitDialogProps {
   open: boolean;
@@ -24,11 +25,11 @@ const KINDS: Array<{
   value: 'ministry' | 'department' | 'life_group' | 'branch' | 'team';
   label: string;
 }> = [
-  { value: 'ministry', label: 'Ministry' },
-  { value: 'department', label: 'Department' },
-  { value: 'team', label: 'Team' },
-  { value: 'branch', label: 'Branch' },
-  { value: 'life_group', label: 'Life group' },
+  { value: 'ministry', label: tk('Ministry') },
+  { value: 'department', label: tk('Department') },
+  { value: 'team', label: tk('Team') },
+  { value: 'branch', label: tk('Branch') },
+  { value: 'life_group', label: tk('Life group') },
 ];
 
 export function CreateUnitDialog({
@@ -102,7 +103,7 @@ export function CreateUnitDialog({
         setFormError(body?.error ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create this unit.',
+          err instanceof Error ? err.message : t('Could not create this unit.'),
         );
       }
       setSubmitting(false);
@@ -113,16 +114,16 @@ export function CreateUnitDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New unit"
-      description="Create a ministry, department, team, branch, or life group."
+      title={t('New unit')}
+      description={t('Create a ministry, department, team, branch, or life group.')}
       size="sm"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Create unit'}
+            {submitting ? t('Saving…') : t('Create unit')}
           </Button>
         </DialogFooter>
       }
@@ -143,7 +144,7 @@ export function CreateUnitDialog({
           </div>
         ) : null}
 
-        <Field label="Kind" required error={fieldErrors.kind}>
+        <Field label={t('Kind')} required error={fieldErrors.kind}>
           <Select
             value={kind}
             onChange={(e) =>
@@ -152,16 +153,16 @@ export function CreateUnitDialog({
           >
             {KINDS.map((k) => (
               <option key={k.value} value={k.value}>
-                {k.label}
+                {t(k.label)}
               </option>
             ))}
           </Select>
         </Field>
 
         <Field
-          label="Name"
+          label={t('Name')}
           required
-          hint="e.g. 'Worship ministry' or 'Youth department'."
+          hint={t('e.g. \'Worship ministry\' or \'Youth department\'.')}
           error={fieldErrors.name}
         >
           <Input
@@ -172,7 +173,7 @@ export function CreateUnitDialog({
           />
         </Field>
 
-        <Field label="Description" error={fieldErrors.description}>
+        <Field label={t('Description')} error={fieldErrors.description}>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -183,12 +184,12 @@ export function CreateUnitDialog({
 
         {parents.length > 0 ? (
           <Field
-            label="Parent unit"
-            hint="Optional — nest this under another unit."
+            label={t('Parent unit')}
+            hint={t('Optional — nest this under another unit.')}
             error={fieldErrors.parentId}
           >
             <Select value={parentId} onChange={(e) => setParentId(e.target.value)}>
-              <option value="">No parent</option>
+              <option value="">{t('No parent')}</option>
               {parents.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}

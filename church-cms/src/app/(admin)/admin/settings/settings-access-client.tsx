@@ -22,6 +22,7 @@ import {
 import { normalizeTanzaniaPhoneE164 } from '@/platform/phone';
 import { asList } from '../../_lib/list';
 import { extractValidationErrors } from '../people/form-errors';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface RoleRow {
   id: string;
@@ -44,10 +45,10 @@ interface OrganisationUserRow {
 }
 
 const INVITE_ROLE_OPTIONS = [
-  { code: 'pastoral_leadership', label: 'Pastoral Leadership' },
-  { code: 'senior_pastor', label: 'Senior Pastor' },
-  { code: 'church_administrator', label: 'Church Administrator' },
-  { code: 'finance_officer', label: 'Finance Officer' },
+  { code: 'pastoral_leadership', label: tk('Pastoral Leadership') },
+  { code: 'senior_pastor', label: tk('Senior Pastor') },
+  { code: 'church_administrator', label: tk('Church Administrator') },
+  { code: 'finance_officer', label: tk('Finance Officer') },
 ] as const;
 
 function shortId(id: string): string {
@@ -126,7 +127,7 @@ export function SettingsAccessClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load roles',
+            : t('Unable to load roles'),
       );
     } finally {
       setAccessLoading(false);
@@ -180,7 +181,7 @@ export function SettingsAccessClient(): React.ReactElement {
       setInviteName('');
       setInviteEmail('');
       setInvitePhone('');
-      push({ tone: 'success', message: 'Leadership account created.' });
+      push({ tone: 'success', message: t('Leadership account created.') });
       void loadAccess();
     } catch (err) {
       if (err instanceof ApiError) {
@@ -189,7 +190,7 @@ export function SettingsAccessClient(): React.ReactElement {
         setInviteFormError(parsed.formError ?? err.message);
       } else {
         setInviteFormError(
-          err instanceof Error ? err.message : 'Could not invite leadership.',
+          err instanceof Error ? err.message : t('Could not invite leadership.'),
         );
       }
     } finally {
@@ -216,7 +217,7 @@ export function SettingsAccessClient(): React.ReactElement {
         },
       );
       setAssignments((prev) => [created, ...prev]);
-      push({ tone: 'success', message: 'Role assigned.' });
+      push({ tone: 'success', message: t('Role assigned.') });
     } catch (err) {
       if (err instanceof ApiError) {
         const parsed = extractValidationErrors(err);
@@ -224,7 +225,7 @@ export function SettingsAccessClient(): React.ReactElement {
         setAssignFormError(parsed.formError ?? err.message);
       } else {
         setAssignFormError(
-          err instanceof Error ? err.message : 'Could not assign role.',
+          err instanceof Error ? err.message : t('Could not assign role.'),
         );
       }
     } finally {
@@ -240,7 +241,7 @@ export function SettingsAccessClient(): React.ReactElement {
         method: 'DELETE',
       });
       setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
-      push({ tone: 'success', message: 'Role revoked.' });
+      push({ tone: 'success', message: t('Role revoked.') });
     } catch (err) {
       push({
         tone: 'danger',
@@ -249,7 +250,7 @@ export function SettingsAccessClient(): React.ReactElement {
             ? err.message
             : err instanceof Error
               ? err.message
-              : 'Could not revoke role.',
+              : t('Could not revoke role.'),
       });
     } finally {
       setRevokingId(null);
@@ -258,7 +259,7 @@ export function SettingsAccessClient(): React.ReactElement {
 
   if (accessLoading) {
     return (
-      <Panel title="Roles / Access">
+      <Panel title={t('Roles / Access')}>
         <div className="flex flex-col gap-3 p-4">
           <Skeleton size="heading" />
           <Skeleton size="line" />
@@ -272,11 +273,11 @@ export function SettingsAccessClient(): React.ReactElement {
       <EmptyState
         icon="shield"
         tone="gold"
-        title="Could not load roles"
+        title={t('Could not load roles')}
         description={accessError}
         action={
           <Button variant="secondary" onClick={() => void loadAccess()}>
-            Try again
+            {t('Try again')}
           </Button>
         }
       />
@@ -284,24 +285,22 @@ export function SettingsAccessClient(): React.ReactElement {
   }
 
   return (
-    <Panel title="Roles / Access">
+    <Panel title={t('Roles / Access')}>
       <div className="flex flex-col gap-5 p-4 sm:p-5">
         <p className="text-sm text-muted-foreground">
-          System access is separate from organisational leadership positions.
-          Appointing someone as a pastor does not grant admin permissions — assign
-          a role here explicitly.
+          {t('System access is separate from organisational leadership positions. Appointing someone as a pastor does not grant admin permissions — assign a role here explicitly.')}
         </p>
 
         {issuedInvite ? (
           <div className="rounded-lg border border-border bg-surface p-4">
-            <p className="font-medium">Leadership credentials issued (once)</p>
+            <p className="font-medium">{t('Leadership credentials issued (once)')}</p>
             <p>
               {issuedInvite.email}
               {issuedInvite.phoneE164 ? ` · ${issuedInvite.phoneE164}` : ''} ·{' '}
               {issuedInvite.roleName}
             </p>
             <p>
-              PIN: <code>{issuedInvite.initialPin}</code>
+              {t('PIN:')} <code>{issuedInvite.initialPin}</code>
             </p>
           </div>
         ) : null}
@@ -318,41 +317,41 @@ export function SettingsAccessClient(): React.ReactElement {
               {inviteFormError}
             </div>
           ) : null}
-          <Field label="Display name" required error={inviteFieldErrors.displayName}>
+          <Field label={t('Display name')} required error={inviteFieldErrors.displayName}>
             <Input
               value={inviteName}
               onChange={(e) => setInviteName(e.target.value)}
               maxLength={120}
             />
           </Field>
-          <Field label="Email" required error={inviteFieldErrors.email}>
+          <Field label={t('Email')} required error={inviteFieldErrors.email}>
             <Input
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
             />
           </Field>
-          <Field label="Phone" error={inviteFieldErrors.phoneE164}>
+          <Field label={t('Phone')} error={inviteFieldErrors.phoneE164}>
             <Input
               value={invitePhone}
               onChange={(e) => setInvitePhone(e.target.value)}
               placeholder="0712 345 678"
             />
           </Field>
-          <Field label="Role" required>
+          <Field label={t('Role')} required>
             <Select
               value={inviteRoleCode}
               onChange={(e) => setInviteRoleCode(e.target.value)}
             >
               {INVITE_ROLE_OPTIONS.map((opt) => (
                 <option key={opt.code} value={opt.code}>
-                  {opt.label}
+                  {t(opt.label)}
                 </option>
               ))}
             </Select>
           </Field>
           <Button type="submit" size="sm" loading={inviting}>
-            Invite leadership
+            {t('Invite leadership')}
           </Button>
         </form>
 
@@ -370,7 +369,7 @@ export function SettingsAccessClient(): React.ReactElement {
               {assignFormError}
             </div>
           ) : null}
-          <Field label="Person" required error={assignFieldErrors.userAccountId}>
+          <Field label={t('Person')} required error={assignFieldErrors.userAccountId}>
             <Select
               value={userAccountId}
               onChange={(e) => setUserAccountId(e.target.value)}
@@ -383,7 +382,7 @@ export function SettingsAccessClient(): React.ReactElement {
               ))}
             </Select>
           </Field>
-          <Field label="Role" required error={assignFieldErrors.roleId}>
+          <Field label={t('Role')} required error={assignFieldErrors.roleId}>
             <Select
               value={roleId}
               onChange={(e) => setRoleId(e.target.value)}
@@ -402,24 +401,24 @@ export function SettingsAccessClient(): React.ReactElement {
             loading={assigning}
             disabled={roles.length === 0 || orgUsers.length === 0}
           >
-            Assign role
+            {t('Assign role')}
           </Button>
         </form>
 
         {assignments.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No active role assignments yet.
+            {t('No active role assignments yet.')}
           </p>
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Person</TH>
-                  <TH>Role</TH>
-                  <TH>Scope</TH>
+                  <TH>{t('Person')}</TH>
+                  <TH>{t('Role')}</TH>
+                  <TH>{t('Scope')}</TH>
                   <TH className="w-28">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('Actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -437,7 +436,7 @@ export function SettingsAccessClient(): React.ReactElement {
                         disabled={Boolean(revokingId)}
                         onClick={() => void handleRevoke(row.id)}
                       >
-                        Revoke
+                        {t('Revoke')}
                       </Button>
                     </TD>
                   </TR>

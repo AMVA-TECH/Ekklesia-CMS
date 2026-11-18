@@ -10,6 +10,7 @@ import { toMinorUnits } from '../../../_lib/errors';
 import { formatDate, formatMoney } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import type { Journal } from '../_lib/finance-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /**
  * Link money already received (a posted journal — e.g. a posted offering or
@@ -46,15 +47,15 @@ export function RecordPaymentDialog({
 
   return (
     <FormDialog
-      title="Record pledge payment"
-      description={`${pledgerName} pledged ${formatMoney(pledge.amountMinor, pledge.currency)}; ${formatMoney(outstanding, pledge.currency)} is still owed.`}
-      submitLabel="Record payment"
+      title={t('Record pledge payment')}
+      description={t('{0} pledged {1}; {2} is still owed.', pledgerName, formatMoney(pledge.amountMinor, pledge.currency), formatMoney(outstanding, pledge.currency))}
+      submitLabel={t('Record payment')}
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!journalId) e.journalId = 'Choose the posted entry where this money was recorded.';
+        if (!journalId) e.journalId = t('Choose the posted entry where this money was recorded.');
         const minor = toMinorUnits(amount);
-        if (minor === null) e.amountMinor = 'Enter an amount greater than zero.';
+        if (minor === null) e.amountMinor = t('Enter an amount greater than zero.');
         return e;
       }}
       onSubmit={async () => {
@@ -69,40 +70,40 @@ export function RecordPaymentDialog({
       {(errors) => (
         <>
           <Field
-            label="Received in"
+            label={t('Received in')}
             required
-            hint="Record the money as an offering or journal and post it first, then link it here."
+            hint={t('Record the money as an offering or journal and post it first, then link it here.')}
             error={errors.journalId}
           >
             <Select data-autofocus value={journalId} onChange={(e) => setJournalId(e.target.value)}>
               <option value="">
                 {journals.loading
-                  ? 'Loading posted entries…'
+                  ? t('Loading posted entries…')
                   : options.length === 0
-                    ? 'No posted entries yet'
-                    : 'Choose a posted entry…'}
+                    ? t('No posted entries yet')
+                    : t('Choose a posted entry…')}
               </option>
               {options.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.label}
+                  {t(o.label)}
                 </option>
               ))}
             </Select>
           </Field>
           {!journals.loading && options.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nothing posted yet.{' '}
+              {t('Nothing posted yet.')}{' '}
               <Link href="/admin/finance/offerings" className="underline">
-                Record an offering
+                {t('Record an offering')}
               </Link>{' '}
-              or{' '}
+              {t('or')}{' '}
               <Link href="/admin/finance/journals" className="underline">
-                post a journal
+                {t('post a journal')}
               </Link>
               .
             </p>
           ) : null}
-          <Field label={`Amount (${pledge.currency})`} required error={errors.amountMinor}>
+          <Field label={t('Amount ({0})', pledge.currency)} required error={errors.amountMinor}>
             <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </Field>
         </>

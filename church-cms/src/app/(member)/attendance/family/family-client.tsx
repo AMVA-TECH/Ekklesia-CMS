@@ -18,6 +18,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { MemberPerson } from '../../_shared/api-types';
 import { formatServiceDate } from '../../_shared/formatters';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 type DayStatus = 'full' | 'partial' | 'notice' | 'absent';
 interface FamilyAttendance {
@@ -63,7 +64,7 @@ export function FamilyAttendanceClient(): React.ReactElement {
     } else {
       const e = famRes.reason;
       if (e instanceof ApiError && (e.status === 422 || e.status === 404)) setNoHousehold(true);
-      else setError(e instanceof ApiError ? e.message : 'Check your connection and try again.');
+      else setError(e instanceof ApiError ? e.message : t('Check your connection and try again.'));
     }
     setLoading(false);
   }, []);
@@ -79,17 +80,17 @@ export function FamilyAttendanceClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/attendance">My attendance</Link>}
-        title="Family attendance"
-        lede="How your household has been gathering, and a quick way to let the church know you'll be away."
+        eyebrow={<Link href="/attendance">{t('My attendance')}</Link>}
+        title={t('Family attendance')}
+        lede={t('How your household has been gathering, and a quick way to let the church know you\'ll be away.')}
       />
 
-      <Panel title="I'll be away" subtitle="Your pastors see this so nobody worries.">
+      <Panel title={t('I\'ll be away')} subtitle={t('Your pastors see this so nobody worries.')}>
         {loading ? (
           <Skeleton size="block" />
         ) : people.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Your account isn&rsquo;t linked to a member record yet. Ask the church office to link it.
+            {t('Your account isn’t linked to a member record yet. Ask the church office to link it.')}
           </p>
         ) : (
           <AbsenceForm people={people} onSent={() => void load()} />
@@ -97,7 +98,7 @@ export function FamilyAttendanceClient(): React.ReactElement {
       </Panel>
 
       <Panel
-        title={family ? family.label : 'Household'}
+        title={family ? family.label : t('Household')}
         subtitle={family ? `${formatServiceDate(family.from)} – ${formatServiceDate(family.to)}` : undefined}
       >
         {loading ? (
@@ -113,11 +114,11 @@ export function FamilyAttendanceClient(): React.ReactElement {
           <EmptyState
             icon="home"
             tone="sage"
-            title="No household linked"
-            description="When the church office links your family, everyone's Sundays show up here together."
+            title={t('No household linked')}
+            description={t('When the church office links your family, everyone\'s Sundays show up here together.')}
           />
         ) : family.days.length === 0 ? (
-          <EmptyState icon="calendar" tone="sky" title="No services in this period yet" />
+          <EmptyState icon="calendar" tone="sky" title={t('No services in this period yet')} />
         ) : (
           <ul className="flex flex-col divide-y divide-border">
             {[...family.days].reverse().map((d) => (
@@ -159,7 +160,7 @@ function AbsenceForm({
 
   const submit = async (): Promise<void> => {
     if (!serviceDate || !reason.trim()) {
-      setError('Choose the date and add a short reason.');
+      setError(t('Choose the date and add a short reason.'));
       return;
     }
     setSending(true);
@@ -169,12 +170,12 @@ function AbsenceForm({
         method: 'POST',
         json: { personId, serviceDate, reason: reason.trim() },
       });
-      push({ tone: 'success', title: 'Thank you', message: 'The church knows you will be away.' });
+      push({ tone: 'success', title: t('Thank you'), message: t('The church knows you will be away.') });
       setServiceDate('');
       setReason('');
       onSent();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Could not send. Try again.');
+      setError(e instanceof ApiError ? e.message : t('Could not send. Try again.'));
     } finally {
       setSending(false);
     }
@@ -190,7 +191,7 @@ function AbsenceForm({
     >
       <div className="grid gap-3 sm:grid-cols-2">
         {people.length > 1 ? (
-          <Field label="Who">
+          <Field label={t('Who')}>
             <Select value={personId} onChange={(e) => setPersonId(e.target.value)}>
               {people.map((p) => (
                 <option key={p.personId} value={p.personId}>
@@ -200,11 +201,11 @@ function AbsenceForm({
             </Select>
           </Field>
         ) : null}
-        <Field label="Service date" required>
+        <Field label={t('Service date')} required>
           <Input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} />
         </Field>
       </div>
-      <Field label="Reason" required hint="A few words is fine — e.g. travelling for a funeral.">
+      <Field label={t('Reason')} required hint={t('A few words is fine — e.g. travelling for a funeral.')}>
         <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} maxLength={1000} />
       </Field>
       {error ? (
@@ -213,7 +214,7 @@ function AbsenceForm({
         </p>
       ) : null}
       <Button type="submit" className="self-start" loading={sending}>
-        Let the church know
+        {t('Let the church know')}
       </Button>
     </form>
   );

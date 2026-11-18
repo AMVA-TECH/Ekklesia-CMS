@@ -6,6 +6,7 @@ import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
 import { cn } from '../ui/utils';
 import { RoleNav, type NavGroup } from './role-nav';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const STORAGE_KEY = 'ek-sidebar-collapsed';
 
@@ -71,7 +72,7 @@ export function Sidebar({
           ? 'w-[var(--layout-sidebar-collapsed)]'
           : 'w-[var(--layout-sidebar-width)]',
       )}
-      aria-label="Primary navigation"
+      aria-label={t('Primary navigation')}
     >
       <div
         className={cn(
@@ -108,7 +109,7 @@ export function Sidebar({
         type="button"
         onClick={toggle}
         aria-pressed={collapsed}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? t('Expand sidebar') : t('Collapse sidebar')}
         className={cn(
           'border-t border-[color:var(--sidebar-border)] py-2 text-xs font-medium',
           'text-[color:var(--sidebar-muted)] hover:bg-[color:var(--sidebar-hover)] hover:text-[color:var(--sidebar-foreground)] focus-ring',
@@ -116,7 +117,7 @@ export function Sidebar({
         )}
       >
         <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={14} />
-        {collapsed ? null : <span>Collapse</span>}
+        {collapsed ? null : <span>{t('Collapse')}</span>}
       </button>
     </aside>
   );
@@ -124,17 +125,17 @@ export function Sidebar({
 
 function CollapsedNav({ groups }: { groups: readonly NavGroup[] }): React.ReactElement {
   return (
-    <nav aria-label="Primary (collapsed)" className="flex flex-col items-center gap-1 py-2">
+    <nav aria-label={t('Primary (collapsed)')} className="flex flex-col items-center gap-1 py-2">
       {groups.flatMap((g) =>
         g.items.map((item) => (
           <a
             key={item.href}
             href={item.href}
             className="group relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--sidebar-muted)] hover:bg-[color:var(--sidebar-hover)] hover:text-[color:var(--sidebar-foreground)] focus-ring"
-            title={item.label}
+            title={t(item.label)}
           >
             {item.icon ? <Icon name={item.icon} size={18} /> : null}
-            <span className="sr-only">{item.label}</span>
+            <span className="sr-only">{t(item.label)}</span>
           </a>
         )),
       )}

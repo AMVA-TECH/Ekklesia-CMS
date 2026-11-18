@@ -30,6 +30,7 @@ import { titleCase } from '../../../_lib/format';
 import { AddChildDialog } from './add-child-dialog';
 import { AddMemberDialog } from './add-member-dialog';
 import { EditHouseholdDialog } from './edit-household-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface HouseholdDetailClientProps {
   householdId: string;
@@ -74,7 +75,7 @@ export function HouseholdDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load this household.',
+            : t('Unable to load this household.'),
       );
       setHousehold(null);
     } finally {
@@ -103,17 +104,17 @@ export function HouseholdDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              Back to households
+              {t('Back to households')}
             </Link>
           }
-          title="Household not found"
-          lede={error ?? 'This household may have been removed.'}
+          title={t('Household not found')}
+          lede={error ?? t('This household may have been removed.')}
           actions={
             <Link
               href="/admin/households"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Back to list
+              {t('Back to list')}
             </Link>
           }
         />
@@ -130,10 +131,10 @@ export function HouseholdDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            Back to households
+            {t('Back to households')}
           </Link>
         }
-        title={household.label}
+        title={t(household.label)}
         lede={household.sharedAddress ?? undefined}
         actions={
           <Button
@@ -141,7 +142,7 @@ export function HouseholdDetailClient({
             iconLeft="edit"
             onClick={() => setEditOpen(true)}
           >
-            Edit
+            {t('Edit')}
           </Button>
         }
       />
@@ -149,7 +150,7 @@ export function HouseholdDetailClient({
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Emergency contact</CardTitle>
+            <CardTitle>{t('Emergency contact')}</CardTitle>
           </CardHeader>
           {household.emergencyContactName ? (
             <div className="space-y-1 text-sm">
@@ -165,22 +166,22 @@ export function HouseholdDetailClient({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No emergency contact on file.
+              {t('No emergency contact on file.')}
             </p>
           )}
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>At a glance</CardTitle>
+            <CardTitle>{t('At a glance')}</CardTitle>
           </CardHeader>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center justify-between">
-              <span className="text-muted-foreground">Members</span>
+              <span className="text-muted-foreground">{t('Members')}</span>
               <Badge tone="sage">{household.members.length}</Badge>
             </li>
             <li className="flex items-center justify-between">
-              <span className="text-muted-foreground">Children</span>
+              <span className="text-muted-foreground">{t('Children')}</span>
               <Badge tone={household.children.length ? 'lavender' : 'neutral'}>
                 {household.children.length}
               </Badge>
@@ -190,8 +191,8 @@ export function HouseholdDetailClient({
       </div>
 
       <Panel
-        title="Members"
-        subtitle="People linked to this household."
+        title={t('Members')}
+        subtitle={t('People linked to this household.')}
         flush
         actions={
           <Button
@@ -200,7 +201,7 @@ export function HouseholdDetailClient({
             iconLeft="plus"
             onClick={() => setMemberOpen(true)}
           >
-            Add member
+            {t('Add member')}
           </Button>
         }
       >
@@ -208,15 +209,15 @@ export function HouseholdDetailClient({
           <EmptyState
             icon="users"
             tone="sage"
-            title="No members yet"
-            description="Link people from the directory to this household."
+            title={t('No members yet')}
+            description={t('Link people from the directory to this household.')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setMemberOpen(true)}
               >
-                Add member
+                {t('Add member')}
               </Button>
             }
           />
@@ -225,9 +226,9 @@ export function HouseholdDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Person</TH>
-                  <TH>Relationship</TH>
-                  <TH>Primary contact</TH>
+                  <TH>{t('Person')}</TH>
+                  <TH>{t('Relationship')}</TH>
+                  <TH>{t('Primary contact')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -257,7 +258,7 @@ export function HouseholdDetailClient({
                       <TD>
                         {m.isPrimaryContact ? (
                           <StatusPill tone="success" hideDot>
-                            Primary
+                            {t('Primary')}
                           </StatusPill>
                         ) : (
                           <span className="text-xs text-muted-foreground">
@@ -275,8 +276,8 @@ export function HouseholdDetailClient({
       </Panel>
 
       <Panel
-        title="Children"
-        subtitle="Non-member children in this household."
+        title={t('Children')}
+        subtitle={t('Non-member children in this household.')}
         flush
         actions={
           <Button
@@ -285,7 +286,7 @@ export function HouseholdDetailClient({
             iconLeft="plus"
             onClick={() => setChildOpen(true)}
           >
-            Add child
+            {t('Add child')}
           </Button>
         }
       >
@@ -293,15 +294,15 @@ export function HouseholdDetailClient({
           <EmptyState
             icon="users"
             tone="lavender"
-            title="No children on file"
-            description="Add children when you want ages for Sunday school and safeguarding records."
+            title={t('No children on file')}
+            description={t('Add children when you want ages for Sunday school and safeguarding records.')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setChildOpen(true)}
               >
-                Add child
+                {t('Add child')}
               </Button>
             }
           />
@@ -310,8 +311,8 @@ export function HouseholdDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Name</TH>
-                  <TH>Age</TH>
+                  <TH>{t('Name')}</TH>
+                  <TH>{t('Age')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -335,8 +336,8 @@ export function HouseholdDetailClient({
           setHousehold(updated);
           push({
             tone: 'success',
-            title: 'Household updated',
-            message: `${updated.label} was saved.`,
+            title: t('Household updated'),
+            message: t('{0} was saved.', updated.label),
           });
         }}
       />
@@ -349,8 +350,8 @@ export function HouseholdDetailClient({
           void load();
           push({
             tone: 'success',
-            title: 'Member added',
-            message: 'The person is now linked to this household.',
+            title: t('Member added'),
+            message: t('The person is now linked to this household.'),
           });
         }}
       />
@@ -362,8 +363,8 @@ export function HouseholdDetailClient({
           setHousehold(updated);
           push({
             tone: 'success',
-            title: 'Child added',
-            message: 'The child record is on file.',
+            title: t('Child added'),
+            message: t('The child record is on file.'),
           });
         }}
       />

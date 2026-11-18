@@ -28,6 +28,7 @@ import { asList } from '../../_lib/list';
 import type { AttendanceSession } from './attendance-types';
 import { ManageSessionDialog } from './manage-session-dialog';
 import { OpenSessionDialog } from './open-session-dialog';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface LeadershipStatsEnvelope {
   people: Array<{
@@ -97,7 +98,7 @@ export function AttendanceClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load attendance.',
+            : t('Unable to load attendance.'),
       );
     } finally {
       setLoading(false);
@@ -112,10 +113,10 @@ export function AttendanceClient(): React.ReactElement {
       setStats(null);
       setStatsError(
         err instanceof ApiError && err.status === 403
-          ? 'Leadership attendance insights require a leadership role.'
+          ? t('Leadership attendance insights require a leadership role.')
           : err instanceof Error
             ? err.message
-            : 'Leadership attendance unavailable.',
+            : t('Leadership attendance unavailable.'),
       );
     }
   }, []);
@@ -154,21 +155,21 @@ export function AttendanceClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Attendance"
-        lede="How many showed up to recent services, and who among your leaders might need a nudge."
+        title={t('Attendance')}
+        lede={t('How many showed up to recent services, and who among your leaders might need a nudge.')}
         actions={
           <>
             <Link
               href="/admin/attendance/absences"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Absence notices
+              {t('Absence notices')}
             </Link>
             <Link
               href="/admin/attendance/corrections"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Corrections
+              {t('Corrections')}
             </Link>
             <Button
               variant="primary"
@@ -176,14 +177,14 @@ export function AttendanceClient(): React.ReactElement {
               onClick={() => startOpenSession()}
               disabled={events.length === 0}
             >
-              Record attendance
+              {t('Record attendance')}
             </Button>
             <Link
               href="/admin/events"
               className={buttonClassName({ variant: 'secondary' })}
             >
               <Icon name="calendar" size={14} />
-              Open events
+              {t('Open events')}
             </Link>
           </>
         }
@@ -200,41 +201,41 @@ export function AttendanceClient(): React.ReactElement {
 
       <section aria-labelledby="attendance-totals">
         <h2 id="attendance-totals" className="sr-only">
-          Recent attendance totals
+          {t('Recent attendance totals')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric
-            label="Recent total"
+            label={t('Recent total')}
             value={formatCount(totals.total)}
             icon="users"
             tone="sage"
-            hint="All sessions in view"
+            hint={t('All sessions in view')}
           />
           <Metric
-            label="Adults"
+            label={t('Adults')}
             value={formatCount(totals.adults)}
             icon="user"
             tone="sky"
           />
           <Metric
-            label="Children"
+            label={t('Children')}
             value={formatCount(totals.children)}
             icon="users"
             tone="lavender"
           />
           <Metric
-            label="Visitors"
+            label={t('Visitors')}
             value={formatCount(totals.visitors)}
             icon="user-plus"
             tone="peach"
-            hint="Not yet members"
+            hint={t('Not yet members')}
           />
         </div>
       </section>
 
       <Panel
-        title="Recent services"
-        subtitle="Open a session to show an attendance QR, record people, then finalize when done."
+        title={t('Recent services')}
+        subtitle={t('Open a session to show an attendance QR, record people, then finalize when done.')}
         linkHref="/admin/events"
       >
         {loading && events.length === 0 ? (
@@ -246,23 +247,23 @@ export function AttendanceClient(): React.ReactElement {
           <EmptyState
             icon="calendar-check"
             tone="sky"
-            title="No recent attendance"
-            description="Create an event first, then open an attendance session from here."
+            title={t('No recent attendance')}
+            description={t('Create an event first, then open an attendance session from here.')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Event</TH>
-                  <TH>Date</TH>
-                  <TH>Sessions</TH>
-                  <TH>Men</TH>
-                  <TH>Women</TH>
-                  <TH>Children</TH>
-                  <TH>Visitors</TH>
-                  <TH>Total</TH>
-                  <TH>Action</TH>
+                  <TH>{t('Event')}</TH>
+                  <TH>{t('Date')}</TH>
+                  <TH>{t('Sessions')}</TH>
+                  <TH>{t('Men')}</TH>
+                  <TH>{t('Women')}</TH>
+                  <TH>{t('Children')}</TH>
+                  <TH>{t('Visitors')}</TH>
+                  <TH>{t('Total')}</TH>
+                  <TH>{t('Action')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -277,7 +278,7 @@ export function AttendanceClient(): React.ReactElement {
                           href={`/admin/events/${ev.id}`}
                           className="font-medium text-foreground hover:text-[color:var(--brand-gold-ink)] focus-ring rounded-sm"
                         >
-                          {ev.title}
+                          {t(ev.title)}
                         </Link>
                       </TD>
                       <TD className="text-sm text-muted-foreground">
@@ -307,7 +308,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="primary"
                               onClick={() => openManage(openSession, ev.title)}
                             >
-                              Show QR
+                              {t('Show QR')}
                             </Button>
                           ) : openSession ? (
                             <Button
@@ -315,7 +316,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="secondary"
                               onClick={() => openManage(openSession, ev.title)}
                             >
-                              Continue
+                              {t('Continue')}
                             </Button>
                           ) : (
                             <Button
@@ -323,7 +324,7 @@ export function AttendanceClient(): React.ReactElement {
                               variant="ghost"
                               onClick={() => startOpenSession(ev.id)}
                             >
-                              Open + QR
+                              {t('Open + QR')}
                             </Button>
                           )}
                         </div>
@@ -338,8 +339,8 @@ export function AttendanceClient(): React.ReactElement {
       </Panel>
 
       <Panel
-        title="Leadership attendance"
-        subtitle="How consistently each leader is showing up, and a suggested next step."
+        title={t('Leadership attendance')}
+        subtitle={t('How consistently each leader is showing up, and a suggested next step.')}
         actions={
           stats && stats.people.length > 0 ? (
             <Button
@@ -348,7 +349,7 @@ export function AttendanceClient(): React.ReactElement {
               aria-pressed={followUpOnly}
               onClick={() => setFollowUpOnly((v) => !v)}
             >
-              {followUpOnly ? 'Showing follow-ups' : 'Needs follow-up only'}
+              {followUpOnly ? t('Showing follow-ups') : t('Needs follow-up only')}
             </Button>
           ) : null
         }
@@ -363,19 +364,19 @@ export function AttendanceClient(): React.ReactElement {
           <EmptyState
             icon="chart"
             tone="sage"
-            title="No leaders to compare"
-            description="Leadership attendance insights appear once leaders have assignments and attendance history."
+            title={t('No leaders to compare')}
+            description={t('Leadership attendance insights appear once leaders have assignments and attendance history.')}
           />
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Leader</TH>
-                  <TH>Sessions attended</TH>
-                  <TH>Rate</TH>
-                  <TH>Band</TH>
-                  <TH>Suggested follow-up</TH>
+                  <TH>{t('Leader')}</TH>
+                  <TH>{t('Sessions attended')}</TH>
+                  <TH>{t('Rate')}</TH>
+                  <TH>{t('Band')}</TH>
+                  <TH>{t('Suggested follow-up')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -407,14 +408,14 @@ export function AttendanceClient(): React.ReactElement {
                       {p.suggestedNudge ? (
                         <>
                           <span className="font-medium text-foreground">
-                            {NUDGE_COPY[p.suggestedNudge].label}
+                            {t(NUDGE_COPY[p.suggestedNudge].label)}
                           </span>
                           <div className="text-xs text-muted-foreground">
-                            {NUDGE_COPY[p.suggestedNudge].hint}
+                            {t(NUDGE_COPY[p.suggestedNudge].hint)}
                           </div>
                         </>
                       ) : (
-                        <span className="text-muted-foreground">Too early to tell</span>
+                        <span className="text-muted-foreground">{t('Too early to tell')}</span>
                       )}
                     </TD>
                   </TR>
@@ -500,9 +501,9 @@ function aggregateTotals(
 
 /** Leader-facing wording for the API's suggested nudge. */
 const NUDGE_COPY = {
-  congratulate: { label: 'Say thank you', hint: 'Consistently present — a word of thanks goes a long way.' },
-  encourage: { label: 'Encourage', hint: 'Coming some weeks — check in warmly.' },
-  remind: { label: 'Reach out', hint: 'Missing recently — a call or visit may help.' },
+  congratulate: { label: tk('Say thank you'), hint: tk('Consistently present — a word of thanks goes a long way.') },
+  encourage: { label: tk('Encourage'), hint: tk('Coming some weeks — check in warmly.') },
+  remind: { label: tk('Reach out'), hint: tk('Missing recently — a call or visit may help.') },
 } as const;
 
 function bandTone(

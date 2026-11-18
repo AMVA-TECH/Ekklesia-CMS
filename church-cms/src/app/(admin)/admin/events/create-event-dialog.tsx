@@ -14,6 +14,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { EventRow, EventType } from '../../_lib/api-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -138,7 +139,7 @@ export function CreateEventDialog({
         setFormError(body?.error ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create event.',
+          err instanceof Error ? err.message : t('Could not create event.'),
         );
       }
       setSubmitting(false);
@@ -149,16 +150,16 @@ export function CreateEventDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New event"
-      description="Schedule a service or gathering. Attach a poster if you'd like members to see it on their home screen."
+      title={t('New event')}
+      description={t('Schedule a service or gathering. Attach a poster if you\'d like members to see it on their home screen.')}
       size="lg"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Save event'}
+            {submitting ? t('Saving…') : t('Save event')}
           </Button>
         </DialogFooter>
       }
@@ -185,11 +186,10 @@ export function CreateEventDialog({
               role="alert"
               className="rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]"
             >
-              No event types are configured yet. Ask an administrator to add
-              one (e.g. &ldquo;Sunday service&rdquo;) before scheduling.
+              {t('No event types are configured yet. Ask an administrator to add one (e.g. “Sunday service”) before scheduling.')}
             </div>
           ) : (
-            <Field label="Type" required error={fieldErrors.eventTypeCode}>
+            <Field label={t('Type')} required error={fieldErrors.eventTypeCode}>
               <Select
                 value={selectedTypeCode}
                 onChange={(e) => setEventTypeCode(e.target.value)}
@@ -204,21 +204,21 @@ export function CreateEventDialog({
             </Field>
           )}
 
-          <Field label="Title" required error={fieldErrors.title}>
+          <Field label={t('Title')} required error={fieldErrors.title}>
             <Input
               data-autofocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={
                 selectedTypeCode === 'sunday_service'
-                  ? 'Sunday service · 1st service'
-                  : 'Event title'
+                  ? t('Sunday service · 1st service')
+                  : t('Event title')
               }
               maxLength={300}
             />
           </Field>
 
-          <Field label="Service date" required error={fieldErrors.serviceDate}>
+          <Field label={t('Service date')} required error={fieldErrors.serviceDate}>
             <Input
               type="date"
               value={serviceDate}
@@ -228,8 +228,8 @@ export function CreateEventDialog({
           </Field>
 
           <Field
-            label="Description"
-            hint="Optional note for the calendar."
+            label={t('Description')}
+            hint={t('Optional note for the calendar.')}
             error={fieldErrors.description}
           >
             <Textarea
@@ -237,15 +237,15 @@ export function CreateEventDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={5000}
-              placeholder="Theme, invited speaker, meeting point…"
+              placeholder={t('Theme, invited speaker, meeting point…')}
             />
           </Field>
         </div>
 
         <div className="flex flex-col gap-3">
           <Field
-            label="Poster image"
-            hint="JPEG, PNG, WebP, or GIF."
+            label={t('Poster image')}
+            hint={t('JPEG, PNG, WebP, or GIF.')}
           >
             <input
               type="file"
@@ -259,14 +259,14 @@ export function CreateEventDialog({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={previewUrl}
-                alt="Poster preview"
+                alt={t('Poster preview')}
                 className="h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full items-center justify-center p-3 text-center text-xs text-muted-foreground">
                 <span className="inline-flex flex-col items-center gap-2">
                   <Icon name="image" size={24} />
-                  Preview appears here
+                  {t('Preview appears here')}
                 </span>
               </div>
             )}
@@ -278,7 +278,7 @@ export function CreateEventDialog({
               iconLeft="trash"
               onClick={() => setPosterFile(null)}
             >
-              Remove poster
+              {t('Remove poster')}
             </Button>
           ) : null}
         </div>

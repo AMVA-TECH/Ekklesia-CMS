@@ -21,6 +21,7 @@ import { ListState } from '../../../_components/kit';
 import { formatDate, titleCase } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { usePeopleNames } from '../../../_lib/use-people-names';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AbsenceNotice {
   id: string;
@@ -47,9 +48,9 @@ export function AbsencesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/attendance">Attendance</Link>}
-        title="Absence notices"
-        lede="People who let the church know they'd be away — so follow-up lists don't flag them."
+        eyebrow={<Link href="/admin/attendance">{t('Attendance')}</Link>}
+        title={t('Absence notices')}
+        lede={t('People who let the church know they\'d be away — so follow-up lists don\'t flag them.')}
       />
 
       <form
@@ -59,34 +60,34 @@ export function AbsencesClient(): React.ReactElement {
           setApplied(range);
         }}
       >
-        <Field label="From">
+        <Field label={t('From')}>
           <Input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} />
         </Field>
-        <Field label="To">
+        <Field label={t('To')}>
           <Input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} />
         </Field>
         <Button type="submit" variant="secondary" iconLeft="filter">
-          Filter
+          {t('Filter')}
         </Button>
       </form>
 
-      <Panel title="Notices" subtitle={notices.loading ? 'Loading…' : `${notices.items.length} shown`} flush>
+      <Panel title={t('Notices')} subtitle={notices.loading ? t('Loading…') : t('{0} shown', notices.items.length)} flush>
         <ListState
           loading={notices.loading}
           error={notices.error}
           forbidden={notices.forbidden}
           isEmpty={notices.items.length === 0}
           onRetry={() => void notices.reload()}
-          empty={{ icon: 'calendar', title: 'No absence notices in this period' }}
+          empty={{ icon: 'calendar', title: t('No absence notices in this period') }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Person</TH>
-                  <TH>Service date</TH>
-                  <TH>Reason</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Person')}</TH>
+                  <TH>{t('Service date')}</TH>
+                  <TH>{t('Reason')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>

@@ -26,6 +26,7 @@ import { FormDialog, ListState, useRowAction } from '../../_components/kit';
 import { formatDate, formatMoney, titleCase } from '../../_lib/format';
 import { useApiList } from '../../_lib/use-api-list';
 import type { Expense } from '../finance/expenses/expense-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface ApprovalRequest {
   id: string;
@@ -91,12 +92,12 @@ export function ApprovalsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Approvals"
-        lede="Second-person sign-off for spending and church-wide announcements. You can't decide a request you submitted yourself."
+        title={t('Approvals')}
+        lede={t('Second-person sign-off for spending and church-wide announcements. You can\'t decide a request you submitted yourself.')}
       />
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as Status)}>
-        <TabList aria-label="Approval status">
+        <TabList aria-label={t('Approval status')}>
           {STATUSES.map((s) => (
             <Tab key={s} value={s}>
               {titleCase(s)}
@@ -106,8 +107,8 @@ export function ApprovalsClient(): React.ReactElement {
       </Tabs>
 
       <Panel
-        title={`${titleCase(status)} requests`}
-        subtitle={approvals.loading ? 'Loading…' : `${approvals.items.length} shown`}
+        title={t('{0} requests', titleCase(status))}
+        subtitle={approvals.loading ? t('Loading…') : t('{0} shown', approvals.items.length)}
         flush
       >
         <ListState
@@ -118,10 +119,10 @@ export function ApprovalsClient(): React.ReactElement {
           onRetry={() => void approvals.reload()}
           empty={{
             icon: 'check-circle',
-            title: status === 'pending' ? 'Nothing waiting for approval' : `No ${status} requests`,
+            title: status === 'pending' ? t('Nothing waiting for approval') : t('No {0} requests', titleCase(status).toLowerCase()),
             description:
               status === 'pending'
-                ? 'Submitted expenses and church-wide announcements will queue here.'
+                ? t('Submitted expenses and church-wide announcements will queue here.')
                 : undefined,
           }}
         >
@@ -129,11 +130,11 @@ export function ApprovalsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Request</TH>
-                  <TH>Type</TH>
-                  <TH>Submitted</TH>
-                  <TH>Status</TH>
-                  {status === 'pending' ? <TH className="text-right">Decision</TH> : null}
+                  <TH>{t('Request')}</TH>
+                  <TH>{t('Type')}</TH>
+                  <TH>{t('Submitted')}</TH>
+                  <TH>{t('Status')}</TH>
+                  {status === 'pending' ? <TH className="text-right">{t('Decision')}</TH> : null}
                 </TR>
               </THead>
               <TBody>
@@ -148,7 +149,7 @@ export function ApprovalsClient(): React.ReactElement {
                               {subject.title}
                             </Link>
                           ) : (
-                            (subject?.title ?? `${titleCase(a.subjectType)} request`)
+                            (subject?.title ?? t('{0} request', titleCase(a.subjectType)))
                           )}
                         </div>
                         {subject?.detail ? (
@@ -176,16 +177,16 @@ export function ApprovalsClient(): React.ReactElement {
                               disabled={busyKey !== null}
                               onClick={() =>
                                 void run(a.id, () => decide({ approval: a, action: 'approve' }), {
-                                  success: 'Approved',
+                                  success: t('Approved'),
                                   detail:
                                     a.subjectType === 'expense'
-                                      ? 'The expense is approved and posted to the ledger when its accounts are set.'
-                                      : 'The announcement is published.',
-                                  failure: 'Could not approve',
+                                      ? t('The expense is approved and posted to the ledger when its accounts are set.')
+                                      : t('The announcement is published.'),
+                                  failure: t('Could not approve'),
                                 })
                               }
                             >
-                              Approve
+                              {t('Approve')}
                             </Button>
                             <Button
                               size="sm"
@@ -193,7 +194,7 @@ export function ApprovalsClient(): React.ReactElement {
                               disabled={busyKey !== null}
                               onClick={() => setDeciding({ approval: a, action: 'reject' })}
                             >
-                              Reject
+                              {t('Reject')}
                             </Button>
                           </div>
                         </TD>
@@ -230,16 +231,16 @@ function RejectDialog({
   const [note, setNote] = useState('');
   return (
     <FormDialog
-      title="Reject request"
-      description="The requester can correct it and submit again."
-      submitLabel="Reject"
+      title={t('Reject request')}
+      description={t('The requester can correct it and submit again.')}
+      submitLabel={t('Reject')}
       submitVariant="destructive"
       size="sm"
       onClose={onClose}
       onSubmit={() => onReject(note.trim() || undefined)}
     >
       {(errors) => (
-        <Field label="Note" hint="Optional — explain what needs to change." error={errors.note}>
+        <Field label={t('Note')} hint={t('Optional — explain what needs to change.')} error={errors.note}>
           <Textarea
             data-autofocus
             value={note}

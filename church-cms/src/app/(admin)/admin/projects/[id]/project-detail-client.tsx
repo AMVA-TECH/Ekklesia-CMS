@@ -26,6 +26,7 @@ import { errorMessage, todayLocalIso, toMinorUnits } from '../../../_lib/errors'
 import { formatDate, formatMoney, titleCase } from '../../../_lib/format';
 import { usePeopleNames } from '../../../_lib/use-people-names';
 import type { Project } from '../project-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 export function ProjectDetailClient({ projectId }: { projectId: string }): React.ReactElement {
   const [project, setProject] = useState<Project | null>(null);
@@ -38,7 +39,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
       setProject(await apiFetch<Project>(`/api/v1/projects/${projectId}`));
       setError(null);
     } catch (err) {
-      setError(errorMessage(err, 'Unable to load this project.'));
+      setError(errorMessage(err, t('Unable to load this project.')));
     }
   }, [projectId]);
   useLoadEffect(load);
@@ -54,7 +55,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
       <div className="flex flex-col gap-4">
         <InlineAlert>{error}</InlineAlert>
         <Link href="/admin/projects" className="text-sm underline">
-          Back to projects
+          {t('Back to projects')}
         </Link>
       </div>
     );
@@ -81,8 +82,8 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
           json: { action },
         }),
       action === 'accept'
-        ? { success: 'Volunteer added', detail: 'They are now assigned to the project.', failure: 'Could not accept' }
-        : { success: 'Interest declined', failure: 'Could not decline' },
+        ? { success: t('Volunteer added'), detail: t('They are now assigned to the project.'), failure: t('Could not accept') }
+        : { success: t('Interest declined'), failure: t('Could not decline') },
     ).then((ok) => {
       if (ok) void load();
     });
@@ -91,29 +92,29 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow={<Link href="/admin/projects">Projects</Link>}
+        eyebrow={<Link href="/admin/projects">{t('Projects')}</Link>}
         title={project.name}
         lede={project.description ?? undefined}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" iconLeft="user-plus" onClick={() => setDialog('assign')}>
-              Assign person
+              {t('Assign person')}
             </Button>
             <Button iconLeft="coin" onClick={() => setDialog('contribute')}>
-              Record contribution
+              {t('Record contribution')}
             </Button>
           </div>
         }
       />
 
-      <Panel title="Progress">
+      <Panel title={t('Progress')}>
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-2xl font-semibold tabular-nums">
               {formatMoney(raised, project.currency)}
             </span>
             <span className="text-sm text-muted-foreground">
-              {target > 0 ? `of ${formatMoney(target, project.currency)} goal` : 'No goal set'}
+              {target > 0 ? t('of {0} goal', formatMoney(target, project.currency)) : t('No goal set')}
             </span>
           </div>
           {pct !== null ? (
@@ -123,7 +124,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
               aria-valuenow={pct}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label="Raised against goal"
+              aria-label={t('Raised against goal')}
             >
               <div className="h-full bg-brand-gold" style={{ width: `${pct}%` }} />
             </div>
@@ -133,20 +134,20 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
               {titleCase(project.status)}
             </StatusPill>
             <span>
-              {project.startsOn ? formatDate(project.startsOn) : 'Open start'} –{' '}
-              {project.endsOn ? formatDate(project.endsOn) : 'ongoing'}
+              {project.startsOn ? formatDate(project.startsOn) : t('Open start')} –{' '}
+              {project.endsOn ? formatDate(project.endsOn) : t('ongoing')}
             </span>
           </div>
         </div>
       </Panel>
 
       <Panel
-        title="Volunteer interest"
-        subtitle="Members who asked to help. Accepting assigns them to the project."
+        title={t('Volunteer interest')}
+        subtitle={t('Members who asked to help. Accepting assigns them to the project.')}
         flush
       >
         {(project.interestRequests ?? []).length === 0 ? (
-          <EmptyState icon="hand" tone="neutral" title="No pending interest" />
+          <EmptyState icon="hand" tone="neutral" title={t('No pending interest')} />
         ) : (
           <TableWrap>
             <Table>
@@ -164,7 +165,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
                           disabled={busyKey !== null}
                           onClick={() => decide(r.id, 'accept')}
                         >
-                          Accept
+                          {t('Accept')}
                         </Button>
                         <Button
                           size="sm"
@@ -173,7 +174,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
                           disabled={busyKey !== null}
                           onClick={() => decide(r.id, 'decline')}
                         >
-                          Decline
+                          {t('Decline')}
                         </Button>
                       </div>
                     </TD>
@@ -186,9 +187,9 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
       </Panel>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Team" subtitle={`${project.assignments?.length ?? 0} people`} flush>
+        <Panel title={t('Team')} subtitle={t('{0} people', project.assignments?.length ?? 0)} flush>
           {(project.assignments ?? []).length === 0 ? (
-            <EmptyState icon="users" tone="neutral" title="Nobody assigned yet" />
+            <EmptyState icon="users" tone="neutral" title={t('Nobody assigned yet')} />
           ) : (
             <TableWrap>
               <Table>
@@ -200,7 +201,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
                           {names[a.personId] ?? '…'}
                         </Link>
                       </TD>
-                      <TD className="text-sm text-muted-foreground">{a.role ?? 'Volunteer'}</TD>
+                      <TD className="text-sm text-muted-foreground">{a.role ?? t('Volunteer')}</TD>
                       <TD>
                         <StatusPill tone={a.status === 'active' ? 'success' : 'neutral'}>
                           {titleCase(a.status)}
@@ -214,24 +215,24 @@ export function ProjectDetailClient({ projectId }: { projectId: string }): React
           )}
         </Panel>
 
-        <Panel title="Contributions" subtitle={`${project.contributions?.length ?? 0} recorded`} flush>
+        <Panel title={t('Contributions')} subtitle={t('{0} recorded', project.contributions?.length ?? 0)} flush>
           {(project.contributions ?? []).length === 0 ? (
-            <EmptyState icon="coin" tone="neutral" title="No contributions yet" />
+            <EmptyState icon="coin" tone="neutral" title={t('No contributions yet')} />
           ) : (
             <TableWrap>
               <Table>
                 <THead>
                   <TR noHover>
-                    <TH>Date</TH>
-                    <TH>From</TH>
-                    <TH className="text-right">Amount</TH>
+                    <TH>{t('Date')}</TH>
+                    <TH>{t('From')}</TH>
+                    <TH className="text-right">{t('Amount')}</TH>
                   </TR>
                 </THead>
                 <TBody>
                   {project.contributions!.map((c) => (
                     <TR key={c.id}>
                       <TD className="text-sm">{formatDate(c.contributedOn)}</TD>
-                      <TD className="text-sm">{c.personId ? (names[c.personId] ?? '…') : 'Anonymous'}</TD>
+                      <TD className="text-sm">{c.personId ? (names[c.personId] ?? '…') : t('Anonymous')}</TD>
                       <TD className="text-right tabular-nums">{formatMoney(c.amountMinor, c.currency)}</TD>
                     </TR>
                   ))}
@@ -279,8 +280,8 @@ function AssignDialog({
   const [role, setRole] = useState('');
   return (
     <FormDialog
-      title="Assign person"
-      submitLabel="Assign"
+      title={t('Assign person')}
+      submitLabel={t('Assign')}
       size="sm"
       onClose={onClose}
       validate={(): Record<string, string> => (person ? {} : { personId: 'Pick a person.' })}
@@ -295,7 +296,7 @@ function AssignDialog({
       {(errors) => (
         <>
           <PersonPicker required value={person} onChange={setPerson} error={errors.personId} />
-          <Field label="Role" hint="Optional, e.g. Coordinator." error={errors.role}>
+          <Field label={t('Role')} hint={t('Optional, e.g. Coordinator.')} error={errors.role}>
             <Input value={role} onChange={(e) => setRole(e.target.value)} maxLength={100} />
           </Field>
         </>
@@ -318,14 +319,14 @@ function ContributionDialog({
   const [person, setPerson] = useState<Person | null>(null);
   return (
     <FormDialog
-      title="Record contribution"
-      submitLabel="Record"
+      title={t('Record contribution')}
+      submitLabel={t('Record')}
       size="sm"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (toMinorUnits(amount) === null) e.amountMinor = 'Enter an amount greater than zero.';
-        if (!contributedOn) e.contributedOn = 'Choose a date.';
+        if (toMinorUnits(amount) === null) e.amountMinor = t('Enter an amount greater than zero.');
+        if (!contributedOn) e.contributedOn = t('Choose a date.');
         return e;
       }}
       onSubmit={async () => {
@@ -343,7 +344,7 @@ function ContributionDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Amount (TZS)" required error={errors.amountMinor}>
+            <Field label={t('Amount (TZS)')} required error={errors.amountMinor}>
               <Input
                 data-autofocus
                 inputMode="decimal"
@@ -351,7 +352,7 @@ function ContributionDialog({
                 onChange={(e) => setAmount(e.target.value)}
               />
             </Field>
-            <Field label="Date" required error={errors.contributedOn}>
+            <Field label={t('Date')} required error={errors.contributedOn}>
               <Input
                 type="date"
                 value={contributedOn}
@@ -359,7 +360,7 @@ function ContributionDialog({
               />
             </Field>
           </div>
-          <PersonPicker label="Contributor (optional)" value={person} onChange={setPerson} error={errors.personId} />
+          <PersonPicker label={t('Contributor (optional)')} value={person} onChange={setPerson} error={errors.personId} />
         </>
       )}
     </FormDialog>

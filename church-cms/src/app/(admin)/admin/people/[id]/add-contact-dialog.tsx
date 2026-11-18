@@ -12,6 +12,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Person } from '../../../_lib/api-types';
 import { extractValidationErrors } from '../form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AddContactDialogProps {
   open: boolean;
@@ -98,7 +99,7 @@ export function AddContactDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not add this contact.',
+          err instanceof Error ? err.message : t('Could not add this contact.'),
         );
       }
     } finally {
@@ -110,13 +111,13 @@ export function AddContactDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Add contact"
-      description="Add a phone number or email for this person."
+      title={t('Add contact')}
+      description={t('Add a phone number or email for this person.')}
       size="sm"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -124,7 +125,7 @@ export function AddContactDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Saving…' : 'Add contact'}
+            {submitting ? t('Saving…') : t('Add contact')}
           </Button>
         </DialogFooter>
       }
@@ -145,23 +146,23 @@ export function AddContactDialog({
           </div>
         ) : null}
 
-        <Field label="Channel" error={fieldErrors.channel}>
+        <Field label={t('Channel')} error={fieldErrors.channel}>
           <Select
             data-autofocus
             value={channel}
             onChange={(e) => setChannel(e.target.value as 'phone' | 'email')}
           >
-            <option value="phone">Phone</option>
-            <option value="email">Email</option>
+            <option value="phone">{t('Phone')}</option>
+            <option value="email">{t('Email')}</option>
           </Select>
         </Field>
 
         <Field
-          label={channel === 'phone' ? 'Phone number' : 'Email address'}
+          label={channel === 'phone' ? t('Phone number') : t('Email address')}
           required
           hint={
             channel === 'phone'
-              ? 'E.164 format, e.g. +255712345678'
+              ? t('E.164 format, e.g. +255712345678')
               : undefined
           }
           error={fieldErrors.value}
@@ -182,7 +183,7 @@ export function AddContactDialog({
             onChange={(e) => setIsPrimary(e.target.checked)}
             className="h-4 w-4 rounded-sm border-border text-foreground focus-ring"
           />
-          Set as primary contact
+          {t('Set as primary contact')}
         </label>
       </form>
     </Dialog>

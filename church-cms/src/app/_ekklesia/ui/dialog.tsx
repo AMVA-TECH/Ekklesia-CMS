@@ -11,6 +11,7 @@ import {
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
 import { cn } from './utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<Dialog>`. */
 export interface DialogProps {
@@ -85,7 +86,7 @@ export function Dialog({
     previousFocusRef.current = document.activeElement as HTMLElement | null;
     const { body } = document;
     const previousOverflow = body.style.overflow;
-    body.style.overflow = 'hidden';
+    body.style.overflow = t('hidden');
 
     const focusInitial = (): void => {
       const root = dialogRef.current;
@@ -152,7 +153,7 @@ export function Dialog({
       {/* Overlay */}
       <button
         type="button"
-        aria-label="Close dialog"
+        aria-label={t('Close dialog')}
         tabIndex={-1}
         data-focus-skip
         className="absolute inset-0 bg-foreground/40 backdrop-blur-[1px]"
@@ -188,7 +189,7 @@ export function Dialog({
           {hideCloseButton ? null : (
             <button
               type="button"
-              aria-label="Close dialog"
+              aria-label={t('Close dialog')}
               onClick={onClose}
               className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
             >

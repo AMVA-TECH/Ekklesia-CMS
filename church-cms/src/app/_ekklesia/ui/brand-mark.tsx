@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { cn } from './utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Where the mark sits — selects light/dark assets for contrast. */
 export type BrandSurface = 'light' | 'dark' | 'auto';
@@ -152,7 +153,7 @@ export function BrandMark({
               'font-[family-name:var(--font-scripture)] not-italic',
             )}
           >
-            Ekklesia
+            {t('Ekklesia')}
           </span>
           {subline ? (
             <span
@@ -168,14 +169,14 @@ export function BrandMark({
           ) : null}
         </span>
       ) : (
-        <span className="sr-only">Ekklesia</span>
+        <span className="sr-only">{t('Ekklesia')}</span>
       )}
     </span>
   );
 
   if (href) {
     return (
-      <Link href={href} className="focus-ring rounded-sm" aria-label="Ekklesia home">
+      <Link href={href} className="focus-ring rounded-sm" aria-label={t('Ekklesia home')}>
         {content}
       </Link>
     );

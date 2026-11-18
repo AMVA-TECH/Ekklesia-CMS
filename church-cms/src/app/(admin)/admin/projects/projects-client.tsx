@@ -30,6 +30,7 @@ import { toMinorUnits } from '../../_lib/errors';
 import { formatDate, formatMoney, titleCase } from '../../_lib/format';
 import { useApiList } from '../../_lib/use-api-list';
 import type { Project } from './project-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const FILTERS = ['active', 'closed'] as const;
 
@@ -44,17 +45,17 @@ export function ProjectsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Projects"
-        lede="Time-bound efforts with an optional fundraising goal — building works, outreach, missions. Members can express interest to volunteer."
+        title={t('Projects')}
+        lede={t('Time-bound efforts with an optional fundraising goal — building works, outreach, missions. Members can express interest to volunteer.')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            New project
+            {t('New project')}
           </Button>
         }
       />
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as (typeof FILTERS)[number])}>
-        <TabList aria-label="Project status">
+        <TabList aria-label={t('Project status')}>
           {FILTERS.map((f) => (
             <Tab key={f} value={f}>
               {titleCase(f)}
@@ -64,8 +65,8 @@ export function ProjectsClient(): React.ReactElement {
       </Tabs>
 
       <Panel
-        title={`${titleCase(status)} projects`}
-        subtitle={projects.loading ? 'Loading…' : `${projects.items.length} shown`}
+        title={t('{0} projects', titleCase(status))}
+        subtitle={projects.loading ? t('Loading…') : t('{0} shown', projects.items.length)}
         flush
       >
         <ListState
@@ -76,18 +77,18 @@ export function ProjectsClient(): React.ReactElement {
           onRetry={() => void projects.reload()}
           empty={{
             icon: 'briefcase',
-            title: `No ${status} projects`,
-            description: status === 'active' ? 'Start a project to track its goal and volunteers.' : undefined,
+            title: t('No {0} projects', titleCase(status).toLowerCase()),
+            description: status === 'active' ? t('Start a project to track its goal and volunteers.') : undefined,
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Project</TH>
-                  <TH>Runs</TH>
-                  <TH className="text-right">Goal</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Project')}</TH>
+                  <TH>{t('Runs')}</TH>
+                  <TH className="text-right">{t('Goal')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -107,9 +108,9 @@ export function ProjectsClient(): React.ReactElement {
                       ) : null}
                     </TD>
                     <TD className="text-sm text-muted-foreground">
-                      {p.startsOn ? formatDate(p.startsOn) : 'Open start'}
+                      {p.startsOn ? formatDate(p.startsOn) : t('Open start')}
                       {' – '}
-                      {p.endsOn ? formatDate(p.endsOn) : 'ongoing'}
+                      {p.endsOn ? formatDate(p.endsOn) : t('ongoing')}
                     </TD>
                     <TD className="text-right tabular-nums">
                       {p.targetAmountMinor ? formatMoney(p.targetAmountMinor, p.currency) : '—'}
@@ -160,15 +161,15 @@ function CreateProjectDialog({
 
   return (
     <FormDialog
-      title="New project"
-      submitLabel="Create project"
+      title={t('New project')}
+      submitLabel={t('Create project')}
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!name.trim()) e.name = 'Enter a name.';
+        if (!name.trim()) e.name = t('Enter a name.');
         if (target.trim() && toMinorUnits(target) === null)
-          e.targetAmountMinor = 'Enter a goal greater than zero, or leave it empty.';
-        if (startsOn && endsOn && endsOn < startsOn) e.endsOn = 'End must be on or after the start.';
+          e.targetAmountMinor = t('Enter a goal greater than zero, or leave it empty.');
+        if (startsOn && endsOn && endsOn < startsOn) e.endsOn = t('End must be on or after the start.');
         return e;
       }}
       onSubmit={async () => {
@@ -189,16 +190,16 @@ function CreateProjectDialog({
     >
       {(errors) => (
         <>
-          <Field label="Name" required error={errors.name}>
+          <Field label={t('Name')} required error={errors.name}>
             <Input
               data-autofocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="New sanctuary roof"
+              placeholder={t('New sanctuary roof')}
               maxLength={200}
             />
           </Field>
-          <Field label="Description" error={errors.description}>
+          <Field label={t('Description')} error={errors.description}>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -207,20 +208,20 @@ function CreateProjectDialog({
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Goal (TZS)" hint="Optional." error={errors.targetAmountMinor}>
+            <Field label={t('Goal (TZS)')} hint="Optional." error={errors.targetAmountMinor}>
               <Input inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} />
             </Field>
-            <Field label="Starts" error={errors.startsOn}>
+            <Field label={t('Starts')} error={errors.startsOn}>
               <Input type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
             </Field>
-            <Field label="Ends" error={errors.endsOn}>
+            <Field label={t('Ends')} error={errors.endsOn}>
               <Input type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Fund" hint="Where contributions are recorded." error={errors.fundId}>
+            <Field label={t('Fund')} hint={t('Where contributions are recorded.')} error={errors.fundId}>
               <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-                <option value="">None</option>
+                <option value="">{t('None')}</option>
                 {funds.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -228,9 +229,9 @@ function CreateProjectDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Ministry / unit" error={errors.organisationalUnitId}>
+            <Field label={t('Ministry / unit')} error={errors.organisationalUnitId}>
               <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-                <option value="">Church-wide</option>
+                <option value="">{t('Church-wide')}</option>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}

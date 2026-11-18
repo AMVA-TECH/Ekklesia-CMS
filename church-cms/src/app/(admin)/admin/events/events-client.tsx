@@ -16,6 +16,7 @@ import type { EventRow, EventType } from '../../_lib/api-types';
 import { formatDate, titleCase } from '../../_lib/format';
 import { CreateEventDialog } from './create-event-dialog';
 import { PosterImage } from './poster-image';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /**
  * Events list — replaces the legacy `src/app/events/events-admin.tsx` page.
@@ -50,7 +51,7 @@ export function EventsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load events',
+            : t('Unable to load events'),
       );
     } finally {
       setLoading(false);
@@ -62,11 +63,11 @@ export function EventsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Events"
-        lede="Schedule Sunday services and gatherings, attach a poster, and open any card for the full-size view."
+        title={t('Events')}
+        lede={t('Schedule Sunday services and gatherings, attach a poster, and open any card for the full-size view.')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New event
+            {t('New event')}
           </Button>
         }
       />
@@ -81,8 +82,8 @@ export function EventsClient(): React.ReactElement {
       ) : null}
 
       <Panel
-        title="Upcoming and recent"
-        subtitle="Most recent first."
+        title={t('Upcoming and recent')}
+        subtitle={t('Most recent first.')}
         actions={
           <Button
             variant="secondary"
@@ -91,7 +92,7 @@ export function EventsClient(): React.ReactElement {
             onClick={load}
             disabled={loading}
           >
-            Refresh
+            {t('Refresh')}
           </Button>
         }
       >
@@ -105,15 +106,15 @@ export function EventsClient(): React.ReactElement {
           <EmptyState
             icon="calendar"
             tone="sky"
-            title="No events yet"
-            description="Add your first Sunday service or gathering to get started."
+            title={t('No events yet')}
+            description={t('Add your first Sunday service or gathering to get started.')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setCreateOpen(true)}
               >
-                New event
+                {t('New event')}
               </Button>
             }
           />
@@ -152,7 +153,7 @@ function EventCard({ event }: { event: EventRow }): React.ReactElement {
         <div className="aspect-[4/3] w-full bg-surface-muted">
           <PosterImage
             url={event.posterUrl}
-            alt={`${event.title} poster`}
+            alt={t('{0} poster', event.title)}
             className="h-full w-full object-cover"
             emptyIcon="image"
           />

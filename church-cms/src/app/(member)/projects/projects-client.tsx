@@ -17,6 +17,7 @@ import {
   useToast,
 } from '@/app/_ekklesia/ui';
 import { formatMoney } from '../_shared/formatters';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface MemberProject {
   id: string;
@@ -43,7 +44,7 @@ export function MemberProjectsClient(): React.ReactElement {
       setError(null);
     } catch (e) {
       setProjects([]);
-      setError(e instanceof ApiError ? e.message : 'Check your connection and try again.');
+      setError(e instanceof ApiError ? e.message : t('Check your connection and try again.'));
     }
   }, []);
   useLoadEffect(load);
@@ -51,8 +52,8 @@ export function MemberProjectsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Projects"
-        lede="What the church is building together. Offer your time and the project team will be in touch."
+        title={t('Projects')}
+        lede={t('What the church is building together. Offer your time and the project team will be in touch.')}
       />
 
       {projects === null ? (
@@ -64,11 +65,11 @@ export function MemberProjectsClient(): React.ReactElement {
         <EmptyState
           icon="alert-circle"
           tone="peach"
-          title="Couldn't load projects"
+          title={t('Couldn\'t load projects')}
           description={error}
           action={
             <Button size="sm" variant="secondary" onClick={() => void load()}>
-              Try again
+              {t('Try again')}
             </Button>
           }
         />
@@ -76,8 +77,8 @@ export function MemberProjectsClient(): React.ReactElement {
         <EmptyState
           icon="briefcase"
           tone="gold"
-          title="No active projects right now"
-          description="When your church starts a project you can join, it will appear here."
+          title={t('No active projects right now')}
+          description={t('When your church starts a project you can join, it will appear here.')}
         />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
@@ -86,7 +87,7 @@ export function MemberProjectsClient(): React.ReactElement {
               <Card className="flex h-full flex-col gap-3 p-5">
                 <CardTitle>{p.name}</CardTitle>
                 {p.targetAmountMinor ? (
-                  <CardSubtitle>Goal {formatMoney(p.targetAmountMinor, p.currency)}</CardSubtitle>
+                  <CardSubtitle>{t('Goal')} {formatMoney(p.targetAmountMinor, p.currency)}</CardSubtitle>
                 ) : null}
                 {p.description ? (
                   <p className="text-sm text-muted-foreground">{p.description}</p>
@@ -94,11 +95,11 @@ export function MemberProjectsClient(): React.ReactElement {
                 <div className="mt-auto pt-2">
                   {sent.has(p.id) ? (
                     <p className="text-sm font-medium text-[color:var(--success-ink)]">
-                      Thanks — your interest was sent.
+                      {t('Thanks — your interest was sent.')}
                     </p>
                   ) : (
                     <Button size="sm" iconLeft="hand" onClick={() => setHelping(p)}>
-                      I&rsquo;d like to help
+                      {t('I’d like to help')}
                     </Button>
                   )}
                 </div>
@@ -116,8 +117,8 @@ export function MemberProjectsClient(): React.ReactElement {
             setSent((s) => new Set(s).add(helping.id));
             push({
               tone: 'success',
-              title: 'Interest sent',
-              message: `The ${helping.name} team will review it.`,
+              title: t('Interest sent'),
+              message: t('The {0} team will review it.', helping.name),
             });
             setHelping(null);
           }}
@@ -150,7 +151,7 @@ function InterestDialog({
       });
       onSent();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Could not send. Try again.');
+      setError(e instanceof ApiError ? e.message : t('Could not send. Try again.'));
       setSending(false);
     }
   };
@@ -161,17 +162,17 @@ function InterestDialog({
       onClose={() => {
         if (!sending) onClose();
       }}
-      title={`Help with ${project.name}`}
-      description="Tell the team how you'd like to help (optional)."
+      title={t('Help with {0}', project.name)}
+      description={t('Tell the team how you\'d like to help (optional).')}
       size="sm"
       sheetOnMobile
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={sending}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button loading={sending} onClick={() => void submit()}>
-            Send
+            {t('Send')}
           </Button>
         </DialogFooter>
       }
@@ -182,14 +183,14 @@ function InterestDialog({
             {error}
           </p>
         ) : null}
-        <Field label="Note">
+        <Field label={t('Note')}>
           <Textarea
             data-autofocus
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
             maxLength={1000}
-            placeholder="I can help on Saturdays with setup."
+            placeholder={t('I can help on Saturdays with setup.')}
           />
         </Field>
       </div>

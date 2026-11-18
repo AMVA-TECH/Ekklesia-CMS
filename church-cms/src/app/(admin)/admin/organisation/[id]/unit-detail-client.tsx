@@ -42,6 +42,7 @@ import type {
 } from '../../../_lib/api-types';
 import { formatDate, titleCase } from '../../../_lib/format';
 import { asList } from '../../../_lib/list';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface ProgrammeRow {
   id: string;
@@ -137,7 +138,7 @@ export function UnitDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load this unit.',
+            : t('Unable to load this unit.'),
       );
     } finally {
       setLoading(false);
@@ -165,7 +166,7 @@ export function UnitDetailClient({
       );
       setUnit(updated);
       setEditing(false);
-      push({ tone: 'success', message: 'Unit profile saved.' });
+      push({ tone: 'success', message: t('Unit profile saved.') });
       void load();
     } catch (err) {
       push({
@@ -173,7 +174,7 @@ export function UnitDetailClient({
         message:
           err instanceof ApiError
             ? err.message
-            : 'Could not save unit profile.',
+            : t('Could not save unit profile.'),
       });
     } finally {
       setSaving(false);
@@ -205,17 +206,17 @@ export function UnitDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              Back to organisation
+              {t('Back to organisation')}
             </Link>
           }
-          title="Unit not found"
-          lede={error ?? 'We could not find this organisational unit.'}
+          title={t('Unit not found')}
+          lede={error ?? t('We could not find this organisational unit.')}
           actions={
             <Link
               href="/admin/organisation"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Back to list
+              {t('Back to list')}
             </Link>
           }
         />
@@ -232,7 +233,7 @@ export function UnitDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            Back to organisation
+            {t('Back to organisation')}
           </Link>
         }
         title={unit.name}
@@ -255,14 +256,14 @@ export function UnitDetailClient({
                     setParentId(unit.parentId ?? '');
                   }}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="submit"
                   form={editFormId}
                   loading={saving}
                 >
-                  Save changes
+                  {t('Save changes')}
                 </Button>
               </>
             ) : (
@@ -271,7 +272,7 @@ export function UnitDetailClient({
                 iconLeft="edit"
                 onClick={() => setEditing(true)}
               >
-                Edit
+                {t('Edit')}
               </Button>
             )}
           </>
@@ -284,11 +285,11 @@ export function UnitDetailClient({
         <StatusPill tone={unit.status === 'active' ? 'success' : 'neutral'}>
           {titleCase(unit.status)}
         </StatusPill>
-        {unit.metadata?.proposed === true ? <Badge>Proposed</Badge> : null}
+        {unit.metadata?.proposed === true ? <Badge>{t('Proposed')}</Badge> : null}
       </div>
 
       {editing ? (
-        <Panel title="Edit unit">
+        <Panel title={t('Edit unit')}>
           <form
             id={editFormId}
             onSubmit={(e) => {
@@ -296,7 +297,7 @@ export function UnitDetailClient({
             }}
             className="grid max-w-2xl gap-4 p-4 sm:p-5"
           >
-            <Field label="Name" required>
+            <Field label={t('Name')} required>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -304,7 +305,7 @@ export function UnitDetailClient({
                 required
               />
             </Field>
-            <Field label="Description">
+            <Field label={t('Description')}>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -313,21 +314,21 @@ export function UnitDetailClient({
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Status">
+              <Field label={t('Status')}>
                 <Select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">{t('Active')}</option>
+                  <option value="inactive">{t('Inactive')}</option>
                 </Select>
               </Field>
-              <Field label="Parent unit">
+              <Field label={t('Parent unit')}>
                 <Select
                   value={parentId}
                   onChange={(e) => setParentId(e.target.value)}
                 >
-                  <option value="">None (top-level)</option>
+                  <option value="">{t('None (top-level)')}</option>
                   {parentOptions.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name} ({u.kind})
@@ -342,21 +343,21 @@ export function UnitDetailClient({
         <div className="grid gap-6 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Overview</CardTitle>
+              <CardTitle>{t('Overview')}</CardTitle>
             </CardHeader>
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-muted-foreground">Kind</dt>
+                <dt className="text-muted-foreground">{t('Kind')}</dt>
                 <dd className="font-medium text-foreground">
                   {titleCase(unit.kind)}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Code</dt>
+                <dt className="text-muted-foreground">{t('Code')}</dt>
                 <dd className="font-medium text-foreground">{unit.code}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Status</dt>
+                <dt className="text-muted-foreground">{t('Status')}</dt>
                 <dd>
                   <StatusPill
                     tone={unit.status === 'active' ? 'success' : 'neutral'}
@@ -366,7 +367,7 @@ export function UnitDetailClient({
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Parent</dt>
+                <dt className="text-muted-foreground">{t('Parent')}</dt>
                 <dd className="font-medium text-foreground">
                   {parent ? (
                     <Link
@@ -385,26 +386,26 @@ export function UnitDetailClient({
 
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Description</CardTitle>
+              <CardTitle>{t('Description')}</CardTitle>
             </CardHeader>
             <p className="text-sm text-foreground whitespace-pre-wrap">
               {unit.description?.trim() ||
-                'No description yet. Use Edit to add purpose, responsibilities, or notes.'}
+                t('No description yet. Use Edit to add purpose, responsibilities, or notes.')}
             </p>
           </Card>
         </div>
       )}
 
       {children.length > 0 ? (
-        <Panel title="Child units" subtitle={`${children.length} nested`}>
+        <Panel title={t('Child units')} subtitle={t('{0} nested', children.length)}>
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Name</TH>
-                  <TH>Kind</TH>
-                  <TH>Code</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Name')}</TH>
+                  <TH>{t('Kind')}</TH>
+                  <TH>{t('Code')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -443,27 +444,27 @@ export function UnitDetailClient({
 
       {unit.kind === 'ministry' ? (
         <Panel
-          title="Programmes"
+          title={t('Programmes')}
           subtitle={
             programmes.length === 0
-              ? 'None yet'
-              : `${programmes.length} programme${programmes.length === 1 ? '' : 's'}`
+              ? t('None yet')
+              : t('{0} programme{1}', programmes.length, programmes.length === 1 ? '' : 's')
           }
         >
           {programmes.length === 0 ? (
             <EmptyState
               icon="calendar"
               tone="gold"
-              title="No programmes"
-              description="Programmes for this ministry will appear here when created."
+              title={t('No programmes')}
+              description={t('Programmes for this ministry will appear here when created.')}
             />
           ) : (
             <TableWrap>
               <Table>
                 <THead>
                   <TR noHover>
-                    <TH>Name</TH>
-                    <TH>Status</TH>
+                    <TH>{t('Name')}</TH>
+                    <TH>{t('Status')}</TH>
                   </TR>
                 </THead>
                 <TBody>
@@ -489,26 +490,25 @@ export function UnitDetailClient({
       ) : null}
 
       <Panel
-        title="Linked leadership positions"
+        title={t('Linked leadership positions')}
         subtitle={
           positions.length === 0
-            ? 'None linked'
-            : `${positions.length} position${positions.length === 1 ? '' : 's'}`
+            ? t('None linked')
+            : t('{0} position{1}', positions.length, positions.length === 1 ? '' : 's')
         }
       >
         {positions.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">
-            No leadership positions are linked to this unit yet. Link them from
-            Leadership when editing a position.
+            {t('No leadership positions are linked to this unit yet. Link them from Leadership when editing a position.')}
           </p>
         ) : (
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Title</TH>
-                  <TH>Code</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Title')}</TH>
+                  <TH>{t('Code')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -541,21 +541,21 @@ export function UnitDetailClient({
       </Panel>
 
       <Panel
-        title="People"
-        subtitle={`${participations.filter((p) => p.status === 'active').length} active`}
+        title={t('People')}
+        subtitle={t('{0} active', participations.filter((p) => p.status === 'active').length)}
       >
         {participations.length === 0 ? (
           <EmptyState
             icon="users"
             tone="gold"
-            title="No participations"
-            description="Add people from the Ministries list, or when participation tools are available here."
+            title={t('No participations')}
+            description={t('Add people from the Ministries list, or when participation tools are available here.')}
             action={
               <Link
                 href="/admin/ministries"
                 className={buttonClassName({ variant: 'secondary', size: 'sm' })}
               >
-                Open ministries
+                {t('Open ministries')}
               </Link>
             }
           />
@@ -564,10 +564,10 @@ export function UnitDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Person</TH>
-                  <TH>Role in unit</TH>
-                  <TH>From</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Person')}</TH>
+                  <TH>{t('Role in unit')}</TH>
+                  <TH>{t('From')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>

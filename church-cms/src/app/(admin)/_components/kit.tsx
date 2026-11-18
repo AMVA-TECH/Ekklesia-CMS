@@ -21,6 +21,7 @@ import {
 import type { Person } from '../_lib/api-types';
 import { errorMessage, fieldErrorsFrom } from '../_lib/errors';
 import { asList } from '../_lib/list';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /* ------------------------------------------------------------------ */
 /* List states                                                         */
@@ -51,8 +52,8 @@ export function ListState({
       <EmptyState
         icon="lock"
         tone="neutral"
-        title="You don't have access to this"
-        description="Ask a church administrator to grant the permission if you need it."
+        title={t('You don\'t have access to this')}
+        description={t('Ask a church administrator to grant the permission if you need it.')}
       />
     );
   }
@@ -62,7 +63,7 @@ export function ListState({
         {error}
         <div className="mt-3">
           <Button variant="secondary" size="sm" onClick={onRetry}>
-            Try again
+            {t('Try again')}
           </Button>
         </div>
       </div>
@@ -81,8 +82,8 @@ export function ListState({
       <EmptyState
         icon={empty.icon ?? 'inbox'}
         tone="gold"
-        title={empty.title}
-        description={empty.description}
+        title={t(empty.title)}
+        description={t(empty.description)}
         action={empty.action}
       />
     );
@@ -145,7 +146,7 @@ export function FormDialog({
       await onSubmit();
     } catch (err) {
       setFieldErrors(fieldErrorsFrom(err));
-      setFormError(errorMessage(err, 'Something went wrong. Please try again.'));
+      setFormError(errorMessage(err, t('Something went wrong. Please try again.')));
       setSubmitting(false);
     }
   };
@@ -160,7 +161,7 @@ export function FormDialog({
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={close} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -234,7 +235,7 @@ export function useRowAction(): {
       push({
         tone: 'danger',
         title: messages.failure,
-        message: errorMessage(err, 'Please try again.'),
+        message: errorMessage(err, t('Please try again.')),
       });
       return false;
     } finally {
@@ -289,11 +290,11 @@ export function PersonPicker({
 
   if (value) {
     return (
-      <Field label={label} required={required} error={error}>
+      <Field label={t(label)} required={required} error={error}>
         <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 py-2 text-sm">
           <span className="font-medium text-foreground">{value.displayName}</span>
           <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
-            Change
+            {t('Change')}
           </Button>
         </div>
       </Field>
@@ -302,10 +303,10 @@ export function PersonPicker({
 
   return (
     <Field
-      label={label}
+      label={t(label)}
       required={required}
       error={error}
-      hint="Type at least two letters of their name."
+      hint={t('Type at least two letters of their name.')}
     >
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
@@ -321,7 +322,7 @@ export function PersonPicker({
                 void search();
               }
             }}
-            placeholder="Search by name…"
+            placeholder={t('Search by name…')}
           />
           <Button
             variant="secondary"
@@ -329,7 +330,7 @@ export function PersonPicker({
             loading={searching}
             disabled={query.trim().length < 2}
           >
-            Search
+            {t('Search')}
           </Button>
         </div>
         {results.length > 0 ? (
@@ -350,7 +351,7 @@ export function PersonPicker({
             ))}
           </ul>
         ) : searched && !searching ? (
-          <p className="text-sm text-muted-foreground">No people match that search.</p>
+          <p className="text-sm text-muted-foreground">{t('No people match that search.')}</p>
         ) : null}
       </div>
     </Field>

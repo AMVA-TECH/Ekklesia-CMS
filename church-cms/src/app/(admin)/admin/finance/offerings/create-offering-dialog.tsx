@@ -14,6 +14,7 @@ import {
 import type { Fund, Offering } from '../../../_lib/api-types';
 import { asList } from '../../../_lib/list';
 import { extractValidationErrors } from '../../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AccountOption {
   id: string;
@@ -105,7 +106,7 @@ export function CreateOfferingDialog({
     if (submitting) return;
     const amountNumber = Number(amount);
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-      setFieldErrors({ amountMinor: 'Enter an amount greater than zero.' });
+      setFieldErrors({ amountMinor: t('Enter an amount greater than zero.') });
       return;
     }
     setSubmitting(true);
@@ -134,7 +135,7 @@ export function CreateOfferingDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not record offering.',
+          err instanceof Error ? err.message : t('Could not record offering.'),
         );
       }
       setSubmitting(false);
@@ -145,8 +146,8 @@ export function CreateOfferingDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Record offering"
-      description="Amount is entered in the major unit (e.g. TZS 10,000). Set income and deposit accounts if you plan to post to the ledger."
+      title={t('Record offering')}
+      description={t('Amount is entered in the major unit (e.g. TZS 10,000). Set income and deposit accounts if you plan to post to the ledger.')}
       size="sm"
       footer={
         <DialogFooter>
@@ -155,10 +156,10 @@ export function CreateOfferingDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Save offering'}
+            {submitting ? t('Saving…') : t('Save offering')}
           </Button>
         </DialogFooter>
       }
@@ -179,7 +180,7 @@ export function CreateOfferingDialog({
           </div>
         ) : null}
 
-        <Field label="Service date" required error={fieldErrors.serviceDate}>
+        <Field label={t('Service date')} required error={fieldErrors.serviceDate}>
           <Input
             type="date"
             value={serviceDate}
@@ -189,9 +190,9 @@ export function CreateOfferingDialog({
         </Field>
 
         <Field
-          label="Amount"
+          label={t('Amount')}
           required
-          hint="Entered in the main currency unit (e.g. TZS)."
+          hint={t('Entered in the main currency unit (e.g. TZS).')}
           error={fieldErrors.amountMinor}
         >
           <Input
@@ -206,9 +207,9 @@ export function CreateOfferingDialog({
           />
         </Field>
 
-        <Field label="Fund" hint="Optional" error={fieldErrors.fundId}>
+        <Field label={t('Fund')} hint={t('Optional')} error={fieldErrors.fundId}>
           <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-            <option value="">Unassigned</option>
+            <option value="">{t('Unassigned')}</option>
             {funds.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name} ({f.code})
@@ -218,15 +219,15 @@ export function CreateOfferingDialog({
         </Field>
 
         <Field
-          label="Income account"
-          hint="Needed to post to the ledger"
+          label={t('Income account')}
+          hint={t('Needed to post to the ledger')}
           error={fieldErrors.incomeAccountId}
         >
           <Select
             value={incomeAccountId}
             onChange={(e) => setIncomeAccountId(e.target.value)}
           >
-            <option value="">Not set</option>
+            <option value="">{t('Not set')}</option>
             {incomeAccounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.code} — {a.name}
@@ -236,15 +237,15 @@ export function CreateOfferingDialog({
         </Field>
 
         <Field
-          label="Deposit account"
-          hint="Cash or bank asset account for posting"
+          label={t('Deposit account')}
+          hint={t('Cash or bank asset account for posting')}
           error={fieldErrors.depositAccountId}
         >
           <Select
             value={depositAccountId}
             onChange={(e) => setDepositAccountId(e.target.value)}
           >
-            <option value="">Not set</option>
+            <option value="">{t('Not set')}</option>
             {depositAccounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.code} — {a.name}
@@ -253,13 +254,13 @@ export function CreateOfferingDialog({
           </Select>
         </Field>
 
-        <Field label="Note" error={fieldErrors.note}>
+        <Field label={t('Note')} error={fieldErrors.note}>
           <Textarea
             rows={2}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={500}
-            placeholder="Optional reference"
+            placeholder={t('Optional reference')}
           />
         </Field>
       </form>

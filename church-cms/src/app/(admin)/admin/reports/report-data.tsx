@@ -1,4 +1,5 @@
 import { formatMoney, titleCase } from '../../_lib/format';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /**
  * Generic renderer for report payloads, whose shapes differ per report:
@@ -22,7 +23,7 @@ function scalar(key: string, value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value === 'number' && key.endsWith('Minor')) return formatMoney(value);
   if (typeof value === 'number') return value.toLocaleString();
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'boolean') return value ? t('Yes') : t('No');
   return String(value);
 }
 
@@ -40,7 +41,7 @@ function Value({
   name?: string;
 }): React.ReactElement {
   if (Array.isArray(value)) {
-    if (value.length === 0) return <p className="text-sm text-muted-foreground">No rows.</p>;
+    if (value.length === 0) return <p className="text-sm text-muted-foreground">{t('No rows.')}</p>;
     if (value.every(isRow)) {
       const cols = Array.from(new Set(value.flatMap((r) => Object.keys(r)))).filter(
         (c) => !value.some((r) => typeof r[c] === 'object' && r[c] !== null),

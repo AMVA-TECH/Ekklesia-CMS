@@ -18,6 +18,7 @@ import {
   TANZANIA_PHONE_INVALID_MESSAGE,
   normalizeTanzaniaPhoneE164,
 } from '@/platform/phone';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 type ChurchHit = {
   id: string;
@@ -90,23 +91,23 @@ export function RegisterClient(): React.ReactElement {
   function validate(): boolean {
     const next: typeof fieldErrors = {};
     if (firstName.trim().length < 1) {
-      next.firstName = 'Enter your first name.';
+      next.firstName = t('Enter your first name.');
     }
     if (lastName.trim().length < 1) {
-      next.lastName = 'Enter your last name.';
+      next.lastName = t('Enter your last name.');
     }
     const emailTrim = email.trim();
     const phoneTrim = phone.trim();
     if (!phoneTrim) {
-      next.phone = 'Enter your phone number.';
+      next.phone = t('Enter your phone number.');
     } else if (!normalizeTanzaniaPhoneE164(phoneTrim)) {
       next.phone = TANZANIA_PHONE_INVALID_MESSAGE;
     }
     if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
-      next.email = 'That email does not look right.';
+      next.email = t('That email does not look right.');
     }
     if (!church) {
-      next.church = 'Select the church you want to be attached to.';
+      next.church = t('Select the church you want to be attached to.');
     }
     setFieldErrors(next);
     return Object.keys(next).length === 0;
@@ -141,11 +142,11 @@ export function RegisterClient(): React.ReactElement {
         churchName: church.name,
         message:
           payload.message ||
-          'Your registration was received. A church administrator must attach you before you can use church services.',
+          t('Your registration was received. A church administrator must attach you before you can use church services.'),
       });
       setSuccessOpen(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Request failed');
+      setError(err instanceof Error ? err.message : t('Request failed'));
       setFailureOpen(true);
     } finally {
       setSubmitting(false);
@@ -164,12 +165,10 @@ export function RegisterClient(): React.ReactElement {
     <div className="flex flex-col">
       <div className="mb-8 text-center lg:text-left">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-          Request to join
+          {t('Request to join')}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Tell us who you are and which church to attach to. Attachment unlocks
-          that church’s services after an admin approves you. This does not sign
-          you in — use Sign in with your phone and PIN once approved.
+          {t('Tell us who you are and which church to attach to. Attachment unlocks that church’s services after an admin approves you. This does not sign you in — use Sign in with your phone and PIN once approved.')}
         </p>
       </div>
 
@@ -182,10 +181,9 @@ export function RegisterClient(): React.ReactElement {
             <Icon name="check-circle" size={20} />
           </span>
           <div>
-            <p className="font-semibold">Registration received</p>
+            <p className="font-semibold">{t('Registration received')}</p>
             <p className="mt-1 opacity-90">
-              Waiting for {success.churchName} to attach you. You will be able
-              to sign in after approval.
+              {t('Waiting for')} {success.churchName} {t('to attach you. You will be able to sign in after approval.')}
             </p>
           </div>
         </div>
@@ -198,7 +196,7 @@ export function RegisterClient(): React.ReactElement {
         noValidate
       >
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="First name" required error={fieldErrors.firstName}>
+          <Field label={t('First name')} required error={fieldErrors.firstName}>
             <Input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -207,7 +205,7 @@ export function RegisterClient(): React.ReactElement {
               disabled={Boolean(success)}
             />
           </Field>
-          <Field label="Last name" required error={fieldErrors.lastName}>
+          <Field label={t('Last name')} required error={fieldErrors.lastName}>
             <Input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -219,9 +217,9 @@ export function RegisterClient(): React.ReactElement {
         </div>
 
         <Field
-          label="Phone"
+          label={t('Phone')}
           required
-          hint={`${TANZANIA_PHONE_HINT} Used to sign in after approval.`}
+          hint={t('{0} Used to sign in after approval.', TANZANIA_PHONE_HINT)}
           error={fieldErrors.phone}
         >
           <Input
@@ -235,7 +233,7 @@ export function RegisterClient(): React.ReactElement {
           />
         </Field>
 
-        <Field label="Email" hint="Optional" error={fieldErrors.email}>
+        <Field label={t('Email')} hint={t('Optional')} error={fieldErrors.email}>
           <Input
             type="email"
             value={email}
@@ -247,12 +245,12 @@ export function RegisterClient(): React.ReactElement {
         </Field>
 
         <Field
-          label="Church to attach to"
+          label={t('Church to attach to')}
           required
           hint={
             church
-              ? 'Attachment connects you to this church’s services after approval'
-              : 'Type at least 2 letters to find your church'
+              ? t('Attachment connects you to this church’s services after approval')
+              : t('Type at least 2 letters to find your church')
           }
           error={fieldErrors.church}
         >
@@ -261,7 +259,7 @@ export function RegisterClient(): React.ReactElement {
               <Input
                 value={church.name}
                 readOnly
-                aria-label="Selected church"
+                aria-label={t('Selected church')}
                 disabled={Boolean(success)}
               />
               {!success ? (
@@ -275,7 +273,7 @@ export function RegisterClient(): React.ReactElement {
                     setHits([]);
                   }}
                 >
-                  Change
+                  {t('Change')}
                 </Button>
               ) : null}
             </div>
@@ -288,13 +286,13 @@ export function RegisterClient(): React.ReactElement {
                   if (e.target.value.trim().length < 2) setHits([]);
                   setFieldErrors((f) => ({ ...f, church: undefined }));
                 }}
-                placeholder="Search church name"
+                placeholder={t('Search church name')}
                 autoComplete="off"
                 aria-autocomplete="list"
                 aria-expanded={hits.length > 0}
               />
               {searching ? (
-                <p className="mt-1 text-xs text-muted-foreground">Searching…</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t('Searching…')}</p>
               ) : null}
               {hits.length > 0 ? (
                 <ul
@@ -328,14 +326,14 @@ export function RegisterClient(): React.ReactElement {
           )}
         </Field>
 
-        <Field label="Language">
+        <Field label={t('Language')}>
           <Select
             value={locale}
             onChange={(e) => setLocale(e.target.value as 'en' | 'sw')}
             disabled={Boolean(success)}
           >
-            <option value="sw">Kiswahili</option>
-            <option value="en">English</option>
+            <option value="sw">{t('Kiswahili')}</option>
+            <option value="en">{t('English')}</option>
           </Select>
         </Field>
 
@@ -348,34 +346,34 @@ export function RegisterClient(): React.ReactElement {
           className="mt-1"
         >
           {submitting
-            ? 'Sending request…'
+            ? t('Sending request…')
             : success
-              ? 'Request sent'
-              : 'Submit join request'}
+              ? t('Request sent')
+              : t('Submit join request')}
         </Button>
       </form>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Already approved?{' '}
+        {t('Already approved?')}{' '}
         <Link
           href="/sign-in"
           className="link-ink font-medium underline-offset-2 hover:underline focus-ring rounded-sm"
         >
-          Sign in
+          {t('Sign in')}
         </Link>
       </p>
 
       <Dialog
         open={successOpen && Boolean(success)}
         onClose={closeSuccessDialog}
-        title="Registration successful"
-        description="Your request was received. You are not signed in yet."
+        title={t('Registration successful')}
+        description={t('Your request was received. You are not signed in yet.')}
         size="sm"
         hideCloseButton
         footer={
           <DialogFooter>
             <Button variant="secondary" onClick={closeSuccessDialog}>
-              Stay here
+              {t('Stay here')}
             </Button>
             <Button
               data-autofocus
@@ -384,7 +382,7 @@ export function RegisterClient(): React.ReactElement {
                 router.push('/sign-in');
               }}
             >
-              Go to sign in
+              {t('Go to sign in')}
             </Button>
           </DialogFooter>
         }
@@ -396,20 +394,18 @@ export function RegisterClient(): React.ReactElement {
                 <Icon name="check-circle" size={36} />
               </span>
               <p className="mt-3 text-base font-semibold text-[color:var(--success-ink)]">
-                Success
+                {t('Success')}
               </p>
               <p className="mt-1 text-[color:var(--success-ink)] opacity-90">
-                {success.message}
+                {t(success.message)}
               </p>
             </div>
             <div className="rounded-xl border-2 border-[color:var(--brand-gold)] bg-[color:var(--brand-gold-tint)] px-3 py-3">
               <p className="font-semibold text-[color:var(--brand-gold-ink)]">
-                Waiting for attachment
+                {t('Waiting for attachment')}
               </p>
               <p className="mt-1 text-sm text-[color:var(--brand-gold-ink)] opacity-90">
-                <strong>{success.churchName}</strong> must approve and attach
-                you before church services unlock. After that, sign in with
-                your phone and the PIN they give you.
+                <strong>{success.churchName}</strong> {t('must approve and attach you before church services unlock. After that, sign in with your phone and the PIN they give you.')}
               </p>
             </div>
           </div>
@@ -419,14 +415,14 @@ export function RegisterClient(): React.ReactElement {
       <Dialog
         open={failureOpen && Boolean(error)}
         onClose={closeFailureDialog}
-        title="Registration failed"
-        description="Something went wrong. Your request was not sent."
+        title={t('Registration failed')}
+        description={t('Something went wrong. Your request was not sent.')}
         size="sm"
         hideCloseButton
         footer={
           <DialogFooter>
             <Button data-autofocus onClick={closeFailureDialog}>
-              Try again
+              {t('Try again')}
             </Button>
           </DialogFooter>
         }
@@ -436,7 +432,7 @@ export function RegisterClient(): React.ReactElement {
             <Icon name="alert-circle" size={36} />
           </span>
           <p className="mt-3 text-base font-semibold text-[color:var(--danger-ink)]">
-            Failed
+            {t('Failed')}
           </p>
           <p className="mt-1 text-[color:var(--danger-ink)] opacity-90">
             {error}

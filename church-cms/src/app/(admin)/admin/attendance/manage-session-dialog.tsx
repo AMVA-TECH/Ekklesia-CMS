@@ -17,6 +17,7 @@ import { formatDateTime, titleCase } from '../../_lib/format';
 import { extractValidationErrors } from '../people/form-errors';
 import type { AttendanceRecord, AttendanceSession } from './attendance-types';
 import { AttendanceQrPanel } from './attendance-qr-panel';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface ManageSessionDialogProps {
   open: boolean;
@@ -108,7 +109,7 @@ export function ManageSessionDialog({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load session records.',
+            : t('Unable to load session records.'),
       );
     } finally {
       setLoadingRecords(false);
@@ -191,7 +192,7 @@ export function ManageSessionDialog({
     event.preventDefault();
     if (!current || !isOpen || recording) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: t('Pick a person from the search results.') });
       return;
     }
     setFieldErrors({});
@@ -228,7 +229,7 @@ export function ManageSessionDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not record attendance.',
+          err instanceof Error ? err.message : t('Could not record attendance.'),
         );
       }
     } finally {
@@ -243,15 +244,15 @@ export function ManageSessionDialog({
     const children = Number(childrenCount);
     const visitors = Number(visitorsCount);
     const nextErrors: Record<string, string> = {};
-    if (!Number.isInteger(men) || men < 0) nextErrors.menCount = 'Enter a whole number.';
+    if (!Number.isInteger(men) || men < 0) nextErrors.menCount = t('Enter a whole number.');
     if (!Number.isInteger(women) || women < 0) {
-      nextErrors.womenCount = 'Enter a whole number.';
+      nextErrors.womenCount = t('Enter a whole number.');
     }
     if (!Number.isInteger(children) || children < 0) {
-      nextErrors.childrenCount = 'Enter a whole number.';
+      nextErrors.childrenCount = t('Enter a whole number.');
     }
     if (!Number.isInteger(visitors) || visitors < 0) {
-      nextErrors.visitorsCount = 'Enter a whole number.';
+      nextErrors.visitorsCount = t('Enter a whole number.');
     }
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
@@ -282,7 +283,7 @@ export function ManageSessionDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not save headcount.',
+          err instanceof Error ? err.message : t('Could not save headcount.'),
         );
       }
     } finally {
@@ -311,7 +312,7 @@ export function ManageSessionDialog({
         setFormError(err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not finalize session.',
+          err instanceof Error ? err.message : t('Could not finalize session.'),
         );
       }
     } finally {
@@ -325,19 +326,19 @@ export function ManageSessionDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={eventTitle || 'Attendance session'}
+      title={eventTitle || t('Attendance session')}
       description={
         current
           ? `${titleCase(current.mode.replaceAll('_', ' '))} · ${
-              isOpen ? 'Open' : 'Finalized'
+              isOpen ? t('Open') : t('Finalized')
             }`
-          : 'Manage attendance for this event.'
+          : t('Manage attendance for this event.')
       }
       size="lg"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={busy}>
-            Close
+            {t('Close')}
           </Button>
           {isOpen ? (
             confirmFinalize ? (
@@ -347,7 +348,7 @@ export function ManageSessionDialog({
                   onClick={() => setConfirmFinalize(false)}
                   disabled={finalizing}
                 >
-                  Not yet
+                  {t('Not yet')}
                 </Button>
                 <Button
                   variant="primary"
@@ -356,7 +357,7 @@ export function ManageSessionDialog({
                     void handleFinalize();
                   }}
                 >
-                  {finalizing ? 'Finalizing…' : 'Yes, finalize'}
+                  {finalizing ? t('Finalizing…') : t('Yes, finalize')}
                 </Button>
               </>
             ) : (
@@ -368,7 +369,7 @@ export function ManageSessionDialog({
                   void handleFinalize();
                 }}
               >
-                Finalize session
+                {t('Finalize session')}
               </Button>
             )
           ) : null}
@@ -376,7 +377,7 @@ export function ManageSessionDialog({
       }
     >
       {!current ? (
-        <p className="text-sm text-muted-foreground">No session selected.</p>
+        <p className="text-sm text-muted-foreground">{t('No session selected.')}</p>
       ) : (
         <div className="flex flex-col gap-5">
           {formError ? (
@@ -393,23 +394,22 @@ export function ManageSessionDialog({
               role="status"
               className="rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]"
             >
-              Finalizing locks this session. You will not be able to add more
-              records afterward.
+              {t('Finalizing locks this session. You will not be able to add more records afterward.')}
             </div>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <StatusPill tone={isOpen ? 'info' : 'success'}>
-              {isOpen ? 'Open' : 'Finalized'}
+              {isOpen ? t('Open') : t('Finalized')}
             </StatusPill>
             <Badge tone="neutral">{titleCase(current.mode.replaceAll('_', ' '))}</Badge>
             <span className="text-muted-foreground">
               {current.recordCount ?? 0}{' '}
-              {(current.recordCount ?? 0) === 1 ? 'record' : 'records'}
+              {(current.recordCount ?? 0) === 1 ? t('record') : t('records')}
             </span>
             {current.summary ? (
               <span className="text-muted-foreground">
-                · Headcount {current.summary.totalCount}
+                {t('· Headcount')} {current.summary.totalCount}
               </span>
             ) : null}
           </div>
@@ -425,7 +425,7 @@ export function ManageSessionDialog({
           {allowsRecords ? (
             <section className="flex flex-col gap-3" aria-labelledby="record-people">
               <h3 id="record-people" className="text-sm font-medium text-foreground">
-                People present
+                {t('People present')}
               </h3>
               {isOpen ? (
                 <form
@@ -436,9 +436,9 @@ export function ManageSessionDialog({
                   className="flex flex-col gap-3"
                 >
                   <Field
-                    label="Add person"
+                    label={t('Add person')}
                     required
-                    hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+                    hint={searching ? t('Searching…') : t('Type at least 2 letters')}
                     error={fieldErrors.personId}
                   >
                     <Input
@@ -449,7 +449,7 @@ export function ManageSessionDialog({
                         if (e.target.value.trim().length < 2) setResults([]);
                         setPersonId('');
                       }}
-                      placeholder="Search by name…"
+                      placeholder={t('Search by name…')}
                       disabled={recording}
                     />
                   </Field>
@@ -486,17 +486,17 @@ export function ManageSessionDialog({
                       iconLeft={recording ? undefined : 'user-plus'}
                       disabled={!personId}
                     >
-                      {recording ? 'Recording…' : 'Mark present'}
+                      {recording ? t('Recording…') : t('Mark present')}
                     </Button>
                   </div>
                 </form>
               ) : null}
 
               {loadingRecords ? (
-                <p className="text-sm text-muted-foreground">Loading records…</p>
+                <p className="text-sm text-muted-foreground">{t('Loading records…')}</p>
               ) : records.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No people recorded yet.
+                  {t('No people recorded yet.')}
                 </p>
               ) : (
                 <ul className="max-h-56 divide-y divide-border overflow-y-auto rounded-md border border-border">
@@ -510,8 +510,8 @@ export function ManageSessionDialog({
                           {r.personId
                             ? (nameByPersonId[r.personId] ??
                               r.checkInName ??
-                              'Person')
-                            : (r.checkInName ?? 'Guest')}
+                              t('Person'))
+                            : (r.checkInName ?? t('Guest'))}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDateTime(r.checkedInAt)} · {titleCase(r.presence)}
@@ -528,10 +528,10 @@ export function ManageSessionDialog({
           {allowsSummary ? (
             <section className="flex flex-col gap-3" aria-labelledby="headcount">
               <h3 id="headcount" className="text-sm font-medium text-foreground">
-                {isHeadcount ? 'Headcount' : 'Optional headcount'}
+                {isHeadcount ? t('Headcount') : t('Optional headcount')}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Men" error={fieldErrors.menCount}>
+                <Field label={t('Men')} error={fieldErrors.menCount}>
                   <Input
                     type="number"
                     min={0}
@@ -541,7 +541,7 @@ export function ManageSessionDialog({
                     onChange={(e) => setMenCount(e.target.value)}
                   />
                 </Field>
-                <Field label="Women" error={fieldErrors.womenCount}>
+                <Field label={t('Women')} error={fieldErrors.womenCount}>
                   <Input
                     type="number"
                     min={0}
@@ -551,7 +551,7 @@ export function ManageSessionDialog({
                     onChange={(e) => setWomenCount(e.target.value)}
                   />
                 </Field>
-                <Field label="Children" error={fieldErrors.childrenCount}>
+                <Field label={t('Children')} error={fieldErrors.childrenCount}>
                   <Input
                     type="number"
                     min={0}
@@ -561,7 +561,7 @@ export function ManageSessionDialog({
                     onChange={(e) => setChildrenCount(e.target.value)}
                   />
                 </Field>
-                <Field label="Visitors" error={fieldErrors.visitorsCount}>
+                <Field label={t('Visitors')} error={fieldErrors.visitorsCount}>
                   <Input
                     type="number"
                     min={0}
@@ -582,7 +582,7 @@ export function ManageSessionDialog({
                       void handleSaveSummary();
                     }}
                   >
-                    {savingSummary ? 'Saving…' : 'Save headcount'}
+                    {savingSummary ? t('Saving…') : t('Save headcount')}
                   </Button>
                 </div>
               ) : null}

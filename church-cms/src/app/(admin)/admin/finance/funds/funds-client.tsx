@@ -22,6 +22,7 @@ import type { Fund } from '../../../_lib/api-types';
 import { asList } from '../../../_lib/list';
 import { titleCase } from '../../../_lib/format';
 import { CreateFundDialog } from './create-fund-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 export function FundsClient(): React.ReactElement {
   const { push } = useToast();
@@ -43,7 +44,7 @@ export function FundsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load funds.',
+            : t('Unable to load funds.'),
       );
     } finally {
       setLoading(false);
@@ -55,18 +56,18 @@ export function FundsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Funds"
-        lede="How giving is categorised — general offerings, designated projects, and restricted funds."
+        title={t('Funds')}
+        lede={t('How giving is categorised — general offerings, designated projects, and restricted funds.')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New fund
+            {t('New fund')}
           </Button>
         }
       />
 
       <Panel
-        title="All funds"
-        subtitle={error ?? `${funds.length} total`}
+        title={t('All funds')}
+        subtitle={error ?? t('{0} total', funds.length)}
         flush
       >
         {error ? (
@@ -74,7 +75,7 @@ export function FundsClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                Try again
+                {t('Try again')}
               </Button>
             </div>
           </div>
@@ -87,15 +88,15 @@ export function FundsClient(): React.ReactElement {
           <EmptyState
             icon="briefcase"
             tone="gold"
-            title="No funds yet"
-            description="Add a general fund to start, then add project-specific funds as needed."
+            title={t('No funds yet')}
+            description={t('Add a general fund to start, then add project-specific funds as needed.')}
             action={
               <Button
                 iconLeft="plus"
                 size="sm"
                 onClick={() => setCreateOpen(true)}
               >
-                New fund
+                {t('New fund')}
               </Button>
             }
           />
@@ -104,10 +105,10 @@ export function FundsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Code</TH>
-                  <TH>Name</TH>
-                  <TH>Type</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Code')}</TH>
+                  <TH>{t('Name')}</TH>
+                  <TH>{t('Type')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -139,8 +140,8 @@ export function FundsClient(): React.ReactElement {
         onCreated={(f) => {
           push({
             tone: 'success',
-            title: 'Fund created',
-            message: `${f.name} is active.`,
+            title: t('Fund created'),
+            message: t('{0} is active.', f.name),
           });
           setCreateOpen(false);
           void load();

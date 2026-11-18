@@ -18,6 +18,7 @@ import {
 import { ListState } from '../../_components/kit';
 import { formatDateTime } from '../../_lib/format';
 import { useApiList } from '../../_lib/use-api-list';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AuditEvent {
   id: string;
@@ -48,14 +49,14 @@ export function AuditClient(): React.ReactElement {
   const users = useApiList<OrgUser>('/api/v1/organisation-users');
   const who = useMemo(() => {
     const map = new Map(users.items.map((u) => [u.userAccountId, u.label]));
-    return (id: string | null): string => (id ? (map.get(id) ?? 'User') : 'System');
+    return (id: string | null): string => (id ? (map.get(id) ?? t('User')) : t('System'));
   }, [users.items]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Audit log"
-        lede="High-impact actions — approvals, money, roles, exports — recorded with who did them. Sensitive values are removed."
+        title={t('Audit log')}
+        lede={t('High-impact actions — approvals, money, roles, exports — recorded with who did them. Sensitive values are removed.')}
       />
 
       <form
@@ -65,44 +66,44 @@ export function AuditClient(): React.ReactElement {
           setApplied(draft);
         }}
       >
-        <Field label="Action" hint="Exact, e.g. finance.journal.posted">
+        <Field label={t('Action')} hint={t('Exact, e.g. finance.journal.posted')}>
           <Input value={draft.action} onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))} />
         </Field>
-        <Field label="Entity type" hint="e.g. expense, journal">
+        <Field label={t('Entity type')} hint={t('e.g. expense, journal')}>
           <Input
             value={draft.entityType}
             onChange={(e) => setDraft((d) => ({ ...d, entityType: e.target.value }))}
           />
         </Field>
-        <Field label="From">
+        <Field label={t('From')}>
           <Input type="date" value={draft.from} onChange={(e) => setDraft((d) => ({ ...d, from: e.target.value }))} />
         </Field>
-        <Field label="To">
+        <Field label={t('To')}>
           <Input type="date" value={draft.to} onChange={(e) => setDraft((d) => ({ ...d, to: e.target.value }))} />
         </Field>
         <Button type="submit" iconLeft="filter">
-          Filter
+          {t('Filter')}
         </Button>
       </form>
 
-      <Panel title="Events" subtitle={events.loading ? 'Loading…' : `${events.items.length} shown · newest first`} flush>
+      <Panel title={t('Events')} subtitle={events.loading ? t('Loading…') : t('{0} shown · newest first', events.items.length)} flush>
         <ListState
           loading={events.loading}
           error={events.error}
           forbidden={events.forbidden}
           isEmpty={events.items.length === 0}
           onRetry={() => void events.reload()}
-          empty={{ icon: 'shield', title: 'No matching events' }}
+          empty={{ icon: 'shield', title: t('No matching events') }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>When</TH>
-                  <TH>Who</TH>
-                  <TH>Action</TH>
-                  <TH>Entity</TH>
-                  <TH>Details</TH>
+                  <TH>{t('When')}</TH>
+                  <TH>{t('Who')}</TH>
+                  <TH>{t('Action')}</TH>
+                  <TH>{t('Entity')}</TH>
+                  <TH>{t('Details')}</TH>
                 </TR>
               </THead>
               <TBody>

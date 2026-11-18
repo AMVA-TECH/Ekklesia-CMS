@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { Icon, type IconName } from '../icons';
 import { cn } from './utils';
+import { tn } from '@/app/_ekklesia/i18n/core';
 
 /** Supporting tone for the tinted metric tile (mockup pastel cards). */
 export type MetricTone = 'sage' | 'sky' | 'lavender' | 'peach' | 'gold' | 'neutral';
@@ -71,7 +72,7 @@ export function Metric({
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium text-muted-foreground">{tn(label)}</p>
         {icon ? (
           <span
             className={cn(
@@ -105,7 +106,7 @@ export function Metric({
           <span>{change}</span>
         </p>
       ) : null}
-      {hint ? <p className="mt-2 text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-2 text-xs text-muted-foreground">{tn(hint)}</p> : null}
     </>
   );
 

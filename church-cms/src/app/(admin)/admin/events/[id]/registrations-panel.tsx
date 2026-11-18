@@ -7,6 +7,7 @@ import { ListState } from '../../../_components/kit';
 import { formatDate } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
 import { usePeopleNames } from '../../../_lib/use-people-names';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface EventRegistration {
   id: string;
@@ -30,16 +31,16 @@ export function RegistrationsPanel({ eventId }: { eventId: string }): React.Reac
 
   return (
     <Panel
-      title="Registrations"
+      title={t('Registrations')}
       subtitle={
         regs.loading
-          ? 'Loading…'
-          : `${registered.length} coming${cancelled ? ` · ${cancelled} cancelled` : ''}`
+          ? t('Loading…')
+          : t('{0} coming{1}', registered.length, cancelled ? ` · ${cancelled} cancelled` : '')
       }
       actions={
         cancelled > 0 ? (
           <Button size="sm" variant="ghost" onClick={() => setShowCancelled((v) => !v)}>
-            {showCancelled ? 'Hide cancelled' : 'Show cancelled'}
+            {showCancelled ? t('Hide cancelled') : t('Show cancelled')}
           </Button>
         ) : null
       }
@@ -52,12 +53,12 @@ export function RegistrationsPanel({ eventId }: { eventId: string }): React.Reac
         onRetry={() => void regs.reload()}
         empty={{
           icon: 'calendar-check',
-          title: 'No registrations yet',
-          description: 'Members can register for this event from the app.',
+          title: t('No registrations yet'),
+          description: t('Members can register for this event from the app.'),
         }}
       >
         {shown.length === 0 ? (
-          <EmptyState icon="calendar-check" tone="neutral" title="Everyone who registered has cancelled" />
+          <EmptyState icon="calendar-check" tone="neutral" title={t('Everyone who registered has cancelled')} />
         ) : (
           <ul className="divide-y divide-border rounded-md border border-border">
             {shown.map((r) => (
@@ -69,10 +70,10 @@ export function RegistrationsPanel({ eventId }: { eventId: string }): React.Reac
                   >
                     {names[r.personId] ?? '…'}
                   </Link>
-                  <p className="text-xs text-muted-foreground">Registered {formatDate(r.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{t('Registered')} {formatDate(r.createdAt)}</p>
                 </div>
                 <StatusPill tone={r.status === 'registered' ? 'success' : 'neutral'}>
-                  {r.status === 'registered' ? 'Coming' : 'Cancelled'}
+                  {r.status === 'registered' ? t('Coming') : t('Cancelled')}
                 </StatusPill>
               </li>
             ))}

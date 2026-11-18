@@ -12,6 +12,7 @@ import { BottomNav, type BottomNavItem } from './bottom-nav';
 import { MobileDrawer } from './mobile-drawer';
 import type { NavGroup } from './role-nav';
 import { Topbar } from './topbar';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<MemberShell>`. */
 export interface MemberShellProps {
@@ -98,7 +99,7 @@ function DesktopNav({ items }: { items: readonly BottomNavItem[] }): React.React
   return (
     <div className="flex min-w-0 flex-1 items-center gap-6">
       <BrandMark href="/home" size={28} variant="symbol" surface="light" />
-      <nav aria-label="Primary" className="flex min-w-0 items-center gap-1 overflow-x-auto">
+      <nav aria-label={t('Primary')} className="flex min-w-0 items-center gap-1 overflow-x-auto">
         {items.map((item) => {
           const active =
             item.href === '/home' ? pathname === '/home' : pathname.startsWith(item.href);
@@ -115,7 +116,7 @@ function DesktopNav({ items }: { items: readonly BottomNavItem[] }): React.React
               )}
             >
               {item.icon ? <Icon name={item.icon} size={16} /> : null}
-              {item.label}
+              {t(item.label)}
             </Link>
           );
         })}

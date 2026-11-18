@@ -11,6 +11,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Household } from '../../../_lib/api-types';
 import { extractValidationErrors } from '../../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AddChildDialogProps {
   open: boolean;
@@ -59,11 +60,11 @@ export function AddChildDialog({
     if (submitting) return;
     const ageNum = Number.parseInt(age, 10);
     if (!name.trim()) {
-      setFieldErrors({ name: 'Please enter a name.' });
+      setFieldErrors({ name: t('Please enter a name.') });
       return;
     }
     if (!Number.isFinite(ageNum) || ageNum < 0 || ageNum > 17) {
-      setFieldErrors({ age: 'Age must be between 0 and 17.' });
+      setFieldErrors({ age: t('Age must be between 0 and 17.') });
       return;
     }
     setFieldErrors({});
@@ -86,7 +87,7 @@ export function AddChildDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not add this child.',
+          err instanceof Error ? err.message : t('Could not add this child.'),
         );
       }
     } finally {
@@ -98,13 +99,13 @@ export function AddChildDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Add a child"
-      description="Record a child under 18 who does not yet have their own person record."
+      title={t('Add a child')}
+      description={t('Record a child under 18 who does not yet have their own person record.')}
       size="sm"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -112,7 +113,7 @@ export function AddChildDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Saving…' : 'Add child'}
+            {submitting ? t('Saving…') : t('Add child')}
           </Button>
         </DialogFooter>
       }
@@ -133,7 +134,7 @@ export function AddChildDialog({
           </div>
         ) : null}
 
-        <Field label="Name" required error={fieldErrors.name}>
+        <Field label={t('Name')} required error={fieldErrors.name}>
           <Input
             data-autofocus
             value={name}
@@ -142,7 +143,7 @@ export function AddChildDialog({
           />
         </Field>
 
-        <Field label="Age" required hint="0–17" error={fieldErrors.age}>
+        <Field label={t('Age')} required hint="0–17" error={fieldErrors.age}>
           <Input
             type="number"
             min={0}

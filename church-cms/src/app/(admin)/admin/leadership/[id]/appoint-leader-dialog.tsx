@@ -13,6 +13,7 @@ import {
 import type { LeadershipAppointment, Person } from '../../../_lib/api-types';
 import { asList } from '../../../_lib/list';
 import { extractValidationErrors } from '../../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AppointLeaderDialogProps {
   open: boolean;
@@ -97,11 +98,11 @@ export function AppointLeaderDialog({
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: t('Pick a person from the search results.') });
       return;
     }
     if (!effectiveFrom.trim()) {
-      setFieldErrors({ effectiveFrom: 'Start date is required.' });
+      setFieldErrors({ effectiveFrom: t('Start date is required.') });
       return;
     }
     setFieldErrors({});
@@ -133,7 +134,7 @@ export function AppointLeaderDialog({
         setFormError(
           err instanceof Error
             ? err.message
-            : 'Could not appoint this person.',
+            : t('Could not appoint this person.'),
         );
       }
     } finally {
@@ -145,8 +146,8 @@ export function AppointLeaderDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Appoint leader"
-      description={`Attach a person to ${positionTitle}. This does not grant system login permissions — assign roles separately under Church profile.`}
+      title={t('Appoint leader')}
+      description={t('Attach a person to {0}. This does not grant system login permissions — assign roles separately under Church profile.', positionTitle)}
       size="md"
       footer={
         <DialogFooter>
@@ -155,10 +156,10 @@ export function AppointLeaderDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Appoint'}
+            {submitting ? t('Saving…') : t('Appoint')}
           </Button>
         </DialogFooter>
       }
@@ -180,9 +181,9 @@ export function AppointLeaderDialog({
         ) : null}
 
         <Field
-          label="Person"
+          label={t('Person')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? t('Searching…') : t('Type at least 2 letters')}
           error={fieldErrors.personId}
         >
           <Input
@@ -193,7 +194,7 @@ export function AppointLeaderDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Search by name…"
+            placeholder={t('Search by name…')}
           />
         </Field>
 
@@ -223,20 +224,20 @@ export function AppointLeaderDialog({
           </ul>
         ) : null}
 
-        <Field label="Appointment kind" error={fieldErrors.appointmentKind}>
+        <Field label={t('Appointment kind')} error={fieldErrors.appointmentKind}>
           <Select
             value={appointmentKind}
             onChange={(e) =>
               setAppointmentKind(e.target.value as 'substantive' | 'acting')
             }
           >
-            <option value="substantive">Substantive</option>
-            <option value="acting">Acting / temporary</option>
+            <option value="substantive">{t('Substantive')}</option>
+            <option value="acting">{t('Acting / temporary')}</option>
           </Select>
         </Field>
 
         <Field
-          label="Effective from"
+          label={t('Effective from')}
           required
           error={fieldErrors.effectiveFrom}
         >
@@ -248,12 +249,12 @@ export function AppointLeaderDialog({
           />
         </Field>
 
-        <Field label="Notes" error={fieldErrors.notes}>
+        <Field label={t('Notes')} error={fieldErrors.notes}>
           <Input
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             maxLength={2000}
-            placeholder="Optional"
+            placeholder={t('Optional')}
           />
         </Field>
       </form>

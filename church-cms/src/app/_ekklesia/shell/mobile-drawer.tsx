@@ -6,6 +6,7 @@ import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
 import { cn } from '../ui/utils';
 import { RoleNav, type NavGroup } from './role-nav';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -47,7 +48,7 @@ export function MobileDrawer({
     if (!open) return;
     const { body } = document;
     const prevOverflow = body.style.overflow;
-    body.style.overflow = 'hidden';
+    body.style.overflow = t('hidden');
     const prevActive = document.activeElement as HTMLElement | null;
 
     const handleKey = (event: KeyboardEvent): void => {
@@ -105,7 +106,7 @@ export function MobileDrawer({
     <div className="fixed inset-0 z-50 lg:hidden">
       <button
         type="button"
-        aria-label="Close navigation"
+        aria-label={t('Close navigation')}
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 bg-foreground/40"
@@ -114,7 +115,7 @@ export function MobileDrawer({
         ref={rootRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Primary navigation"
+        aria-label={t('Primary navigation')}
         className={cn(
           'absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col shadow-pop',
           'border-r border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-background)] text-[color:var(--sidebar-foreground)]',
@@ -130,7 +131,7 @@ export function MobileDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close navigation"
+            aria-label={t('Close navigation')}
             className="inline-flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--sidebar-muted)] hover:bg-[color:var(--sidebar-hover)] hover:text-[color:var(--sidebar-foreground)] focus-ring"
           >
             <Icon name="close" size={18} />

@@ -13,6 +13,7 @@ import {
 import type { Membership, Person } from '../../_lib/api-types';
 import { asList } from '../../_lib/list';
 import { extractValidationErrors } from '../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface CreateMembershipDialogProps {
   open: boolean;
@@ -92,7 +93,7 @@ export function CreateMembershipDialog({
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: t('Pick a person from the search results.') });
       return;
     }
     setFieldErrors({});
@@ -119,7 +120,7 @@ export function CreateMembershipDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create membership.',
+          err instanceof Error ? err.message : t('Could not create membership.'),
         );
       }
     } finally {
@@ -131,13 +132,13 @@ export function CreateMembershipDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Add membership"
-      description="Start a membership journey for someone already in your people directory."
+      title={t('Add membership')}
+      description={t('Start a membership journey for someone already in your people directory.')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -145,7 +146,7 @@ export function CreateMembershipDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Saving…' : 'Create membership'}
+            {submitting ? t('Saving…') : t('Create membership')}
           </Button>
         </DialogFooter>
       }
@@ -167,9 +168,9 @@ export function CreateMembershipDialog({
         ) : null}
 
         <Field
-          label="Person"
+          label={t('Person')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? t('Searching…') : t('Type at least 2 letters')}
           error={fieldErrors.personId}
         >
           <Input
@@ -180,7 +181,7 @@ export function CreateMembershipDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Search by name…"
+            placeholder={t('Search by name…')}
           />
         </Field>
 
@@ -211,7 +212,7 @@ export function CreateMembershipDialog({
         ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Type" error={fieldErrors.membershipType}>
+          <Field label={t('Type')} error={fieldErrors.membershipType}>
             <Select
               value={membershipType}
               onChange={(e) =>
@@ -225,7 +226,7 @@ export function CreateMembershipDialog({
               ))}
             </Select>
           </Field>
-          <Field label="Starting status" error={fieldErrors.status}>
+          <Field label={t('Starting status')} error={fieldErrors.status}>
             <Select
               value={status}
               onChange={(e) =>
@@ -242,8 +243,8 @@ export function CreateMembershipDialog({
         </div>
 
         <Field
-          label="Effective from"
-          hint="Optional — YYYY-MM-DD (defaults to today)"
+          label={t('Effective from')}
+          hint={t('Optional — YYYY-MM-DD (defaults to today)')}
           error={fieldErrors.effectiveFrom}
         >
           <Input

@@ -17,6 +17,7 @@ import {
 } from 'react';
 import { Icon, type IconName } from '../icons';
 import { cn } from './utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface MenuTriggerInjected {
   id?: string;
@@ -165,7 +166,7 @@ export function Menu({
           id={menuId}
           role="menu"
           aria-labelledby={triggerId}
-          aria-label={label}
+          aria-label={t(label)}
           onKeyDown={handleMenuKey}
           className={cn(
             'absolute top-full mt-1 z-40 min-w-[12rem] rounded-md border border-border bg-surface p-1 shadow-pop',

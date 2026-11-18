@@ -29,6 +29,7 @@ import {
   CreateAnnouncementDialog,
   type AnnouncementRow,
 } from './create-announcement-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 function statusTone(status: string): StatusTone {
   switch (status) {
@@ -48,15 +49,15 @@ function statusTone(status: string): StatusTone {
 function statusLabel(status: string): string {
   switch (status) {
     case 'draft':
-      return 'Draft';
+      return t('Draft');
     case 'pending_approval':
-      return 'Waiting for approval';
+      return t('Waiting for approval');
     case 'published':
-      return 'Published';
+      return t('Published');
     case 'rejected':
-      return 'Needs changes';
+      return t('Needs changes');
     case 'archived':
-      return 'Archived';
+      return t('Archived');
     default:
       return status.replaceAll('_', ' ');
   }
@@ -89,7 +90,7 @@ export function AnnouncementsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load announcements',
+            : t('Unable to load announcements'),
       );
     } finally {
       setLoading(false);
@@ -115,7 +116,7 @@ export function AnnouncementsClient(): React.ReactElement {
         );
         push({
           tone: 'success',
-          message: 'Sent for approval.',
+          message: t('Sent for approval.'),
         });
       } else if (action === 'reject') {
         const updated = await apiFetch<AnnouncementRow>(
@@ -123,14 +124,14 @@ export function AnnouncementsClient(): React.ReactElement {
           { method: 'POST', json: {} },
         );
         setRows((prev) => prev.map((r) => (r.id === id ? updated : r)));
-        push({ tone: 'success', message: 'Announcement sent back for changes.' });
+        push({ tone: 'success', message: t('Announcement sent back for changes.') });
       } else {
         const updated = await apiFetch<AnnouncementRow>(
           `/api/v1/announcements/${id}/publish`,
           { method: 'POST' },
         );
         setRows((prev) => prev.map((r) => (r.id === id ? updated : r)));
-        push({ tone: 'success', message: 'Announcement published.' });
+        push({ tone: 'success', message: t('Announcement published.') });
       }
     } catch (err) {
       push({
@@ -140,7 +141,7 @@ export function AnnouncementsClient(): React.ReactElement {
             ? err.message
             : err instanceof Error
               ? err.message
-              : 'Action failed.',
+              : t('Action failed.'),
       });
     } finally {
       setBusyId(null);
@@ -150,8 +151,8 @@ export function AnnouncementsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Announcements"
-        lede="Notices for your church family. Open one to read or edit, then publish when ready."
+        title={t('Announcements')}
+        lede={t('Notices for your church family. Open one to read or edit, then publish when ready.')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -160,25 +161,25 @@ export function AnnouncementsClient(): React.ReactElement {
               iconLeft="refresh"
               onClick={() => {
                 void load().then(() =>
-                  push({ tone: 'success', message: 'Announcements refreshed.' }),
+                  push({ tone: 'success', message: t('Announcements refreshed.') }),
                 );
               }}
             >
-              Refresh
+              {t('Refresh')}
             </Button>
             <Button
               size="sm"
               iconLeft="plus"
               onClick={() => setCreateOpen(true)}
             >
-              New announcement
+              {t('New announcement')}
             </Button>
           </div>
         }
       />
 
       {loading ? (
-        <Panel title="Notices">
+        <Panel title={t('Notices')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -189,11 +190,11 @@ export function AnnouncementsClient(): React.ReactElement {
         <EmptyState
           icon="alert"
           tone="peach"
-          title="Could not load announcements"
+          title={t('Could not load announcements')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              Try again
+              {t('Try again')}
             </Button>
           }
         />
@@ -201,25 +202,25 @@ export function AnnouncementsClient(): React.ReactElement {
         <EmptyState
           icon="bell"
           tone="peach"
-          title="No announcements yet"
-          description="Write a notice for your church family, save the draft, then publish or send it for approval."
+          title={t('No announcements yet')}
+          description={t('Write a notice for your church family, save the draft, then publish or send it for approval.')}
           action={
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-              New announcement
+              {t('New announcement')}
             </Button>
           }
         />
       ) : (
-        <Panel title="All notices" flush>
+        <Panel title={t('All notices')} flush>
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Title</TH>
-                  <TH>Status</TH>
-                  <TH>Published</TH>
+                  <TH>{t('Title')}</TH>
+                  <TH>{t('Status')}</TH>
+                  <TH>{t('Published')}</TH>
                   <TH className="w-12">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('Actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -243,7 +244,7 @@ export function AnnouncementsClient(): React.ReactElement {
                         }
                       }}
                       tabIndex={0}
-                      aria-label={`Open announcement ${row.title}`}
+                      aria-label={t('Open announcement {0}', row.title)}
                     >
                       <TD>
                         <div className="flex flex-col gap-0.5">
@@ -271,12 +272,12 @@ export function AnnouncementsClient(): React.ReactElement {
                         {hasActions ? (
                           <Menu
                             align="end"
-                            label={`Actions for ${row.title}`}
+                            label={t('Actions for {0}', row.title)}
                             trigger={
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                aria-label={`Actions for ${row.title}`}
+                                aria-label={t('Actions for {0}', row.title)}
                                 disabled={busyId === row.id}
                               >
                                 <Icon name="more-horizontal" size={16} />
@@ -287,7 +288,7 @@ export function AnnouncementsClient(): React.ReactElement {
                               icon="edit"
                               onClick={() => setEditing(row)}
                             >
-                              Open
+                              {t('Open')}
                             </MenuItem>
                             <MenuSeparator />
                             {canSubmit ? (
@@ -297,7 +298,7 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'submit');
                                 }}
                               >
-                                Send for approval
+                                {t('Send for approval')}
                               </MenuItem>
                             ) : null}
                             {canPublishDirect ? (
@@ -307,7 +308,7 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'publish');
                                 }}
                               >
-                                Publish now
+                                {t('Publish now')}
                               </MenuItem>
                             ) : null}
                             {canReject ? (
@@ -318,7 +319,7 @@ export function AnnouncementsClient(): React.ReactElement {
                                   void runAction(row.id, 'reject');
                                 }}
                               >
-                                Send back
+                                {t('Send back')}
                               </MenuItem>
                             ) : null}
                           </Menu>
@@ -328,7 +329,7 @@ export function AnnouncementsClient(): React.ReactElement {
                             size="sm"
                             onClick={() => setEditing(row)}
                           >
-                            Open
+                            {t('Open')}
                           </Button>
                         )}
                       </TD>
@@ -343,8 +344,7 @@ export function AnnouncementsClient(): React.ReactElement {
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon name="alert-circle" size={14} />
-        Church-wide notices usually need a second person to approve before they
-        go live. Leaders with publish rights can publish a draft directly.
+        {t('Church-wide notices usually need a second person to approve before they go live. Leaders with publish rights can publish a draft directly.')}
       </p>
 
       <CreateAnnouncementDialog
@@ -353,7 +353,7 @@ export function AnnouncementsClient(): React.ReactElement {
         onCreated={(row) => {
           setRows((prev) => [row, ...prev]);
           setCreateOpen(false);
-          push({ tone: 'success', message: 'Draft saved.' });
+          push({ tone: 'success', message: t('Draft saved.') });
         }}
       />
 
@@ -365,7 +365,7 @@ export function AnnouncementsClient(): React.ReactElement {
         onUpdated={(row) => {
           setRows((prev) => prev.map((r) => (r.id === row.id ? row : r)));
           setEditing(null);
-          push({ tone: 'success', message: 'Announcement saved.' });
+          push({ tone: 'success', message: t('Announcement saved.') });
         }}
       />
     </div>

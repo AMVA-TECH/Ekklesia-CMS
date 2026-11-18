@@ -11,6 +11,7 @@ import {
   Select,
 } from '@/app/_ekklesia/ui';
 import type { Fund } from '../../../_lib/api-types';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface CreateFundDialogProps {
   open: boolean;
@@ -19,9 +20,9 @@ interface CreateFundDialogProps {
 }
 
 const FUND_TYPES = [
-  { value: 'unrestricted', label: 'Unrestricted (general)' },
-  { value: 'restricted', label: 'Restricted' },
-  { value: 'designated', label: 'Designated' },
+  { value: 'unrestricted', label: tk('Unrestricted (general)') },
+  { value: 'restricted', label: tk('Restricted') },
+  { value: 'designated', label: tk('Designated') },
 ];
 
 export function CreateFundDialog({
@@ -87,7 +88,7 @@ export function CreateFundDialog({
         setFormError(body?.error ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create fund.',
+          err instanceof Error ? err.message : t('Could not create fund.'),
         );
       }
       setSubmitting(false);
@@ -98,8 +99,8 @@ export function CreateFundDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New fund"
-      description="Funds categorise giving — e.g. a general fund for weekly offerings and a project fund for a building campaign."
+      title={t('New fund')}
+      description={t('Funds categorise giving — e.g. a general fund for weekly offerings and a project fund for a building campaign.')}
       size="sm"
       footer={
         <DialogFooter>
@@ -108,10 +109,10 @@ export function CreateFundDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Create fund'}
+            {submitting ? t('Saving…') : t('Create fund')}
           </Button>
         </DialogFooter>
       }
@@ -133,34 +134,34 @@ export function CreateFundDialog({
         ) : null}
 
         <Field
-          label="Code"
+          label={t('Code')}
           required
-          hint="Short identifier — letters, digits, underscore. Shown in ledgers."
+          hint={t('Short identifier — letters, digits, underscore. Shown in ledgers.')}
           error={fieldErrors.code}
         >
           <Input
             data-autofocus
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="GENERAL"
+            placeholder={t('GENERAL')}
             maxLength={50}
           />
         </Field>
 
-        <Field label="Name" required error={fieldErrors.name}>
+        <Field label={t('Name')} required error={fieldErrors.name}>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="General Fund"
+            placeholder={t('General Fund')}
             maxLength={200}
           />
         </Field>
 
-        <Field label="Type" error={fieldErrors.fundType}>
+        <Field label={t('Type')} error={fieldErrors.fundType}>
           <Select value={fundType} onChange={(e) => setFundType(e.target.value)}>
-            {FUND_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {FUND_TYPES.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {t(opt.label)}
               </option>
             ))}
           </Select>

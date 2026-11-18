@@ -17,6 +17,7 @@ import { errorMessage } from '../../_lib/errors';
 import { formatDateTime, titleCase } from '../../_lib/format';
 import { useApiList } from '../../_lib/use-api-list';
 import { ReportData } from './report-data';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface CatalogueEntry {
   id: string;
@@ -80,7 +81,7 @@ export function ReportsClient({
       setResult(await fetcher());
     } catch (err) {
       setResult(null);
-      setRunError(errorMessage(err, 'Could not run this report.'));
+      setRunError(errorMessage(err, t('Could not run this report.')));
     } finally {
       setRunning(false);
     }
@@ -110,22 +111,22 @@ export function ReportsClient({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Reports"
-        lede="Live leadership, ministry and finance reports. Save a report with its filters to rerun it in one click."
+        title={t('Reports')}
+        lede={t('Live leadership, ministry and finance reports. Save a report with its filters to rerun it in one click.')}
       />
 
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
         <div className="flex flex-col gap-6">
-          <Panel title="Catalogue" flush>
+          <Panel title={t('Catalogue')} flush>
             <ListState
               loading={catalogue.loading}
               error={catalogue.error}
               forbidden={catalogue.forbidden}
               isEmpty={catalogue.items.length === 0}
               onRetry={() => void catalogue.reload()}
-              empty={{ icon: 'chart', title: 'No reports available' }}
+              empty={{ icon: 'chart', title: t('No reports available') }}
             >
-              <nav aria-label="Reports" className="flex flex-col gap-3 p-3">
+              <nav aria-label={t('Reports')} className="flex flex-col gap-3 p-3">
                 {groups.map(([audience, rows]) => (
                   <div key={audience}>
                     <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -161,14 +162,14 @@ export function ReportsClient({
             </ListState>
           </Panel>
 
-          <Panel title="Saved reports" flush>
+          <Panel title={t('Saved reports')} flush>
             <ListState
               loading={saved.loading}
               error={saved.error}
               forbidden={saved.forbidden}
               isEmpty={saved.items.length === 0}
               onRetry={() => void saved.reload()}
-              empty={{ icon: 'bookmark', title: 'Nothing saved yet' }}
+              empty={{ icon: 'bookmark', title: t('Nothing saved yet') }}
             >
               <ul className="flex flex-col p-2">
                 {saved.items.map((s) => (
@@ -203,9 +204,9 @@ export function ReportsClient({
         </div>
 
         <Panel
-          title={current ? current.name : 'Choose a report'}
+          title={current ? current.name : t('Choose a report')}
           subtitle={
-            result ? `Generated ${formatDateTime(result.generatedAt)}` : current?.id
+            result ? t('Generated {0}', formatDateTime(result.generatedAt)) : current?.id
           }
           actions={
             current ? (
@@ -215,38 +216,38 @@ export function ReportsClient({
                 iconLeft="bookmark"
                 onClick={() => setSaving(true)}
               >
-                Save
+                {t('Save')}
               </Button>
             ) : null
           }
         >
           {!current ? (
             <p className="text-sm text-muted-foreground">
-              Pick a report from the catalogue to see live numbers.
+              {t('Pick a report from the catalogue to see live numbers.')}
             </p>
           ) : (
             <div className="flex flex-col gap-5">
               <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto] sm:items-end">
-                <Field label="From">
+                <Field label={t('From')}>
                   <Input
                     type="date"
                     value={filters.from}
                     onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
                   />
                 </Field>
-                <Field label="To">
+                <Field label={t('To')}>
                   <Input
                     type="date"
                     value={filters.to}
                     onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
                   />
                 </Field>
-                <Field label={needsUnit(current.id) ? 'Unit (required)' : 'Unit'}>
+                <Field label={needsUnit(current.id) ? t('Unit (required)') : t('Unit')}>
                   <Select
                     value={filters.unitId}
                     onChange={(e) => setFilters((f) => ({ ...f, unitId: e.target.value }))}
                   >
-                    <option value="">{needsUnit(current.id) ? 'Choose a unit…' : 'All units'}</option>
+                    <option value="">{needsUnit(current.id) ? t('Choose a unit…') : t('All units')}</option>
                     {units.items.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name}
@@ -260,7 +261,7 @@ export function ReportsClient({
                   disabled={needsUnit(current.id) && !filters.unitId}
                   onClick={runSelected}
                 >
-                  Run
+                  {t('Run')}
                 </Button>
               </div>
               {runError ? <InlineAlert>{runError}</InlineAlert> : null}
@@ -288,7 +289,7 @@ export function ReportsClient({
               },
             });
             setSaving(false);
-            push({ tone: 'success', title: 'Report saved', message: name });
+            push({ tone: 'success', title: t('Report saved'), message: name });
             void saved.reload();
           }}
         />
@@ -309,16 +310,16 @@ function SaveReportDialog({
   const [name, setName] = useState(reportName);
   return (
     <FormDialog
-      title="Save report"
-      description="Saved with the current filters."
-      submitLabel="Save"
+      title={t('Save report')}
+      description={t('Saved with the current filters.')}
+      submitLabel={t('Save')}
       size="sm"
       onClose={onClose}
-      validate={(): Record<string, string> => (name.trim() ? {} : { name: 'Enter a name.' })}
+      validate={(): Record<string, string> => (name.trim() ? {} : { name: t('Enter a name.') })}
       onSubmit={() => onSave(name.trim())}
     >
       {(errors) => (
-        <Field label="Name" required error={errors.name}>
+        <Field label={t('Name')} required error={errors.name}>
           <Input data-autofocus value={name} onChange={(e) => setName(e.target.value)} maxLength={200} />
         </Field>
       )}

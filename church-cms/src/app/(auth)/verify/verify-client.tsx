@@ -15,6 +15,7 @@ import {
   Input,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -71,13 +72,13 @@ export function VerifyClient(): React.ReactElement {
       if (payload?.devOtp) {
         setDevOtp(payload.devOtp);
         setCode(payload.devOtp);
-        setNotice('Local/dev mode: use the code below (not sent by SMS).');
+        setNotice(t('Local/dev mode: use the code below (not sent by SMS).'));
       } else {
         setDevOtp(null);
         setNotice(
           silent
-            ? 'We sent a 6-digit code to your phone or email.'
-            : 'A fresh code is on the way.',
+            ? t('We sent a 6-digit code to your phone or email.')
+            : t('A fresh code is on the way.'),
         );
       }
     } catch (e) {
@@ -86,9 +87,9 @@ export function VerifyClient(): React.ReactElement {
           router.push('/sign-in');
           return;
         }
-        setError(e.message || 'We could not send a new code just now.');
+        setError(e.message || t('We could not send a new code just now.'));
       } else {
-        setError('Check your connection and try again.');
+        setError(t('Check your connection and try again.'));
       }
     } finally {
       setSending(false);
@@ -101,7 +102,7 @@ export function VerifyClient(): React.ReactElement {
     setFieldError(undefined);
     const trimmed = code.trim();
     if (!/^\d{6}$/.test(trimmed)) {
-      setFieldError('The code is 6 digits.');
+      setFieldError(t('The code is 6 digits.'));
       return;
     }
     setSubmitting(true);
@@ -116,14 +117,14 @@ export function VerifyClient(): React.ReactElement {
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 400 || e.status === 401 || e.status === 422) {
-          setFieldError('That code did not match. Check for typos or ask for a new one.');
+          setFieldError(t('That code did not match. Check for typos or ask for a new one.'));
         } else if (e.status === 429) {
-          setError('Too many attempts. Please wait a minute.');
+          setError(t('Too many attempts. Please wait a minute.'));
         } else {
-          setError(e.message || 'We could not verify that code.');
+          setError(e.message || t('We could not verify that code.'));
         }
       } else {
-        setError('Check your connection and try again.');
+        setError(t('Check your connection and try again.'));
       }
     } finally {
       setSubmitting(false);
@@ -138,15 +139,15 @@ export function VerifyClient(): React.ReactElement {
     <div className="flex flex-col">
       <div className="mb-8 text-center lg:text-left">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-          One more step
+          {t('One more step')}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Enter the 6-digit code we sent to keep your church account safe.
+          {t('Enter the 6-digit code we sent to keep your church account safe.')}
         </p>
       </div>
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-        <Field label="6-digit code" required error={fieldError}>
+        <Field label={t('6-digit code')} required error={fieldError}>
           <Input
             type="text"
             inputMode="numeric"
@@ -168,9 +169,9 @@ export function VerifyClient(): React.ReactElement {
             className="mt-1 h-4 w-4 rounded-sm border-border accent-[color:var(--brand-gold-ink)] focus-ring"
           />
           <span>
-            Trust this device for a while
+            {t('Trust this device for a while')}
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              Only turn this off on shared or public phones.
+              {t('Only turn this off on shared or public phones.')}
             </span>
           </span>
         </label>
@@ -181,13 +182,13 @@ export function VerifyClient(): React.ReactElement {
             role="status"
           >
             <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--success-ink)]">
-              Dev verification code
+              {t('Dev verification code')}
             </p>
             <p className="mt-1 font-mono text-2xl font-semibold tracking-[0.35em] text-[color:var(--success-ink)]">
               {devOtp}
             </p>
             <p className="mt-1 text-xs text-[color:var(--success-ink)] opacity-90">
-              Shown only when ALLOW_DEV_AUTH=1. Paste or use the filled field.
+              {t('Shown only when ALLOW_DEV_AUTH=1. Paste or use the filled field.')}
             </p>
           </div>
         ) : null}
@@ -213,7 +214,7 @@ export function VerifyClient(): React.ReactElement {
         ) : null}
 
         <Button type="submit" size="lg" block loading={submitting} className="mt-1">
-          {submitting ? 'Verifying…' : 'Verify and continue'}
+          {submitting ? t('Verifying…') : t('Verify and continue')}
         </Button>
 
         <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
@@ -225,16 +226,16 @@ export function VerifyClient(): React.ReactElement {
           >
             <Icon name="refresh" size={14} />
             {sending
-              ? 'Sending…'
+              ? t('Sending…')
               : canResend
-                ? 'Send a new code'
-                : `Send a new code in ${secondsRemaining}s`}
+                ? t('Send a new code')
+                : t('Send a new code in {0}s', secondsRemaining)}
           </button>
           <Link
             href="/sign-in"
             className="link-ink text-xs underline-offset-2 hover:underline focus-ring rounded-sm"
           >
-            Use a different phone or email
+            {t('Use a different phone or email')}
           </Link>
         </div>
       </form>

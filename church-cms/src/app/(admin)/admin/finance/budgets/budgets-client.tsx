@@ -31,6 +31,7 @@ import {
   type Budget,
   type FinancialYear,
 } from '../_lib/finance-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const PERIOD_KINDS = ['monthly', 'quarterly', 'yearly'] as const;
 const PERIOD_HINT = {
@@ -61,31 +62,31 @@ export function BudgetsClient(): React.ReactElement {
         : null,
     ]
       .filter(Boolean)
-      .join(' · ') || 'Church-wide';
+      .join(' · ') || t('Church-wide');
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Budgets"
-        lede="Planned spending and income per account. Compare against actuals in the Budget vs actual report."
+        title={t('Budgets')}
+        lede={t('Planned spending and income per account. Compare against actuals in the Budget vs actual report.')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/reports?report=R-FIN-06"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Budget vs actual
+              {t('Budget vs actual')}
             </Link>
             <Button iconLeft="plus" onClick={() => setCreating(true)}>
-              New budget
+              {t('New budget')}
             </Button>
           </div>
         }
       />
 
       <Panel
-        title="All budgets"
-        subtitle={budgets.loading ? 'Loading…' : `${budgets.items.length} total`}
+        title={t('All budgets')}
+        subtitle={budgets.loading ? t('Loading…') : t('{0} total', budgets.items.length)}
         flush
       >
         <ListState
@@ -96,19 +97,19 @@ export function BudgetsClient(): React.ReactElement {
           onRetry={() => void budgets.reload()}
           empty={{
             icon: 'chart',
-            title: 'No budgets yet',
-            description: 'Create a yearly budget, then break it down monthly or quarterly as needed.',
+            title: t('No budgets yet'),
+            description: t('Create a yearly budget, then break it down monthly or quarterly as needed.'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Budget</TH>
-                  <TH>Period</TH>
-                  <TH>Scope</TH>
-                  <TH className="text-right">Planned</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Budget')}</TH>
+                  <TH>{t('Period')}</TH>
+                  <TH>{t('Scope')}</TH>
+                  <TH className="text-right">{t('Planned')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -210,17 +211,17 @@ function CreateBudgetDialog({
 
   return (
     <FormDialog
-      title="New budget"
-      submitLabel="Create budget"
+      title={t('New budget')}
+      submitLabel={t('Create budget')}
       size="lg"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!name.trim()) e.name = 'Enter a name.';
-        if (!yearId) e.financialYearId = 'Create a financial year first.';
-        if (!periodKey.trim()) e.periodKey = `Enter the period, ${PERIOD_HINT[periodKind]}.`;
+        if (!name.trim()) e.name = t('Enter a name.');
+        if (!yearId) e.financialYearId = t('Create a financial year first.');
+        if (!periodKey.trim()) e.periodKey = t('Enter the period, {0}.', PERIOD_HINT[periodKind]);
         if (lines.some((l) => !l.accountId || toMinorUnits(l.amount) === null))
-          e.lines = 'Each line needs an account and an amount.';
+          e.lines = t('Each line needs an account and an amount.');
         return e;
       }}
       onSubmit={async () => {
@@ -245,26 +246,26 @@ function CreateBudgetDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Name" required error={errors.name}>
+            <Field label={t('Name')} required error={errors.name}>
               <Input
                 data-autofocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Youth ministry 2027"
+                placeholder={t('Youth ministry 2027')}
                 maxLength={200}
               />
             </Field>
-            <Field label="Financial year" required error={errors.financialYearId}>
+            <Field label={t('Financial year')} required error={errors.financialYearId}>
               <Select value={yearId} onChange={(e) => setYearId(e.target.value)}>
-                {years.length === 0 ? <option value="">No years</option> : null}
+                {years.length === 0 ? <option value="">{t('No years')}</option> : null}
                 {years.map((y) => (
                   <option key={y.id} value={y.id}>
-                    {y.label}
+                    {t(y.label)}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label="Period" error={errors.periodKind}>
+            <Field label={t('Period')} error={errors.periodKind}>
               <Select
                 value={periodKind}
                 onChange={(e) => setPeriodKind(e.target.value as (typeof PERIOD_KINDS)[number])}
@@ -276,12 +277,12 @@ function CreateBudgetDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Period key" required hint={PERIOD_HINT[periodKind]} error={errors.periodKey}>
+            <Field label={t('Period key')} required hint={PERIOD_HINT[periodKind]} error={errors.periodKey}>
               <Input value={periodKey} onChange={(e) => setPeriodKey(e.target.value)} maxLength={32} />
             </Field>
-            <Field label="Fund" error={errors.fundId}>
+            <Field label={t('Fund')} error={errors.fundId}>
               <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-                <option value="">Any fund</option>
+                <option value="">{t('Any fund')}</option>
                 {funds.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -289,9 +290,9 @@ function CreateBudgetDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Ministry / unit" error={errors.organisationalUnitId}>
+            <Field label={t('Ministry / unit')} error={errors.organisationalUnitId}>
               <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-                <option value="">Church-wide</option>
+                <option value="">{t('Church-wide')}</option>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
@@ -302,11 +303,11 @@ function CreateBudgetDialog({
           </div>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium text-foreground">Lines</legend>
+            <legend className="mb-1 text-sm font-medium text-foreground">{t('Lines')}</legend>
             {lines.map((l, i) => (
               <div key={l.key} className="grid gap-2 sm:grid-cols-[2fr_1fr_auto]">
                 <Select
-                  aria-label={`Line ${i + 1} account`}
+                  aria-label={t('Line {0} account', i + 1)}
                   value={l.accountId}
                   onChange={(e) =>
                     setLines((ls) =>
@@ -314,7 +315,7 @@ function CreateBudgetDialog({
                     )
                   }
                 >
-                  <option value="">Account…</option>
+                  <option value="">{t('Account…')}</option>
                   {budgetable.map((a) => (
                     <option key={a.id} value={a.id}>
                       {accountLabel(a)}
@@ -322,9 +323,9 @@ function CreateBudgetDialog({
                   ))}
                 </Select>
                 <Input
-                  aria-label={`Line ${i + 1} amount`}
+                  aria-label={t('Line {0} amount', i + 1)}
                   inputMode="decimal"
-                  placeholder="Amount"
+                  placeholder={t('Amount')}
                   value={l.amount}
                   onChange={(e) =>
                     setLines((ls) =>
@@ -336,7 +337,7 @@ function CreateBudgetDialog({
                   variant="ghost"
                   size="sm"
                   iconLeft="trash"
-                  aria-label={`Remove line ${i + 1}`}
+                  aria-label={t('Remove line {0}', i + 1)}
                   disabled={lines.length <= 1}
                   onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}
                 />
@@ -351,9 +352,9 @@ function CreateBudgetDialog({
                   setLines((ls) => [...ls, { key: nextKey++, accountId: '', amount: '' }])
                 }
               >
-                Add line
+                {t('Add line')}
               </Button>
-              <span className="text-sm text-muted-foreground">Total {formatMoney(total)}</span>
+              <span className="text-sm text-muted-foreground">{t('Total')} {formatMoney(total)}</span>
             </div>
             {errors.lines ? (
               <p role="alert" className="text-sm text-[color:var(--danger-ink)]">

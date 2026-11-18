@@ -15,6 +15,7 @@ import { toUiSession } from '../_lib/session-mapper';
 import { TopbarEnd } from './topbar-end';
 import { SidebarFooter } from './sidebar-footer';
 import { SessionBanner } from './session-banner';
+import { adoptPreferredLocale } from '@/app/_ekklesia/i18n/provider';
 
 interface AdminProvidersProps {
   children: ReactNode;
@@ -44,6 +45,7 @@ export function AdminProviders({ children }: AdminProvidersProps): React.ReactEl
         const me = await apiFetch<AuthMeResponse>('/api/v1/auth/me');
         if (!cancelled) {
           setSession(toUiSession(me));
+          adoptPreferredLocale(me.locale);
           setError(null);
         }
       } catch (err) {

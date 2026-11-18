@@ -12,6 +12,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Person } from '../../../_lib/api-types';
 import { extractValidationErrors } from '../form-errors';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 interface EditPersonDialogProps {
   open: boolean;
@@ -21,8 +22,8 @@ interface EditPersonDialogProps {
 }
 
 const LOCALES: Array<{ value: string; label: string }> = [
-  { value: 'en', label: 'English' },
-  { value: 'sw', label: 'Kiswahili' },
+  { value: 'en', label: tk('English') },
+  { value: 'sw', label: tk('Kiswahili') },
 ];
 
 /**
@@ -96,7 +97,7 @@ export function EditPersonDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not save this person.',
+          err instanceof Error ? err.message : t('Could not save this person.'),
         );
       }
     } finally {
@@ -108,13 +109,13 @@ export function EditPersonDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Edit person"
-      description="Update how this person appears in the church directory."
+      title={t('Edit person')}
+      description={t('Update how this person appears in the church directory.')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -122,7 +123,7 @@ export function EditPersonDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'check'}
           >
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? t('Saving…') : t('Save changes')}
           </Button>
         </DialogFooter>
       }
@@ -143,7 +144,7 @@ export function EditPersonDialog({
           </div>
         ) : null}
 
-        <Field label="Display name" required error={fieldErrors.displayName}>
+        <Field label={t('Display name')} required error={fieldErrors.displayName}>
           <Input
             data-autofocus
             value={displayName}
@@ -152,7 +153,7 @@ export function EditPersonDialog({
           />
         </Field>
 
-        <Field label="Full name" error={fieldErrors.fullName}>
+        <Field label={t('Full name')} error={fieldErrors.fullName}>
           <Input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -162,8 +163,8 @@ export function EditPersonDialog({
 
         <div className="grid gap-4 md:grid-cols-2">
           <Field
-            label="Date of birth"
-            hint="YYYY-MM-DD"
+            label={t('Date of birth')}
+            hint={t('YYYY-MM-DD')}
             error={fieldErrors.dateOfBirth}
           >
             <Input
@@ -172,18 +173,18 @@ export function EditPersonDialog({
               onChange={(e) => setDateOfBirth(e.target.value)}
             />
           </Field>
-          <Field label="Preferred language" error={fieldErrors.preferredLocale}>
+          <Field label={t('Preferred language')} error={fieldErrors.preferredLocale}>
             <Select value={locale} onChange={(e) => setLocale(e.target.value)}>
               {LOCALES.map((l) => (
                 <option key={l.value} value={l.value}>
-                  {l.label}
+                  {t(l.label)}
                 </option>
               ))}
             </Select>
           </Field>
         </div>
 
-        <Field label="Visibility">
+        <Field label={t('Visibility')}>
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
@@ -191,7 +192,7 @@ export function EditPersonDialog({
               onChange={(e) => setDirectoryOptIn(e.target.checked)}
               className="h-4 w-4 rounded-sm border-border text-foreground focus-ring"
             />
-            Show in church directory
+            {t('Show in church directory')}
           </label>
         </Field>
       </form>

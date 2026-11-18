@@ -25,6 +25,7 @@ import { OpenSessionDialog } from '../../attendance/open-session-dialog';
 import { EditEventDialog } from '../edit-event-dialog';
 import { PosterImage } from '../poster-image';
 import { RegistrationsPanel } from './registrations-panel';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface EventDetailClientProps {
   eventId: string;
@@ -62,7 +63,7 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load attendance sessions.',
+            : t('Unable to load attendance sessions.'),
       );
     }
   }, [eventId]);
@@ -84,7 +85,7 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load this event.',
+            : t('Unable to load this event.'),
       );
       setEvent(null);
     } finally {
@@ -119,7 +120,7 @@ export function EventDetailClient({
       const openAny = sessions.find((s) => s.status === 'open');
       if (openAny) {
         setQrError(
-          'An open headcount session already exists. Finalize it first, or continue that session.',
+          t('An open headcount session already exists. Finalize it first, or continue that session.'),
         );
         openManage(openAny);
         return;
@@ -139,7 +140,7 @@ export function EventDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Could not open attendance QR.',
+            : t('Could not open attendance QR.'),
       );
     } finally {
       setQrBusy(false);
@@ -172,17 +173,17 @@ export function EventDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              Back to events
+              {t('Back to events')}
             </Link>
           }
-          title="Event not found"
-          lede={error ?? 'This event may have been removed.'}
+          title={t('Event not found')}
+          lede={error ?? t('This event may have been removed.')}
           actions={
             <Link
               href="/admin/events"
               className={buttonClassName({ variant: 'secondary' })}
             >
-              Back to list
+              {t('Back to list')}
             </Link>
           }
         />
@@ -199,7 +200,7 @@ export function EventDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            Back to events
+            {t('Back to events')}
           </Link>
         }
         title={event.title}
@@ -224,14 +225,14 @@ export function EventDetailClient({
                 void ensureAttendanceQr();
               }}
             >
-              {qrBusy ? 'Opening…' : 'Attendance QR'}
+              {qrBusy ? t('Opening…') : t('Attendance QR')}
             </Button>
             <Button
               variant="secondary"
               iconLeft="edit"
               onClick={() => setEditOpen(true)}
             >
-              Edit
+              {t('Edit')}
             </Button>
             <StatusPill tone={statusTone(event.status)}>
               {titleCase(event.status)}
@@ -245,7 +246,7 @@ export function EventDetailClient({
           <div className="aspect-[3/4] w-full">
             <PosterImage
               url={event.posterUrl}
-              alt={`${event.title} poster`}
+              alt={t('{0} poster', event.title)}
               className="h-full w-full object-cover"
             />
           </div>
@@ -254,41 +255,41 @@ export function EventDetailClient({
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Details</CardTitle>
+              <CardTitle>{t('Details')}</CardTitle>
               <Badge tone="neutral">{titleCase(event.status)}</Badge>
             </CardHeader>
             <dl className="space-y-3 text-sm">
-              <Row label="Service date" value={formatDate(event.serviceDate)} />
+              <Row label={t('Service date')} value={formatDate(event.serviceDate)} />
               <Row
-                label="Starts at"
+                label={t('Starts at')}
                 value={event.startsAt ? formatDateTime(event.startsAt) : '—'}
               />
               <Row
-                label="Ends at"
+                label={t('Ends at')}
                 value={event.endsAt ? formatDateTime(event.endsAt) : '—'}
               />
               <Row
-                label="Type"
+                label={t('Type')}
                 value={event.eventTypeName ?? event.eventTypeCode ?? '—'}
               />
             </dl>
           </Card>
 
-          <Panel title="Description">
+          <Panel title={t('Description')}>
             {event.description ? (
               <p className="text-sm text-foreground whitespace-pre-wrap">
                 {event.description}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                No description provided.
+                {t('No description provided.')}
               </p>
             )}
           </Panel>
 
           <Panel
-            title="Attendance"
-            subtitle="Generate a QR for guests to scan, record people, then finalize."
+            title={t('Attendance')}
+            subtitle={t('Generate a QR for guests to scan, record people, then finalize.')}
           >
             {sessionsError ? (
               <div
@@ -308,7 +309,7 @@ export function EventDetailClient({
             ) : null}
             {sessions.length === 0 ? (
               <p className="mb-3 text-sm text-muted-foreground">
-                No attendance sessions yet for this event.
+                {t('No attendance sessions yet for this event.')}
               </p>
             ) : (
               <ul className="mb-3 divide-y divide-border rounded-md border border-border">
@@ -328,7 +329,7 @@ export function EventDetailClient({
                       </span>
                       <span className="tabular-nums text-muted-foreground">
                         {s.recordCount ?? 0}{' '}
-                        {(s.recordCount ?? 0) === 1 ? 'record' : 'records'}
+                        {(s.recordCount ?? 0) === 1 ? t('record') : t('records')}
                       </span>
                     </div>
                     <Button
@@ -339,7 +340,7 @@ export function EventDetailClient({
                         setManageOpen(true);
                       }}
                     >
-                      {s.status === 'open' ? 'Continue' : 'View'}
+                      {s.status === 'open' ? t('Continue') : t('View')}
                     </Button>
                   </li>
                 ))}
@@ -354,20 +355,20 @@ export function EventDetailClient({
                   void ensureAttendanceQr();
                 }}
               >
-                {qrBusy ? 'Opening…' : 'Attendance QR'}
+                {qrBusy ? t('Opening…') : t('Attendance QR')}
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={() => setOpenSessionOpen(true)}
               >
-                Open session
+                {t('Open session')}
               </Button>
               <Link
                 href="/admin/attendance"
                 className={buttonClassName({ variant: 'secondary', size: 'sm' })}
               >
-                Attendance overview
+                {t('Attendance overview')}
               </Link>
             </div>
           </Panel>
@@ -428,7 +429,7 @@ function Row({
   return (
     <div className="flex items-start justify-between gap-3">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
+        {t(label)}
       </dt>
       <dd className="text-right text-sm text-foreground">{value}</dd>
     </div>

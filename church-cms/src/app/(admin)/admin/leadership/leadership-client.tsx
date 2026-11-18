@@ -33,6 +33,7 @@ import type {
   OrganisationalUnit,
 } from '../../_lib/api-types';
 import { asList } from '../../_lib/list';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 export function LeadershipClient(): React.ReactElement {
   const { push } = useToast();
@@ -74,7 +75,7 @@ export function LeadershipClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load leadership positions',
+            : t('Unable to load leadership positions'),
       );
     } finally {
       setLoading(false);
@@ -119,12 +120,12 @@ export function LeadershipClient(): React.ReactElement {
       setDescription('');
       setReportsTo('');
       setUnitId('');
-      push({ tone: 'success', message: 'Position created (vacant).' });
+      push({ tone: 'success', message: t('Position created (vacant).') });
     } catch (err) {
       push({
         tone: 'danger',
         message:
-          err instanceof ApiError ? err.message : 'Could not create position.',
+          err instanceof ApiError ? err.message : t('Could not create position.'),
       });
     } finally {
       setSubmitting(false);
@@ -134,25 +135,25 @@ export function LeadershipClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Leadership"
-        lede="Positions and reporting relationships. Appointments do not grant system access — assign roles separately under Church profile."
+        title={t('Leadership')}
+        lede={t('Positions and reporting relationships. Appointments do not grant system access — assign roles separately under Church profile.')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/leadership/requests"
               className={buttonClassName({ variant: 'secondary', size: 'sm' })}
             >
-              Appointment requests
+              {t('Appointment requests')}
             </Link>
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              Add position
+              {t('Add position')}
             </Button>
           </div>
         }
       />
 
       {loading ? (
-        <Panel title="Positions">
+        <Panel title={t('Positions')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -162,11 +163,11 @@ export function LeadershipClient(): React.ReactElement {
         <EmptyState
           icon="users"
           tone="gold"
-          title="Could not load leadership"
+          title={t('Could not load leadership')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              Try again
+              {t('Try again')}
             </Button>
           }
         />
@@ -174,25 +175,25 @@ export function LeadershipClient(): React.ReactElement {
         <EmptyState
           icon="users"
           tone="gold"
-          title="No leadership positions yet"
-          description="Define titles and reporting lines before appointing people."
+          title={t('No leadership positions yet')}
+          description={t('Define titles and reporting lines before appointing people.')}
           action={
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              Add position
+              {t('Add position')}
             </Button>
           }
         />
       ) : (
-        <Panel title="Positions">
+        <Panel title={t('Positions')}>
           <TableWrap>
             <Table>
               <THead>
                 <TR>
-                  <TH>Title</TH>
-                  <TH>Code</TH>
-                  <TH>Reports to</TH>
-                  <TH>Occupancy</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Title')}</TH>
+                  <TH>{t('Code')}</TH>
+                  <TH>{t('Reports to')}</TH>
+                  <TH>{t('Occupancy')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -230,7 +231,7 @@ export function LeadershipClient(): React.ReactElement {
                       <StatusPill
                         tone={occupied.has(p.id) ? 'success' : 'warning'}
                       >
-                        {occupied.has(p.id) ? 'Occupied' : 'Vacant'}
+                        {occupied.has(p.id) ? t('Occupied') : t('Vacant')}
                       </StatusPill>
                     </TD>
                     <TD>
@@ -253,8 +254,8 @@ export function LeadershipClient(): React.ReactElement {
         onClose={() => {
           if (!submitting) setCreateOpen(false);
         }}
-        title="Add leadership position"
-        description="Create a vacant position. Appoint people later; roles stay separate."
+        title={t('Add leadership position')}
+        description={t('Create a vacant position. Appoint people later; roles stay separate.')}
         footer={
           <DialogFooter>
             <Button
@@ -262,10 +263,10 @@ export function LeadershipClient(): React.ReactElement {
               disabled={submitting}
               onClick={() => setCreateOpen(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" form={formId} loading={submitting}>
-              Create position
+              {t('Create position')}
             </Button>
           </DialogFooter>
         }
@@ -277,7 +278,7 @@ export function LeadershipClient(): React.ReactElement {
           }}
           className="flex flex-col gap-4"
         >
-          <Field label="Title" required>
+          <Field label={t('Title')} required>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -285,7 +286,7 @@ export function LeadershipClient(): React.ReactElement {
               required
             />
           </Field>
-          <Field label="Description">
+          <Field label={t('Description')}>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -293,12 +294,12 @@ export function LeadershipClient(): React.ReactElement {
               maxLength={4000}
             />
           </Field>
-          <Field label="Reports to">
+          <Field label={t('Reports to')}>
             <Select
               value={reportsTo}
               onChange={(e) => setReportsTo(e.target.value)}
             >
-              <option value="">None (top-level)</option>
+              <option value="">{t('None (top-level)')}</option>
               {positions.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.title}
@@ -306,9 +307,9 @@ export function LeadershipClient(): React.ReactElement {
               ))}
             </Select>
           </Field>
-          <Field label="Linked unit (optional)">
+          <Field label={t('Linked unit (optional)')}>
             <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-              <option value="">None</option>
+              <option value="">{t('None')}</option>
               {units.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name} ({u.kind})

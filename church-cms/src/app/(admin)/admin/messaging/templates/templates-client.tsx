@@ -24,6 +24,7 @@ import {
   CreateTemplateDialog,
   type MessageTemplateRow,
 } from './create-template-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const LOCALE_LABELS: Record<string, string> = {
   en: 'English',
@@ -61,7 +62,7 @@ export function TemplatesClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load templates',
+            : t('Unable to load templates'),
       );
     } finally {
       setLoading(false);
@@ -73,8 +74,8 @@ export function TemplatesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Message templates"
-        lede="Saved messages you can reuse when texting the church."
+        title={t('Message templates')}
+        lede={t('Saved messages you can reuse when texting the church.')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -83,25 +84,25 @@ export function TemplatesClient(): React.ReactElement {
               iconLeft="refresh"
               onClick={() => {
                 void load().then(() =>
-                  push({ tone: 'success', message: 'Templates refreshed.' }),
+                  push({ tone: 'success', message: t('Templates refreshed.') }),
                 );
               }}
             >
-              Refresh
+              {t('Refresh')}
             </Button>
             <Button
               size="sm"
               iconLeft="plus"
               onClick={() => setCreateOpen(true)}
             >
-              New template
+              {t('New template')}
             </Button>
           </div>
         }
       />
 
       {loading ? (
-        <Panel title="Templates">
+        <Panel title={t('Templates')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -112,11 +113,11 @@ export function TemplatesClient(): React.ReactElement {
         <EmptyState
           icon="alert"
           tone="sky"
-          title="Could not load templates"
+          title={t('Could not load templates')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              Try again
+              {t('Try again')}
             </Button>
           }
         />
@@ -124,24 +125,24 @@ export function TemplatesClient(): React.ReactElement {
         <EmptyState
           icon="mail"
           tone="sky"
-          title="No saved messages yet"
-          description="Create a welcome or reminder once, then pick it when you send a message."
+          title={t('No saved messages yet')}
+          description={t('Create a welcome or reminder once, then pick it when you send a message.')}
           action={
             <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-              New template
+              {t('New template')}
             </Button>
           }
         />
       ) : (
-        <Panel title="All templates" flush>
+        <Panel title={t('All templates')} flush>
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Name</TH>
-                  <TH>Send as</TH>
-                  <TH>Language</TH>
-                  <TH>Message</TH>
+                  <TH>{t('Name')}</TH>
+                  <TH>{t('Send as')}</TH>
+                  <TH>{t('Language')}</TH>
+                  <TH>{t('Message')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -157,7 +158,7 @@ export function TemplatesClient(): React.ReactElement {
                       }
                     }}
                     tabIndex={0}
-                    aria-label={`Edit template ${row.name}`}
+                    aria-label={t('Edit template {0}', row.name)}
                   >
                     <TD>
                       <span className="font-medium text-foreground">
@@ -191,7 +192,7 @@ export function TemplatesClient(): React.ReactElement {
         onCreated={(row) => {
           setRows((prev) => [row, ...prev]);
           setCreateOpen(false);
-          push({ tone: 'success', message: 'Template created.' });
+          push({ tone: 'success', message: t('Template created.') });
         }}
       />
 
@@ -203,7 +204,7 @@ export function TemplatesClient(): React.ReactElement {
         onUpdated={(row) => {
           setRows((prev) => prev.map((r) => (r.id === row.id ? row : r)));
           setEditing(null);
-          push({ tone: 'success', message: 'Template saved.' });
+          push({ tone: 'success', message: t('Template saved.') });
         }}
       />
     </div>

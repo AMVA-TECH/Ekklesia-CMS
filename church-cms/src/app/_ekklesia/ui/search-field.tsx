@@ -3,6 +3,7 @@
 import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 import { Icon } from '../icons';
 import { cn } from './utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<SearchField>`. */
 export interface SearchFieldProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -31,7 +32,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
     return (
       <div className={cn('relative block w-full', className)}>
         <label htmlFor={inputId} className="sr-only">
-          {label}
+          {t(label)}
         </label>
         <Icon
           name="search"
@@ -57,7 +58,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
           <button
             type="button"
             onClick={onClear}
-            aria-label="Clear search"
+            aria-label={t('Clear search')}
             className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
           >
             <Icon name="close" size={14} />

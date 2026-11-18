@@ -10,6 +10,7 @@ import {
   Input,
   Textarea,
 } from '@/app/_ekklesia/ui';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 export interface AnnouncementRow {
   id: string;
@@ -130,8 +131,8 @@ export function CreateAnnouncementDialog({
           err instanceof Error
             ? err.message
             : editing
-              ? 'Could not save announcement.'
-              : 'Could not create announcement.',
+              ? t('Could not save announcement.')
+              : t('Could not create announcement.'),
         );
       }
       setSubmitting(false);
@@ -145,16 +146,16 @@ export function CreateAnnouncementDialog({
       title={
         editing
           ? readOnly
-            ? 'Announcement'
-            : 'Edit announcement'
-          : 'New announcement'
+            ? t('Announcement')
+            : t('Edit announcement')
+          : t('New announcement')
       }
       description={
         editing
           ? readOnly
-            ? 'This notice is locked while it awaits approval or after publishing.'
-            : 'Update the draft, then submit for approval or publish when ready.'
-          : 'Write a notice for your church family. Save as a draft first.'
+            ? t('This notice is locked while it awaits approval or after publishing.')
+            : t('Update the draft, then submit for approval or publish when ready.')
+          : t('Write a notice for your church family. Save as a draft first.')
       }
       size="md"
       footer={
@@ -164,15 +165,15 @@ export function CreateAnnouncementDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            {readOnly ? 'Close' : 'Cancel'}
+            {readOnly ? t('Close') : t('Cancel')}
           </Button>
           {readOnly ? null : (
             <Button type="submit" form={formId} loading={submitting}>
               {submitting
-                ? 'Saving…'
+                ? t('Saving…')
                 : editing
-                  ? 'Save changes'
-                  : 'Save draft'}
+                  ? t('Save changes')
+                  : t('Save draft')}
             </Button>
           )}
         </DialogFooter>
@@ -194,12 +195,12 @@ export function CreateAnnouncementDialog({
           </div>
         ) : null}
 
-        <Field label="Title" required error={fieldErrors.title}>
+        <Field label={t('Title')} required error={fieldErrors.title}>
           <Input
             data-autofocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Sunday reminder"
+            placeholder={t('Sunday reminder')}
             maxLength={200}
             readOnly={readOnly}
             disabled={readOnly}
@@ -207,15 +208,15 @@ export function CreateAnnouncementDialog({
         </Field>
 
         <Field
-          label="Message"
+          label={t('Message')}
           required
-          hint="What your church family needs to know."
+          hint={t('What your church family needs to know.')}
           error={fieldErrors.body}
         >
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Share what your church family needs to know…"
+            placeholder={t('Share what your church family needs to know…')}
             rows={6}
             maxLength={5000}
             readOnly={readOnly}

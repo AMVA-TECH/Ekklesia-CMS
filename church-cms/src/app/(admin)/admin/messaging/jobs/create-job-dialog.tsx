@@ -16,6 +16,7 @@ import { titleCase } from '../../../_lib/format';
 import { extractValidationErrors } from '../../people/form-errors';
 import type { AnnouncementRow } from '../announcements/create-announcement-dialog';
 import type { MessageTemplateRow } from '../templates/create-template-dialog';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 export interface MessageJobRow {
   id: string;
@@ -42,12 +43,12 @@ interface CreateJobDialogProps {
 }
 
 const CHANNELS = [
-  { value: 'sms', label: 'SMS' },
-  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'sms', label: tk('SMS') },
+  { value: 'whatsapp', label: tk('WhatsApp') },
 ] as const;
 
 const AUDIENCES = [
-  { value: 'all_members', label: 'All members' },
+  { value: 'all_members', label: tk('All members') },
 ] as const;
 
 /**
@@ -207,7 +208,7 @@ export function CreateJobDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create message job.',
+          err instanceof Error ? err.message : t('Could not create message job.'),
         );
       }
       setSubmitting(false);
@@ -218,8 +219,8 @@ export function CreateJobDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New send job"
-      description="Queue an SMS or WhatsApp blast for members who have opted in."
+      title={t('New send job')}
+      description={t('Queue an SMS or WhatsApp blast for members who have opted in.')}
       size="md"
       footer={
         <DialogFooter>
@@ -228,10 +229,10 @@ export function CreateJobDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Queuing…' : 'Queue job'}
+            {submitting ? t('Queuing…') : t('Queue job')}
           </Button>
         </DialogFooter>
       }
@@ -253,27 +254,27 @@ export function CreateJobDialog({
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Channel" required error={fieldErrors.channel}>
+          <Field label={t('Channel')} required error={fieldErrors.channel}>
             <Select
               value={channel}
               onChange={(e) => handleChannelChange(e.target.value)}
             >
               {CHANNELS.map((c) => (
                 <option key={c.value} value={c.value}>
-                  {c.label}
+                  {t(c.label)}
                 </option>
               ))}
             </Select>
           </Field>
 
-          <Field label="Audience" required error={fieldErrors.audienceType}>
+          <Field label={t('Audience')} required error={fieldErrors.audienceType}>
             <Select
               value={audienceType}
               onChange={(e) => setAudienceType(e.target.value)}
             >
               {AUDIENCES.map((a) => (
                 <option key={a.value} value={a.value}>
-                  {a.label}
+                  {t(a.label)}
                 </option>
               ))}
             </Select>
@@ -281,11 +282,11 @@ export function CreateJobDialog({
         </div>
 
         <Field
-          label="Start from"
+          label={t('Start from')}
           hint={
             listsLoading
-              ? 'Loading saved messages…'
-              : 'Optional. Pick a saved template or published announcement, then edit if needed.'
+              ? t('Loading saved messages…')
+              : t('Optional. Pick a saved template or published announcement, then edit if needed.')
           }
         >
           <Select
@@ -293,19 +294,19 @@ export function CreateJobDialog({
             onChange={(e) => handleSourceChange(e.target.value)}
             disabled={listsLoading}
           >
-            <option value="custom">Write a new message</option>
-            <option value="template">Saved template</option>
-            <option value="announcement">Published announcement</option>
+            <option value="custom">{t('Write a new message')}</option>
+            <option value="template">{t('Saved template')}</option>
+            <option value="announcement">{t('Published announcement')}</option>
           </Select>
         </Field>
 
         {source === 'template' ? (
           <Field
-            label="Template"
+            label={t('Template')}
             required
             hint={
               channelTemplates.length === 0
-                ? 'No templates for this channel yet.'
+                ? t('No templates for this channel yet.')
                 : undefined
             }
             error={fieldErrors.templateId}
@@ -315,7 +316,7 @@ export function CreateJobDialog({
               onChange={(e) => handleTemplateChange(e.target.value)}
               disabled={channelTemplates.length === 0}
             >
-              <option value="">Choose a template…</option>
+              <option value="">{t('Choose a template…')}</option>
               {channelTemplates.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
@@ -327,11 +328,11 @@ export function CreateJobDialog({
 
         {source === 'announcement' ? (
           <Field
-            label="Announcement"
+            label={t('Announcement')}
             required
             hint={
               announcements.length === 0
-                ? 'No published announcements yet.'
+                ? t('No published announcements yet.')
                 : undefined
             }
             error={fieldErrors.announcementId}
@@ -341,7 +342,7 @@ export function CreateJobDialog({
               onChange={(e) => handleAnnouncementChange(e.target.value)}
               disabled={announcements.length === 0}
             >
-              <option value="">Choose an announcement…</option>
+              <option value="">{t('Choose an announcement…')}</option>
               {announcements.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.title}
@@ -351,21 +352,21 @@ export function CreateJobDialog({
           </Field>
         ) : null}
 
-        <Field label="Title" hint="Optional label for this job." error={fieldErrors.title}>
+        <Field label={t('Title')} hint={t('Optional label for this job.')} error={fieldErrors.title}>
           <Input
             data-autofocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Sunday reminder"
+            placeholder={t('Sunday reminder')}
             maxLength={200}
           />
         </Field>
 
-        <Field label="Message" required error={fieldErrors.body}>
+        <Field label={t('Message')} required error={fieldErrors.body}>
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Karibu — service starts at 10:00…"
+            placeholder={t('Karibu — service starts at 10:00…')}
             rows={5}
             maxLength={2000}
           />

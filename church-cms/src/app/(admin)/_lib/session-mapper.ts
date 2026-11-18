@@ -5,6 +5,7 @@ import type {
   SessionUser,
 } from '@/app/_ekklesia/session';
 import type { AuthMeResponse } from './api-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /**
  * Map the backend `/api/v1/auth/me` DTO onto the UI `Session` contract.
@@ -20,7 +21,7 @@ export function toUiSession(me: AuthMeResponse): Session {
   // No person name on /auth/me: derive a readable one from the email
   // ("amani.juma@…" → "Amani Juma"), else the phone number.
   const displayName =
-    (email && nameFromEmail(email)) || phoneE164 || 'Signed-in user';
+    (email && nameFromEmail(email)) || phoneE164 || t('Signed-in user');
   const initials = computeInitials(displayName);
 
   const user: SessionUser = {
@@ -35,7 +36,7 @@ export function toUiSession(me: AuthMeResponse): Session {
   const church: SessionChurch | null = me.church?.id
     ? {
         id: me.church.id,
-        name: me.church.displayName || me.church.name || 'Your church',
+        name: me.church.displayName || me.church.name || t('Your church'),
         shortName: me.church.shortName ?? null,
         displayName: me.church.displayName ?? null,
         slug: me.church.slug ?? undefined,

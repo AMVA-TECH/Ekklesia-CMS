@@ -10,6 +10,7 @@ import {
   Textarea,
 } from '@/app/_ekklesia/ui';
 import { extractValidationErrors } from '../../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AddFollowUpDialogProps {
   open: boolean;
@@ -56,7 +57,7 @@ export function AddFollowUpDialog({
     if (submitting || !pledgeId) return;
     const trimmed = note.trim();
     if (!trimmed) {
-      setFieldErrors({ note: 'Enter a follow-up note.' });
+      setFieldErrors({ note: t('Enter a follow-up note.') });
       return;
     }
     setSubmitting(true);
@@ -76,7 +77,7 @@ export function AddFollowUpDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not save follow-up.',
+          err instanceof Error ? err.message : t('Could not save follow-up.'),
         );
       }
       setSubmitting(false);
@@ -87,8 +88,8 @@ export function AddFollowUpDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Log follow-up"
-      description="Note a kind check-in about this pledge. This is recorded against the pledge for pastoral care."
+      title={t('Log follow-up')}
+      description={t('Note a kind check-in about this pledge. This is recorded against the pledge for pastoral care.')}
       size="sm"
       footer={
         <DialogFooter>
@@ -97,10 +98,10 @@ export function AddFollowUpDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Save follow-up'}
+            {submitting ? t('Saving…') : t('Save follow-up')}
           </Button>
         </DialogFooter>
       }
@@ -121,14 +122,14 @@ export function AddFollowUpDialog({
           </div>
         ) : null}
 
-        <Field label="Note" required error={fieldErrors.note}>
+        <Field label={t('Note')} required error={fieldErrors.note}>
           <Textarea
             data-autofocus
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={1000}
-            placeholder="Called to check in…"
+            placeholder={t('Called to check in…')}
             required
           />
         </Field>

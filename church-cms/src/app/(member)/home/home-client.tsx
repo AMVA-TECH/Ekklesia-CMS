@@ -25,6 +25,7 @@ import {
   timeOfDayGreeting,
   todayIso,
 } from '../_shared/formatters';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface HomeData {
   events: MemberEvent[];
@@ -99,7 +100,7 @@ export function HomeClient(): React.ReactElement {
 
   const greetingName = firstName(user?.displayName);
   // Time-of-day text is client-only (clock read; see isClient above).
-  const greeting = isClient ? timeOfDayGreeting() : 'Welcome';
+  const greeting = isClient ? timeOfDayGreeting() : t('Welcome');
   const churchName = church?.name ?? 'your church';
   const featured = data.events[0] ?? null;
   const unpaidPledgeCount = data.pledges.length;
@@ -109,7 +110,7 @@ export function HomeClient(): React.ReactElement {
       {/* Greeting — mockup mobile first */}
       <section aria-labelledby="home-greeting" className="flex flex-col gap-1">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {sessionLoading ? 'Loading…' : churchName}
+          {sessionLoading ? t('Loading…') : churchName}
         </p>
         <h1
           id="home-greeting"
@@ -120,7 +121,7 @@ export function HomeClient(): React.ReactElement {
           !
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Stay connected, grow, and serve.
+          {t('Stay connected, grow, and serve.')}
         </p>
       </section>
 
@@ -133,11 +134,11 @@ export function HomeClient(): React.ReactElement {
         <EmptyState
           icon="calendar"
           tone="sky"
-          title="Nothing featured yet"
-          description="When your church posts the next service, it will appear here."
+          title={t('Nothing featured yet')}
+          description={t('When your church posts the next service, it will appear here.')}
           action={
             <Link href="/events" className={buttonClassName({ size: 'sm' })}>
-              Browse events
+              {t('Browse events')}
             </Link>
           }
         />
@@ -146,19 +147,19 @@ export function HomeClient(): React.ReactElement {
       {/* Quick actions — Groups / Events / Giving / Sermons (devotionals) */}
       <section aria-labelledby="home-quick-actions">
         <h2 id="home-quick-actions" className="sr-only">
-          Quick actions
+          {t('Quick actions')}
         </h2>
         <div className="grid grid-cols-4 gap-3">
-          <QuickAction href="/community" icon="users" label="Groups" tone="peach" />
-          <QuickAction href="/events" icon="calendar" label="Events" tone="sky" />
+          <QuickAction href="/community" icon="users" label={t('Groups')} tone="peach" />
+          <QuickAction href="/events" icon="calendar" label={t('Events')} tone="sky" />
           <QuickAction
             href="/giving"
             icon="hand"
-            label="Giving"
+            label={t('Giving')}
             tone="sage"
             badge={unpaidPledgeCount > 0 ? String(unpaidPledgeCount) : undefined}
           />
-          <QuickAction href="/home#devotional" icon="book" label="Sermons" tone="lavender" />
+          <QuickAction href="/home#devotional" icon="book" label={t('Sermons')} tone="lavender" />
         </div>
       </section>
 
@@ -167,25 +168,25 @@ export function HomeClient(): React.ReactElement {
         <article className="rounded-2xl border border-[color:var(--brand-gold-soft)] bg-[color:var(--brand-gold-tint)] p-6 sm:p-7">
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[color:var(--brand-gold-ink)]">
             <Icon name="book" size={14} />
-            <span>Daily verse</span>
+            <span>{t('Daily verse')}</span>
           </div>
           <h2 id="home-devotional" className="sr-only">
-            Daily verse
+            {t('Daily verse')}
           </h2>
           {devotional ? (
             <blockquote className="scripture mt-3 text-lg text-foreground sm:text-xl">
-              &ldquo;{devotional.quote}&rdquo;
+              &ldquo;{t(devotional.quote)}&rdquo;
             </blockquote>
           ) : (
             <div aria-hidden className="mt-3 h-14" />
           )}
           {devotional?.attribution ? (
             <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {devotional.attribution}
+              {t(devotional.attribution)}
             </p>
           ) : null}
           {devotional?.thought ? (
-            <p className="mt-4 text-sm text-foreground/90">{devotional.thought}</p>
+            <p className="mt-4 text-sm text-foreground/90">{t(devotional.thought)}</p>
           ) : null}
         </article>
       </section>
@@ -208,7 +209,7 @@ function FeaturedEventCard({ event }: { event: MemberEvent }): React.ReactElemen
       <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--surface-inverse)] via-[color:var(--surface-inverse)]/75 to-[color:var(--surface-inverse)]/25" />
       <div className="relative flex min-h-[14rem] flex-col justify-end gap-3 p-5 sm:min-h-[16rem] sm:p-6">
         <p className="text-xs font-medium uppercase tracking-wide text-white/85">
-          Up next · {formatServiceDate(event.serviceDate)}
+          {t('Up next ·')} {formatServiceDate(event.serviceDate)}
           {time ? ` · ${time}` : null}
         </p>
         <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
@@ -222,11 +223,11 @@ function FeaturedEventCard({ event }: { event: MemberEvent }): React.ReactElemen
             href={`/events/${event.id}`}
             className={buttonClassName({ variant: 'secondary', size: 'sm' })}
           >
-            View details
+            {t('View details')}
           </Link>
           <Link
             href={`/events/${event.id}`}
-            aria-label="Open event"
+            aria-label={t('Open event')}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold-gradient text-[color:var(--sidebar-active-foreground)] shadow-card focus-ring"
           >
             <Icon name="arrow-right" size={18} />
@@ -282,7 +283,7 @@ function QuickAction({
           </Badge>
         ) : null}
       </span>
-      <span className="text-xs font-semibold text-foreground">{label}</span>
+      <span className="text-xs font-semibold text-foreground">{t(label)}</span>
     </Link>
   );
 }

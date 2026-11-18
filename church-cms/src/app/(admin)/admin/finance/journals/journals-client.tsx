@@ -29,6 +29,7 @@ import {
   type Journal,
 } from '../_lib/finance-types';
 import { CreateJournalDialog } from './create-journal-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const FILTERS = ['all', 'draft', 'posted', 'reversed'] as const;
 type Filter = (typeof FILTERS)[number];
@@ -59,11 +60,11 @@ export function JournalsClient(): React.ReactElement {
       `${j.id}:${action}`,
       () => apiFetch(`/api/v1/journals/${j.id}/${action}`, { method: 'POST' }),
       action === 'post'
-        ? { success: `${j.entryNumber} posted`, failure: 'Could not post journal' }
+        ? { success: t('{0} posted', j.entryNumber), failure: t('Could not post journal') }
         : {
-            success: `${j.entryNumber} reversed`,
-            detail: 'A reversing entry was created.',
-            failure: 'Could not reverse journal',
+            success: t('{0} reversed', j.entryNumber),
+            detail: t('A reversing entry was created.'),
+            failure: t('Could not reverse journal'),
           },
     );
     if (ok) void journals.reload();
@@ -72,17 +73,17 @@ export function JournalsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Journals"
-        lede="Double-entry ledger. Drafts can be edited by finance; posting requires balanced lines in an open year. Posted entries are corrected by reversing, never deleting."
+        title={t('Journals')}
+        lede={t('Double-entry ledger. Drafts can be edited by finance; posting requires balanced lines in an open year. Posted entries are corrected by reversing, never deleting.')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            New journal
+            {t('New journal')}
           </Button>
         }
       />
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-        <TabList aria-label="Journal status">
+        <TabList aria-label={t('Journal status')}>
           {FILTERS.map((f) => (
             <Tab key={f} value={f}>
               {titleCase(f)}
@@ -92,8 +93,8 @@ export function JournalsClient(): React.ReactElement {
       </Tabs>
 
       <Panel
-        title="Entries"
-        subtitle={journals.loading ? 'Loading…' : `${journals.items.length} shown · newest first`}
+        title={t('Entries')}
+        subtitle={journals.loading ? t('Loading…') : t('{0} shown · newest first', journals.items.length)}
         flush
       >
         <ListState
@@ -104,20 +105,20 @@ export function JournalsClient(): React.ReactElement {
           onRetry={() => void journals.reload()}
           empty={{
             icon: 'book',
-            title: 'No journal entries',
-            description: 'Posted offerings and approved expenses also create journals automatically.',
+            title: t('No journal entries'),
+            description: t('Posted offerings and approved expenses also create journals automatically.'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Entry</TH>
-                  <TH>Date</TH>
-                  <TH className="hidden lg:table-cell">Memo</TH>
-                  <TH className="text-right">Amount</TH>
-                  <TH>Status</TH>
-                  <TH className="text-right">Actions</TH>
+                  <TH>{t('Entry')}</TH>
+                  <TH>{t('Date')}</TH>
+                  <TH className="hidden lg:table-cell">{t('Memo')}</TH>
+                  <TH className="text-right">{t('Amount')}</TH>
+                  <TH>{t('Status')}</TH>
+                  <TH className="text-right">{t('Actions')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -157,7 +158,7 @@ export function JournalsClient(): React.ReactElement {
                               disabled={busyKey !== null}
                               onClick={() => void act(j, 'post')}
                             >
-                              Post
+                              {t('Post')}
                             </Button>
                           ) : j.status === 'posted' && !j.reversesEntryId ? (
                             <Button
@@ -167,7 +168,7 @@ export function JournalsClient(): React.ReactElement {
                               disabled={busyKey !== null}
                               onClick={() => void act(j, 'reverse')}
                             >
-                              Reverse
+                              {t('Reverse')}
                             </Button>
                           ) : null}
                         </TD>
@@ -178,11 +179,11 @@ export function JournalsClient(): React.ReactElement {
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="text-left text-xs text-muted-foreground">
-                                  <th className="py-1 font-medium">Account</th>
-                                  <th className="py-1 font-medium">Fund</th>
-                                  <th className="py-1 font-medium">Memo</th>
-                                  <th className="py-1 text-right font-medium">Debit</th>
-                                  <th className="py-1 text-right font-medium">Credit</th>
+                                  <th className="py-1 font-medium">{t('Account')}</th>
+                                  <th className="py-1 font-medium">{t('Fund')}</th>
+                                  <th className="py-1 font-medium">{t('Memo')}</th>
+                                  <th className="py-1 text-right font-medium">{t('Debit')}</th>
+                                  <th className="py-1 text-right font-medium">{t('Credit')}</th>
                                 </tr>
                               </thead>
                               <tbody>

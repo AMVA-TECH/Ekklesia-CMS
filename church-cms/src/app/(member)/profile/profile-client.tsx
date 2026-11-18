@@ -21,6 +21,8 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MemberMembership, MemberPerson } from '../_shared/api-types';
+import { t } from '@/app/_ekklesia/i18n/core';
+import { setLocale } from '@/app/_ekklesia/i18n/provider';
 
 interface FormState {
   phone: string;
@@ -81,12 +83,12 @@ export function ProfileClient(): React.ReactElement {
           const reason = personResult.reason;
           if (reason instanceof ApiError && reason.status === 404) {
             setLoadError(
-              'We could not find your profile. Please talk to your church office.',
+              t('We could not find your profile. Please talk to your church office.'),
             );
           } else if (reason instanceof ApiError) {
             setLoadError(reason.message);
           } else {
-            setLoadError('Check your connection and try again.');
+            setLoadError(t('Check your connection and try again.'));
           }
         }
 
@@ -120,11 +122,11 @@ export function ProfileClient(): React.ReactElement {
     const next: typeof fieldErrors = {};
     const phone = form.phone.trim();
     if (phone && !/^\+[1-9]\d{6,14}$/.test(phone)) {
-      next.phone = 'Use the international format, e.g. +255 7XX XXX XXX.';
+      next.phone = t('Use the international format, e.g. +255 7XX XXX XXX.');
     }
     const email = form.email.trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      next.email = 'That email does not look right.';
+      next.email = t('That email does not look right.');
     }
     setFieldErrors(next);
     return Object.keys(next).length === 0;
@@ -151,20 +153,22 @@ export function ProfileClient(): React.ReactElement {
       });
       setPerson(updated);
       setOriginal(form);
+      // The app follows the member's preferred language straight away.
+      if (patch.preferredLocale) setLocale(form.preferredLocale);
       push({
         tone: 'success',
-        title: 'Saved',
-        message: 'Your profile has been updated.',
+        title: t('Saved'),
+        message: t('Your profile has been updated.'),
       });
     } catch (e) {
       if (e instanceof ApiError) {
         push({
           tone: 'danger',
-          title: 'We couldn’t save your changes',
-          message: e.message || 'Try again in a moment.',
+          title: t('We couldn’t save your changes'),
+          message: e.message || t('Try again in a moment.'),
         });
       } else {
-        push({ tone: 'danger', message: 'Check your connection and try again.' });
+        push({ tone: 'danger', message: t('Check your connection and try again.') });
       }
     } finally {
       setSubmitting(false);
@@ -180,7 +184,7 @@ export function ProfileClient(): React.ReactElement {
       <EmptyState
         icon="user"
         tone="peach"
-        title="Profile unavailable"
+        title={t('Profile unavailable')}
         description={loadError}
       />
     );
@@ -191,8 +195,8 @@ export function ProfileClient(): React.ReactElement {
       <EmptyState
         icon="user"
         tone="peach"
-        title="Profile not set up yet"
-        description="Your church office will finish setting up your profile soon."
+        title={t('Profile not set up yet')}
+        description={t('Your church office will finish setting up your profile soon.')}
       />
     );
   }
@@ -200,11 +204,11 @@ export function ProfileClient(): React.ReactElement {
   const displayName =
     person.fullName && person.fullName.trim().length > 0
       ? person.fullName
-      : person.displayName || user?.displayName || 'You';
+      : person.displayName || user?.displayName || t('You');
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="My profile" lede="How your church reaches you and what we share." />
+      <PageHeader title={t('My profile')} lede={t('How your church reaches you and what we share.')} />
 
       {/* Hero summary */}
       <Card padding="lg" className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -214,7 +218,7 @@ export function ProfileClient(): React.ReactElement {
             {displayName}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground truncate">
-            {church?.name ?? 'Your church'}
+            {church?.name ?? t('Your church')}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {membership ? (
@@ -225,7 +229,7 @@ export function ProfileClient(): React.ReactElement {
                 {titleize(membership.membershipType)}
               </StatusPill>
             ) : (
-              <Badge tone="neutral">Member in progress</Badge>
+              <Badge tone="neutral">{t('Member in progress')}</Badge>
             )}
             {user?.locale ? (
               <Badge tone="neutral">
@@ -239,26 +243,26 @@ export function ProfileClient(): React.ReactElement {
 
       {/* Edit form */}
       <Panel
-        title="Contact details"
-        subtitle="We’ll use these to send reminders and important notices."
+        title={t('Contact details')}
+        subtitle={t('We’ll use these to send reminders and important notices.')}
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
           <Field
-            label="Phone"
-            hint="We send reminders by text."
+            label={t('Phone')}
+            hint={t('We send reminders by text.')}
             error={fieldErrors.phone}
           >
             <Input
               type="tel"
               inputMode="tel"
               autoComplete="tel"
-              placeholder="+255 7XX XXX XXX"
+              placeholder={t('+255 7XX XXX XXX')}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
           </Field>
 
-          <Field label="Email" hint="Used for occasional updates." error={fieldErrors.email}>
+          <Field label={t('Email')} hint={t('Used for occasional updates.')} error={fieldErrors.email}>
             <Input
               type="email"
               inputMode="email"
@@ -273,8 +277,8 @@ export function ProfileClient(): React.ReactElement {
           </Field>
 
           <Field
-            label="Preferred language"
-            hint="Which language should we use when we message you?"
+            label={t('Preferred language')}
+            hint={t('Which language should we use when we message you?')}
           >
             <Select
               value={form.preferredLocale}
@@ -285,14 +289,14 @@ export function ProfileClient(): React.ReactElement {
                 })
               }
             >
-              <option value="en">English</option>
-              <option value="sw">Kiswahili</option>
+              <option value="en">{t('English')}</option>
+              <option value="sw">{t('Kiswahili')}</option>
             </Select>
           </Field>
 
           <Field
-            label="Church directory"
-            hint="When on, other members can see your name in the church directory."
+            label={t('Church directory')}
+            hint={t('When on, other members can see your name in the church directory.')}
           >
             <label className="flex items-start gap-3 rounded-md border border-border bg-surface px-3 py-3 text-sm">
               <input
@@ -305,10 +309,10 @@ export function ProfileClient(): React.ReactElement {
               />
               <span>
                 <span className="font-medium text-foreground">
-                  Let other members see me in the directory
+                  {t('Let other members see me in the directory')}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  Giving records, attendance, and notes are never shared.
+                  {t('Giving records, attendance, and notes are never shared.')}
                 </span>
               </span>
             </label>
@@ -316,7 +320,7 @@ export function ProfileClient(): React.ReactElement {
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Button type="submit" loading={submitting} disabled={!dirty || submitting}>
-              {dirty ? 'Save changes' : 'All saved'}
+              {dirty ? t('Save changes') : t('All saved')}
             </Button>
             {dirty ? (
               <Button
@@ -327,7 +331,7 @@ export function ProfileClient(): React.ReactElement {
                   setFieldErrors({});
                 }}
               >
-                Discard
+                {t('Discard')}
               </Button>
             ) : null}
           </div>
@@ -335,13 +339,13 @@ export function ProfileClient(): React.ReactElement {
       </Panel>
 
       <Panel
-        title="Account & safety"
-        subtitle="How you sign in and protect your account."
+        title={t('Account & safety')}
+        subtitle={t('How you sign in and protect your account.')}
       >
         <div className="flex flex-col gap-3">
           <AccountFact
             icon="phone"
-            label="Primary phone"
+            label={t('Primary phone')}
             value={
               person.contacts.find((c) => c.channel === 'phone' && c.isPrimary)
                 ?.value ?? user?.phoneE164 ?? 'Not on file'
@@ -349,7 +353,7 @@ export function ProfileClient(): React.ReactElement {
           />
           <AccountFact
             icon="mail"
-            label="Primary email"
+            label={t('Primary email')}
             value={
               person.contacts.find((c) => c.channel === 'email' && c.isPrimary)
                 ?.value ?? user?.email ?? 'Not on file'
@@ -357,7 +361,7 @@ export function ProfileClient(): React.ReactElement {
           />
           <AccountFact
             icon="key"
-            label="PIN"
+            label={t('PIN')}
             value="Hidden — ask your church office to reset it"
           />
         </div>
@@ -372,10 +376,9 @@ export function ProfileClient(): React.ReactElement {
             <Icon name="shield" size={18} />
           </span>
           <div>
-            <CardTitle>Your information is private</CardTitle>
+            <CardTitle>{t('Your information is private')}</CardTitle>
             <CardSubtitle>
-              We never share your details with other churches. Giving, attendance,
-              and pastoral notes are always private to you and your church team.
+              {t('We never share your details with other churches. Giving, attendance, and pastoral notes are always private to you and your church team.')}
             </CardSubtitle>
           </div>
         </div>
@@ -403,7 +406,7 @@ function AccountFact({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
+          {t(label)}
         </p>
         <p className="mt-0.5 text-sm text-foreground truncate">{value}</p>
       </div>

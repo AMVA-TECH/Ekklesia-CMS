@@ -18,6 +18,7 @@ import { FormDialog, ListState } from '../../../_components/kit';
 import { todayLocalIso } from '../../../_lib/errors';
 import { formatDate, titleCase } from '../../../_lib/format';
 import { useApiList } from '../../../_lib/use-api-list';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface MeetingMinutes {
   id: string;
@@ -45,23 +46,23 @@ export function MinutesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Meeting minutes"
-        lede="A searchable record of what leadership and ministry teams decided."
+        title={t('Meeting minutes')}
+        lede={t('A searchable record of what leadership and ministry teams decided.')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreating(true)}>
-            Record minutes
+            {t('Record minutes')}
           </Button>
         }
       />
 
-      <Panel title="All minutes" subtitle={minutes.loading ? 'Loading…' : `${sorted.length} meetings`}>
+      <Panel title={t('All minutes')} subtitle={minutes.loading ? t('Loading…') : t('{0} meetings', sorted.length)}>
         <ListState
           loading={minutes.loading}
           error={minutes.error}
           forbidden={minutes.forbidden}
           isEmpty={sorted.length === 0}
           onRetry={() => void minutes.reload()}
-          empty={{ icon: 'file', title: 'No minutes recorded yet' }}
+          empty={{ icon: 'file', title: t('No minutes recorded yet') }}
         >
           <ul className="flex flex-col gap-3">
             {sorted.map((m) => {
@@ -82,7 +83,7 @@ export function MinutesClient(): React.ReactElement {
                           {formatDate(m.meetingDate)}
                           {m.organisationalUnitId
                             ? ` · ${unitById.get(m.organisationalUnitId)?.name ?? ''}`
-                            : ' · Church-wide'}
+                            : (' ' + t('· Church-wide'))}
                         </span>
                       </span>
                       <StatusPill tone={TONE[m.status]}>{titleCase(m.status)}</StatusPill>
@@ -92,7 +93,7 @@ export function MinutesClient(): React.ReactElement {
                         <p className="whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
                         {attendees.length > 0 ? (
                           <p className="text-xs text-muted-foreground">
-                            Present: {attendees.join(', ')}
+                            {t('Present:')} {attendees.join(', ')}
                           </p>
                         ) : null}
                       </div>
@@ -137,15 +138,15 @@ function CreateMinutesDialog({
 
   return (
     <FormDialog
-      title="Record minutes"
-      submitLabel="Save minutes"
+      title={t('Record minutes')}
+      submitLabel={t('Save minutes')}
       size="lg"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!title.trim()) e.title = 'Enter a title.';
-        if (!meetingDate) e.meetingDate = 'Choose the meeting date.';
-        if (!body.trim()) e.body = 'Write the minutes.';
+        if (!title.trim()) e.title = t('Enter a title.');
+        if (!meetingDate) e.meetingDate = t('Choose the meeting date.');
+        if (!body.trim()) e.body = t('Write the minutes.');
         return e;
       }}
       onSubmit={async () => {
@@ -170,23 +171,23 @@ function CreateMinutesDialog({
       {(errors) => (
         <>
           <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
-            <Field label="Title" required error={errors.title}>
+            <Field label={t('Title')} required error={errors.title}>
               <Input
                 data-autofocus
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Church council — March"
+                placeholder={t('Church council — March')}
                 maxLength={300}
               />
             </Field>
-            <Field label="Meeting date" required error={errors.meetingDate}>
+            <Field label={t('Meeting date')} required error={errors.meetingDate}>
               <Input type="date" value={meetingDate} onChange={(e) => setMeetingDate(e.target.value)} />
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Ministry / unit" error={errors.organisationalUnitId}>
+            <Field label={t('Ministry / unit')} error={errors.organisationalUnitId}>
               <Select value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-                <option value="">Church-wide</option>
+                <option value="">{t('Church-wide')}</option>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
@@ -194,17 +195,17 @@ function CreateMinutesDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Status" error={errors.status}>
+            <Field label={t('Status')} error={errors.status}>
               <Select value={status} onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}>
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
+                <option value="published">{t('Published')}</option>
+                <option value="draft">{t('Draft')}</option>
               </Select>
             </Field>
           </div>
-          <Field label="Minutes" required error={errors.body}>
+          <Field label={t('Minutes')} required error={errors.body}>
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} maxLength={50000} />
           </Field>
-          <Field label="Present" hint="Names separated by commas or new lines." error={errors.attendees}>
+          <Field label={t('Present')} hint={t('Names separated by commas or new lines.')} error={errors.attendees}>
             <Textarea value={attendees} onChange={(e) => setAttendees(e.target.value)} rows={2} />
           </Field>
         </>

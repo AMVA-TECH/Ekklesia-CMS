@@ -30,12 +30,13 @@ import { usePeopleNames } from '../../../_lib/use-people-names';
 import { AddFollowUpDialog } from './add-follow-up-dialog';
 import { RecordPaymentDialog } from './record-payment-dialog';
 import { CreatePledgeDialog } from './create-pledge-dialog';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 const FILTERS: Array<{ value: string; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'open', label: 'Open' },
-  { value: 'partial', label: 'Partial' },
-  { value: 'fulfilled', label: 'Fulfilled' },
+  { value: 'all', label: tk('All') },
+  { value: 'open', label: tk('Open') },
+  { value: 'partial', label: tk('Partial') },
+  { value: 'fulfilled', label: tk('Fulfilled') },
 ];
 
 export function PledgesClient(): React.ReactElement {
@@ -70,7 +71,7 @@ export function PledgesClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load pledges.',
+            : t('Unable to load pledges.'),
       );
     } finally {
       setLoading(false);
@@ -105,30 +106,30 @@ export function PledgesClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Pledges"
-        lede="Promises of giving and how much has been received so far. Follow up kindly when things drift."
+        title={t('Pledges')}
+        lede={t('Promises of giving and how much has been received so far. Follow up kindly when things drift.')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New pledge
+            {t('New pledge')}
           </Button>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Metric
-          label="Total pledged"
+          label={t('Total pledged')}
           value={loading ? '—' : formatMoney(totalPledged, currency)}
           icon="hand"
           tone="sage"
         />
         <Metric
-          label="Received"
+          label={t('Received')}
           value={loading ? '—' : formatMoney(totalApplied, currency)}
           icon="check-circle"
           tone="peach"
         />
         <Metric
-          label="Still owed"
+          label={t('Still owed')}
           value={loading ? '—' : formatMoney(totalOutstanding, currency)}
           icon="alert-circle"
           tone="neutral"
@@ -139,14 +140,14 @@ export function PledgesClient(): React.ReactElement {
         <TabList>
           {FILTERS.map((f) => (
             <Tab key={f.value} value={f.value}>
-              {f.label}
+              {t(f.label)}
             </Tab>
           ))}
         </TabList>
       </Tabs>
 
       <Panel
-        title={filter === 'all' ? 'All pledges' : `${titleCase(filter)} pledges`}
+        title={filter === 'all' ? t('All pledges') : t('{0} pledges', titleCase(filter))}
         subtitle={error ?? undefined}
         flush
       >
@@ -155,7 +156,7 @@ export function PledgesClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                Try again
+                {t('Try again')}
               </Button>
             </div>
           </div>
@@ -168,15 +169,15 @@ export function PledgesClient(): React.ReactElement {
           <EmptyState
             icon="hand"
             tone="sage"
-            title="No pledges to show"
-            description="Pledges appear here once members commit to giving a specific amount."
+            title={t('No pledges to show')}
+            description={t('Pledges appear here once members commit to giving a specific amount.')}
             action={
               <Button
                 iconLeft="plus"
                 size="sm"
                 onClick={() => setCreateOpen(true)}
               >
-                New pledge
+                {t('New pledge')}
               </Button>
             }
           />
@@ -185,15 +186,15 @@ export function PledgesClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Pledged by</TH>
-                  <TH>Amount</TH>
-                  <TH>Received</TH>
-                  <TH>Outstanding</TH>
-                  <TH>Fund</TH>
-                  <TH>Due</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Pledged by')}</TH>
+                  <TH>{t('Amount')}</TH>
+                  <TH>{t('Received')}</TH>
+                  <TH>{t('Outstanding')}</TH>
+                  <TH>{t('Fund')}</TH>
+                  <TH>{t('Due')}</TH>
+                  <TH>{t('Status')}</TH>
                   <TH className="text-right">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('Actions')}</span>
                   </TH>
                 </TR>
               </THead>
@@ -239,14 +240,14 @@ export function PledgesClient(): React.ReactElement {
                         p.status !== 'fulfilled' ? (
                           <div className="inline-flex gap-2">
                             <Button size="sm" iconLeft="coin" onClick={() => setPaying(p)}>
-                              Record payment
+                              {t('Record payment')}
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => setFollowUpPledgeId(p.id)}
                             >
-                              Follow up
+                              {t('Follow up')}
                             </Button>
                           </div>
                         ) : null}
@@ -267,7 +268,7 @@ export function PledgesClient(): React.ReactElement {
         onCreated={(pledge) => {
           push({
             tone: 'success',
-            title: 'Pledge created',
+            title: t('Pledge created'),
             message: formatMoney(pledge.amountMinor, pledge.currency),
           });
           setCreateOpen(false);
@@ -283,8 +284,8 @@ export function PledgesClient(): React.ReactElement {
           onRecorded={(amountMinor) => {
             push({
               tone: 'success',
-              title: 'Payment recorded',
-              message: `${formatMoney(amountMinor, paying.currency)} applied to the pledge.`,
+              title: t('Payment recorded'),
+              message: t('{0} applied to the pledge.', formatMoney(amountMinor, paying.currency)),
             });
             setPaying(null);
             void load();
@@ -299,8 +300,8 @@ export function PledgesClient(): React.ReactElement {
         onSaved={() => {
           push({
             tone: 'success',
-            title: 'Follow-up saved',
-            message: 'The note was recorded against this pledge.',
+            title: t('Follow-up saved'),
+            message: t('The note was recorded against this pledge.'),
           });
         }}
       />

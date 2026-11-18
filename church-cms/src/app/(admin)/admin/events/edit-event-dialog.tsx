@@ -16,6 +16,7 @@ import { Icon } from '@/app/_ekklesia/icons';
 import type { EventRow, EventType } from '../../_lib/api-types';
 import { extractValidationErrors } from '../people/form-errors';
 import { titleCase } from '../../_lib/format';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Matches `EVENT_STATUSES` / `updateEventBodySchema.status`. */
 const EVENT_STATUSES = ['scheduled', 'cancelled', 'completed'] as const;
@@ -137,7 +138,7 @@ export function EditEventDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not save this event.',
+          err instanceof Error ? err.message : t('Could not save this event.'),
         );
       }
     } finally {
@@ -153,13 +154,13 @@ export function EditEventDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Edit event"
-      description="Update the schedule, type, status, or poster for this gathering."
+      title={t('Edit event')}
+      description={t('Update the schedule, type, status, or poster for this gathering.')}
       size="lg"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -167,7 +168,7 @@ export function EditEventDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'check'}
           >
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? t('Saving…') : t('Save changes')}
           </Button>
         </DialogFooter>
       }
@@ -189,12 +190,12 @@ export function EditEventDialog({
             </div>
           ) : null}
 
-          <Field label="Type" error={fieldErrors.eventTypeId}>
+          <Field label={t('Type')} error={fieldErrors.eventTypeId}>
             <Select
               value={eventTypeId}
               onChange={(e) => setEventTypeId(e.target.value)}
             >
-              <option value="">No type</option>
+              <option value="">{t('No type')}</option>
               {types.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
@@ -203,7 +204,7 @@ export function EditEventDialog({
             </Select>
           </Field>
 
-          <Field label="Title" required error={fieldErrors.title}>
+          <Field label={t('Title')} required error={fieldErrors.title}>
             <Input
               data-autofocus
               value={title}
@@ -213,7 +214,7 @@ export function EditEventDialog({
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Service date" required error={fieldErrors.serviceDate}>
+            <Field label={t('Service date')} required error={fieldErrors.serviceDate}>
               <Input
                 type="date"
                 value={serviceDate}
@@ -221,7 +222,7 @@ export function EditEventDialog({
                 required
               />
             </Field>
-            <Field label="Status" required error={fieldErrors.status}>
+            <Field label={t('Status')} required error={fieldErrors.status}>
               <Select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -238,8 +239,8 @@ export function EditEventDialog({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
-              label="Starts at"
-              hint="Optional local time."
+              label={t('Starts at')}
+              hint={t('Optional local time.')}
               error={fieldErrors.startsAt}
             >
               <Input
@@ -249,8 +250,8 @@ export function EditEventDialog({
               />
             </Field>
             <Field
-              label="Ends at"
-              hint="Optional local time."
+              label={t('Ends at')}
+              hint={t('Optional local time.')}
               error={fieldErrors.endsAt}
             >
               <Input
@@ -262,8 +263,8 @@ export function EditEventDialog({
           </div>
 
           <Field
-            label="Description"
-            hint="Optional note for the calendar."
+            label={t('Description')}
+            hint={t('Optional note for the calendar.')}
             error={fieldErrors.description}
           >
             <Textarea
@@ -271,15 +272,15 @@ export function EditEventDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={5000}
-              placeholder="Theme, invited speaker, meeting point…"
+              placeholder={t('Theme, invited speaker, meeting point…')}
             />
           </Field>
         </div>
 
         <div className="flex flex-col gap-3">
           <Field
-            label="Poster image"
-            hint="JPEG, PNG, WebP, or GIF. Leave empty to keep the current poster."
+            label={t('Poster image')}
+            hint={t('JPEG, PNG, WebP, or GIF. Leave empty to keep the current poster.')}
             error={fieldErrors.posterMediaId}
           >
             <input
@@ -297,14 +298,14 @@ export function EditEventDialog({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={shownPreview}
-                alt="Poster preview"
+                alt={t('Poster preview')}
                 className="h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full items-center justify-center p-3 text-center text-xs text-muted-foreground">
                 <span className="inline-flex flex-col items-center gap-2">
                   <Icon name="image" size={24} />
-                  No poster
+                  {t('No poster')}
                 </span>
               </div>
             )}
@@ -316,7 +317,7 @@ export function EditEventDialog({
               iconLeft="trash"
               onClick={() => setPosterFile(null)}
             >
-              Remove new poster
+              {t('Remove new poster')}
             </Button>
           ) : event.posterMediaId && !clearPoster ? (
             <Button
@@ -325,7 +326,7 @@ export function EditEventDialog({
               iconLeft="trash"
               onClick={() => setClearPoster(true)}
             >
-              Clear poster
+              {t('Clear poster')}
             </Button>
           ) : clearPoster ? (
             <Button
@@ -333,7 +334,7 @@ export function EditEventDialog({
               size="sm"
               onClick={() => setClearPoster(false)}
             >
-              Keep current poster
+              {t('Keep current poster')}
             </Button>
           ) : null}
         </div>

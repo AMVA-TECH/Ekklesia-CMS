@@ -11,6 +11,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import type { Household } from '../../../_lib/api-types';
 import { extractValidationErrors } from '../../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface EditHouseholdDialogProps {
   open: boolean;
@@ -66,7 +67,7 @@ export function EditHouseholdDialog({
     event.preventDefault();
     if (submitting) return;
     if (!label.trim()) {
-      setFieldErrors({ label: 'Please enter a household label.' });
+      setFieldErrors({ label: t('Please enter a household label.') });
       return;
     }
     const phone = emergencyContactPhone.trim()
@@ -74,7 +75,7 @@ export function EditHouseholdDialog({
       : '';
     if (phone && !/^\+[1-9]\d{6,14}$/.test(phone)) {
       setFieldErrors({
-        emergencyContactPhone: 'Use E.164 format, e.g. +255712345678.',
+        emergencyContactPhone: t('Use E.164 format, e.g. +255712345678.'),
       });
       return;
     }
@@ -106,7 +107,7 @@ export function EditHouseholdDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not save household.',
+          err instanceof Error ? err.message : t('Could not save household.'),
         );
       }
     } finally {
@@ -118,13 +119,13 @@ export function EditHouseholdDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Edit household"
-      description="Update the household label, address, and emergency contact."
+      title={t('Edit household')}
+      description={t('Update the household label, address, and emergency contact.')}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -132,7 +133,7 @@ export function EditHouseholdDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'check'}
           >
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? t('Saving…') : t('Save changes')}
           </Button>
         </DialogFooter>
       }
@@ -153,7 +154,7 @@ export function EditHouseholdDialog({
           </div>
         ) : null}
 
-        <Field label="Label" required error={fieldErrors.label}>
+        <Field label={t('Label')} required error={fieldErrors.label}>
           <Input
             data-autofocus
             value={label}
@@ -162,7 +163,7 @@ export function EditHouseholdDialog({
           />
         </Field>
 
-        <Field label="Shared address" error={fieldErrors.sharedAddress}>
+        <Field label={t('Shared address')} error={fieldErrors.sharedAddress}>
           <Input
             value={sharedAddress}
             onChange={(e) => setSharedAddress(e.target.value)}
@@ -171,7 +172,7 @@ export function EditHouseholdDialog({
         </Field>
 
         <Field
-          label="Emergency contact name"
+          label={t('Emergency contact name')}
           error={fieldErrors.emergencyContactName}
         >
           <Input
@@ -182,7 +183,7 @@ export function EditHouseholdDialog({
         </Field>
 
         <Field
-          label="Emergency contact phone"
+          label={t('Emergency contact phone')}
           hint="E.164, e.g. +255712345678"
           error={fieldErrors.emergencyContactPhone}
         >

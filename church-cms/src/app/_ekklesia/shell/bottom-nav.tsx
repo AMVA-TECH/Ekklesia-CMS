@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import type { IconName } from '../icons';
 import { NavLink } from '../ui/nav-link';
 import { cn } from '../ui/utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** A single bottom-nav destination. */
 export interface BottomNavItem {
@@ -31,7 +32,7 @@ export interface BottomNavProps {
 export function BottomNav({ items, className }: BottomNavProps): React.ReactElement {
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t('Primary')}
       className={cn(
         'sticky bottom-0 z-30 flex items-stretch border-t border-border bg-surface md:hidden',
         'pb-[env(safe-area-inset-bottom)]',
@@ -47,7 +48,7 @@ export function BottomNav({ items, className }: BottomNavProps): React.ReactElem
           variant="bottom"
           endSlot={item.endSlot}
         >
-          {item.label}
+          {t(item.label)}
         </NavLink>
       ))}
     </nav>

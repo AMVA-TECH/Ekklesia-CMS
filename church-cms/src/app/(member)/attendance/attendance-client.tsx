@@ -26,6 +26,7 @@ import {
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MyAttendance } from '../_shared/api-types';
 import { formatServiceDate } from '../_shared/formatters';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 export function AttendanceClient(): React.ReactElement {
   const [data, setData] = useState<MyAttendance | null>(null);
@@ -49,7 +50,7 @@ export function AttendanceClient(): React.ReactElement {
         } else if (e instanceof ApiError) {
           setError(e.message);
         } else {
-          setError('Check your connection and try again.');
+          setError(t('Check your connection and try again.'));
         }
       })
       .finally(() => {
@@ -68,11 +69,11 @@ export function AttendanceClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="My attendance"
-        lede="A gentle record of your Sundays and services — only visible to you."
+        title={t('My attendance')}
+        lede={t('A gentle record of your Sundays and services — only visible to you.')}
         actions={
           <Link href="/attendance/family" className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
-            Family &amp; away notices
+            {t('Family & away notices')}
           </Link>
         }
       />
@@ -83,8 +84,8 @@ export function AttendanceClient(): React.ReactElement {
         <EmptyState
           icon="calendar-check"
           tone="sky"
-          title="Attendance isn’t tracked for you yet"
-          description="When your church starts recording attendance for your services, your record will show here."
+          title={t('Attendance isn’t tracked for you yet')}
+          description={t('When your church starts recording attendance for your services, your record will show here.')}
         />
       ) : error ? (
         <ErrorCard message={error} />
@@ -92,20 +93,20 @@ export function AttendanceClient(): React.ReactElement {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <Metric
-              label="Services held"
+              label={t('Services held')}
               value={data.sessionsHeld.toString()}
               icon="calendar"
               tone="sky"
               hint={`${formatServiceDate(data.from)} – ${formatServiceDate(data.to)}`}
             />
             <Metric
-              label="Present"
+              label={t('Present')}
               value={data.presentCount.toString()}
               icon="check-circle"
               tone="sage"
             />
             <Metric
-              label="Attendance rate"
+              label={t('Attendance rate')}
               value={data.rate !== null ? `${Math.round(data.rate * 100)}%` : '—'}
               icon="chart"
               tone="gold"
@@ -120,13 +121,13 @@ export function AttendanceClient(): React.ReactElement {
               <Icon name={bandCopy.icon} size={20} />
             </span>
             <div>
-              <CardTitle>{bandCopy.title}</CardTitle>
-              <CardSubtitle>{bandCopy.message}</CardSubtitle>
+              <CardTitle>{t(bandCopy.title)}</CardTitle>
+              <CardSubtitle>{t(bandCopy.message)}</CardSubtitle>
               {data.noticeCount > 0 ? (
                 <p className="mt-2 inline-flex">
                   <Badge tone="lavender">
-                    {data.noticeCount} absence{' '}
-                    {data.noticeCount === 1 ? 'note' : 'notes'} sent
+                    {data.noticeCount} {t('absence')}{' '}
+                    {data.noticeCount === 1 ? t('note') : t('notes')} {t('sent')}
                   </Badge>
                 </p>
               ) : null}
@@ -134,15 +135,15 @@ export function AttendanceClient(): React.ReactElement {
           </Card>
 
           <Panel
-            title="Service history"
-            subtitle="The last few services on your record."
+            title={t('Service history')}
+            subtitle={t('The last few services on your record.')}
           >
             {data.calendar.length === 0 ? (
               <EmptyState
                 icon="calendar-check"
                 tone="sky"
-                title="No services recorded yet"
-                description="Your attendance will fill in here once services start being recorded."
+                title={t('No services recorded yet')}
+                description={t('Your attendance will fill in here once services start being recorded.')}
               />
             ) : (
               <ul className="flex flex-col divide-y divide-border">
@@ -174,7 +175,7 @@ export function AttendanceClient(): React.ReactElement {
                       <div className="flex shrink-0 items-center gap-2">
                         {entry.status === 'absent' && entry.sessionId ? (
                           requested.has(entry.serviceDate) ? (
-                            <span className="text-xs text-muted-foreground">Correction sent</span>
+                            <span className="text-xs text-muted-foreground">{t('Correction sent')}</span>
                           ) : (
                             <Button
                               size="sm"
@@ -186,7 +187,7 @@ export function AttendanceClient(): React.ReactElement {
                                 })
                               }
                             >
-                              I was there
+                              {t('I was there')}
                             </Button>
                           )
                         ) : null}
@@ -251,12 +252,12 @@ function CorrectionDialog({
       });
       push({
         tone: 'success',
-        title: 'Correction sent',
-        message: 'Your church team will review it and update your record.',
+        title: t('Correction sent'),
+        message: t('Your church team will review it and update your record.'),
       });
       onSent();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Could not send. Try again.');
+      setError(e instanceof ApiError ? e.message : t('Could not send. Try again.'));
       setSending(false);
     }
   };
@@ -267,17 +268,17 @@ function CorrectionDialog({
       onClose={() => {
         if (!sending) onClose();
       }}
-      title="Fix my attendance"
-      description={`Tell the church you were at the service on ${formatServiceDate(serviceDate)}.`}
+      title={t('Fix my attendance')}
+      description={t('Tell the church you were at the service on {0}.', formatServiceDate(serviceDate))}
       size="sm"
       sheetOnMobile
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={sending}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button loading={sending} onClick={() => void submit()}>
-            Send
+            {t('Send')}
           </Button>
         </DialogFooter>
       }
@@ -288,7 +289,7 @@ function CorrectionDialog({
             {error}
           </p>
         ) : null}
-        <Field label="Note" hint="Optional — e.g. I came late and missed the scan.">
+        <Field label={t('Note')} hint={t('Optional — e.g. I came late and missed the scan.')}>
           <Textarea
             data-autofocus
             value={note}
@@ -325,7 +326,7 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
         className="mt-0.5 text-[color:var(--danger-ink)]"
       />
       <div>
-        <CardTitle>We couldn’t load your attendance</CardTitle>
+        <CardTitle>{t('We couldn’t load your attendance')}</CardTitle>
         <CardSubtitle>{message}</CardSubtitle>
       </div>
     </Card>
@@ -358,32 +359,32 @@ function bandNarrative(
   switch (kind) {
     case 'congratulate':
       return {
-        title: 'Steady and present',
+        title: t('Steady and present'),
         message:
-          'You’re showing up — your church family sees it, and it strengthens them too.',
+          t('You’re showing up — your church family sees it, and it strengthens them too.'),
         icon: 'heart',
         toneClass: 'tone-sage',
       };
     case 'encourage':
       return {
-        title: 'Keeping in rhythm',
+        title: t('Keeping in rhythm'),
         message:
-          'You’ve been with us some weeks. Keep walking at a pace that fits your life — we’re glad when you’re here.',
+          t('You’ve been with us some weeks. Keep walking at a pace that fits your life — we’re glad when you’re here.'),
         icon: 'check-circle',
         toneClass: 'tone-sky',
       };
     case 'remind':
       return {
-        title: 'We’ve missed you',
+        title: t('We’ve missed you'),
         message:
-          'It has been a little while between services. We’d love to see you, and your pastor is glad to pray with you about anything.',
+          t('It has been a little while between services. We’d love to see you, and your pastor is glad to pray with you about anything.'),
         icon: 'heart',
         toneClass: 'tone-peach',
       };
     default:
       return {
-        title: 'Your attendance',
-        message: 'Here is a quiet look at your recent services. It fills in after a few Sundays.',
+        title: t('Your attendance'),
+        message: t('Here is a quiet look at your recent services. It fills in after a few Sundays.'),
         icon: 'calendar-check',
         toneClass: 'tone-sky',
       };
@@ -405,9 +406,9 @@ function statusIcon(
 }
 
 function statusLabel(status: 'present' | 'absent' | 'notice'): string {
-  if (status === 'present') return 'Present';
-  if (status === 'notice') return 'Absence noted';
-  return 'Away';
+  if (status === 'present') return t('Present');
+  if (status === 'notice') return t('Absence noted');
+  return t('Away');
 }
 
 function statusPillTone(status: 'present' | 'absent' | 'notice'): StatusTone {

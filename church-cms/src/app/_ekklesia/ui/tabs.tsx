@@ -11,6 +11,7 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { cn } from './utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface TabsContextValue {
   value: string;
@@ -98,8 +99,8 @@ export function TabList({
     const current = document.activeElement as HTMLElement | null;
     const index = current ? nodes.indexOf(current) : -1;
     const horizontal = orientation === 'horizontal';
-    const next = horizontal ? 'ArrowRight' : 'ArrowDown';
-    const prev = horizontal ? 'ArrowLeft' : 'ArrowUp';
+    const next = horizontal ? t('ArrowRight') : t('ArrowDown');
+    const prev = horizontal ? t('ArrowLeft') : t('ArrowUp');
     if (event.key === next) {
       event.preventDefault();
       nodes[(index + 1 + nodes.length) % nodes.length]?.focus();

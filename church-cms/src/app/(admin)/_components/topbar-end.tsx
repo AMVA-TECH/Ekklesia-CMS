@@ -17,6 +17,8 @@ import {
   useToast,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
+import { t } from '@/app/_ekklesia/i18n/core';
+import { LanguageToggle } from '@/app/_ekklesia/i18n/language-toggle';
 
 /**
  * Church profile cluster on the far right of the admin topbar.
@@ -34,8 +36,8 @@ export function TopbarEnd(): React.ReactElement {
     return <Skeleton size="line" className="h-8 w-44 rounded-md" />;
   }
 
-  const churchName = church?.name?.trim() || 'No church selected';
-  const userName = user?.displayName?.trim() || 'Signed out';
+  const churchName = church?.name?.trim() || t('No church selected');
+  const userName = user?.displayName?.trim() || t('Signed out');
 
   const handleSignOut = async (): Promise<void> => {
     if (busy) return;
@@ -44,94 +46,97 @@ export function TopbarEnd(): React.ReactElement {
       await apiFetch('/api/v1/auth/logout', { method: 'POST' });
       push({
         tone: 'success',
-        title: 'Signed out',
-        message: 'See you soon.',
+        title: t('Signed out'),
+        message: t('See you soon.'),
       });
       // Full reload (not router.push) so no signed-in client state survives.
       window.location.assign(new URL('/', window.location.origin));
     } catch (err) {
       push({
         tone: 'danger',
-        title: 'Could not sign out',
+        title: t('Could not sign out'),
         message:
           err instanceof ApiError
             ? err.message
-            : 'Please try again in a moment.',
+            : t('Please try again in a moment.'),
       });
       setBusy(false);
     }
   };
 
   return (
-    <Menu
-      align="end"
-      label="Church profile menu"
-      trigger={
-        <button
-          type="button"
-          className="inline-flex max-w-[16rem] items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-foreground hover:bg-surface-muted focus-ring"
-        >
-          <Avatar
-            name={churchName}
-            src={church?.logoUrl}
-            size="sm"
-            tone="charcoal"
-            ring
-            className="ring-border"
-          />
-          <span className="hidden min-w-0 md:block">
-            <span className="block truncate font-semibold leading-tight">
-              {churchName}
+    <div className="flex items-center gap-2">
+      <LanguageToggle />
+      <Menu
+        align="end"
+        label={t('Church profile menu')}
+        trigger={
+          <button
+            type="button"
+            className="inline-flex max-w-[16rem] items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-foreground hover:bg-surface-muted focus-ring"
+          >
+            <Avatar
+              name={churchName}
+              src={church?.logoUrl}
+              size="sm"
+              tone="charcoal"
+              ring
+              className="ring-border"
+            />
+            <span className="hidden min-w-0 md:block">
+              <span className="block truncate font-semibold leading-tight">
+                {churchName}
+              </span>
+              <span className="block truncate text-[11px] leading-tight text-muted-foreground">
+                {t('Church profile')}
+              </span>
             </span>
-            <span className="block truncate text-[11px] leading-tight text-muted-foreground">
-              Church profile
-            </span>
-          </span>
-          <Icon
-            name="chevron-down"
-            size={14}
-            className="shrink-0 text-muted-foreground"
-          />
-        </button>
-      }
-    >
-      <MenuLabel>Active church</MenuLabel>
-      <div className="px-3 pb-2">
-        <p className="truncate text-sm font-medium text-foreground">
-          {churchName}
-        </p>
-        {church?.slug ? (
-          <p className="truncate text-xs text-muted-foreground">
-            /{church.slug}
+            <Icon
+              name="chevron-down"
+              size={14}
+              className="shrink-0 text-muted-foreground"
+            />
+          </button>
+        }
+      >
+        <MenuLabel>{t('Active church')}</MenuLabel>
+        <div className="px-3 pb-2">
+          <p className="truncate text-sm font-medium text-foreground">
+            {churchName}
           </p>
-        ) : null}
-        <p className="mt-1 truncate text-xs text-muted-foreground">
-          Signed in as {userName}
-        </p>
-      </div>
-      <MenuSeparator />
-      <MenuItem icon="settings" onClick={() => router.push('/admin/settings')}>
-        Church settings
-      </MenuItem>
-      <MenuItem
-        icon="book"
-        onClick={() => {
-          // Route handler, not a Next page — needs a document navigation.
-          window.location.assign(new URL('/api/docs', window.location.origin));
-        }}
-      >
-        API reference
-      </MenuItem>
-      <MenuSeparator />
-      <MenuItem
-        icon="logout"
-        onClick={() => {
-          void handleSignOut();
-        }}
-        disabled={busy}
-      >
-        {busy ? 'Signing out…' : 'Sign out'}
-      </MenuItem>
-    </Menu>
+          {church?.slug ? (
+            <p className="truncate text-xs text-muted-foreground">
+              /{church.slug}
+            </p>
+          ) : null}
+          <p className="mt-1 truncate text-xs text-muted-foreground">
+            {t('Signed in as')} {userName}
+          </p>
+        </div>
+        <MenuSeparator />
+        <MenuItem icon="settings" onClick={() => router.push('/admin/settings')}>
+          {t('Church settings')}
+        </MenuItem>
+        <MenuItem
+          icon="book"
+          onClick={() => {
+            // Route handler, not a Next page — needs a document navigation.
+            window.location.assign(new URL('/api/docs', window.location.origin));
+          }}
+        >
+          {t('API reference')}
+        </MenuItem>
+        <MenuSeparator />
+        <MenuItem
+          icon="logout"
+          onClick={() => {
+            void handleSignOut();
+          }}
+          disabled={busy}
+        >
+          {busy ? t('Signing out…') : t('Sign out')}
+        </MenuItem>
+      </Menu>
+    </div>
   );
 }

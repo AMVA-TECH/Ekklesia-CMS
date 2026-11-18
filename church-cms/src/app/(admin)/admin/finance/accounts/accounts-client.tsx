@@ -27,6 +27,7 @@ import {
   type Account,
   type FinancialYear,
 } from '../_lib/finance-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 export function AccountsClient(): React.ReactElement {
   const accounts = useApiList<Account>('/api/v1/accounts');
@@ -53,16 +54,16 @@ export function AccountsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Accounts & years"
-        lede="The chart of accounts every journal, offering and expense posts to, and the financial years they fall in."
+        title={t('Accounts & years')}
+        lede={t('The chart of accounts every journal, offering and expense posts to, and the financial years they fall in.')}
       />
 
       <Panel
-        title="Financial years"
-        subtitle="Journals can only be posted into an open year."
+        title={t('Financial years')}
+        subtitle={t('Journals can only be posted into an open year.')}
         actions={
           <Button size="sm" iconLeft="plus" onClick={() => setDialog('year')}>
-            New year
+            {t('New year')}
           </Button>
         }
         flush
@@ -75,25 +76,25 @@ export function AccountsClient(): React.ReactElement {
           onRetry={() => void years.reload()}
           empty={{
             icon: 'calendar',
-            title: 'No financial years yet',
-            description: 'Create the current year before recording journals.',
+            title: t('No financial years yet'),
+            description: t('Create the current year before recording journals.'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Year</TH>
-                  <TH>Starts</TH>
-                  <TH>Ends</TH>
-                  <TH>Status</TH>
-                  <TH className="text-right">Actions</TH>
+                  <TH>{t('Year')}</TH>
+                  <TH>{t('Starts')}</TH>
+                  <TH>{t('Ends')}</TH>
+                  <TH>{t('Status')}</TH>
+                  <TH className="text-right">{t('Actions')}</TH>
                 </TR>
               </THead>
               <TBody>
                 {years.items.map((y) => (
                   <TR key={y.id}>
-                    <TD className="font-medium text-foreground">{y.label}</TD>
+                    <TD className="font-medium text-foreground">{t(y.label)}</TD>
                     <TD className="text-sm">{formatDate(y.startsOn)}</TD>
                     <TD className="text-sm">{formatDate(y.endsOn)}</TD>
                     <TD>
@@ -110,7 +111,7 @@ export function AccountsClient(): React.ReactElement {
                           disabled={busyKey !== null}
                           onClick={() => setClosing(y)}
                         >
-                          Close year
+                          {t('Close year')}
                         </Button>
                       ) : null}
                     </TD>
@@ -123,11 +124,11 @@ export function AccountsClient(): React.ReactElement {
       </Panel>
 
       <Panel
-        title="Chart of accounts"
-        subtitle={accounts.loading ? 'Loading…' : `${accounts.items.length} accounts`}
+        title={t('Chart of accounts')}
+        subtitle={accounts.loading ? t('Loading…') : t('{0} accounts', accounts.items.length)}
         actions={
           <Button size="sm" iconLeft="plus" onClick={() => setDialog('account')}>
-            New account
+            {t('New account')}
           </Button>
         }
         flush
@@ -140,19 +141,19 @@ export function AccountsClient(): React.ReactElement {
           onRetry={() => void accounts.reload()}
           empty={{
             icon: 'wallet',
-            title: 'No accounts yet',
+            title: t('No accounts yet'),
             description:
-              'Add at least a bank/cash asset account and an offerings income account.',
+              t('Add at least a bank/cash asset account and an offerings income account.'),
           }}
         >
           <TableWrap>
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Code</TH>
-                  <TH>Name</TH>
-                  <TH>Parent</TH>
-                  <TH>Status</TH>
+                  <TH>{t('Code')}</TH>
+                  <TH>{t('Name')}</TH>
+                  <TH>{t('Parent')}</TH>
+                  <TH>{t('Status')}</TH>
                 </TR>
               </THead>
               {grouped.map((g) => (
@@ -207,9 +208,9 @@ export function AccountsClient(): React.ReactElement {
       ) : null}
       {closing ? (
         <FormDialog
-          title={`Close ${closing.label}?`}
-          description="No more journals can be posted into a closed year. This cannot be undone from the app."
-          submitLabel="Close year"
+          title={t('Close {0}?', closing.label)}
+          description={t('No more journals can be posted into a closed year. This cannot be undone from the app.')}
+          submitLabel={t('Close year')}
           submitVariant="destructive"
           size="sm"
           onClose={() => setClosing(null)}
@@ -220,7 +221,7 @@ export function AccountsClient(): React.ReactElement {
               year.id,
               () =>
                 apiFetch(`/api/v1/financial-years/${year.id}/close`, { method: 'POST' }),
-              { success: `${year.label} closed`, failure: 'Could not close the year' },
+              { success: t('{0} closed', year.label), failure: t('Could not close the year') },
             );
             if (ok) void years.reload();
           }}
@@ -249,14 +250,14 @@ function CreateAccountDialog({
 
   return (
     <FormDialog
-      title="New account"
-      submitLabel="Create account"
+      title={t('New account')}
+      submitLabel={t('Create account')}
       size="sm"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!code.trim()) e.code = 'Enter a code, e.g. 1000.';
-        if (!name.trim()) e.name = 'Enter a name.';
+        if (!code.trim()) e.code = t('Enter a code, e.g. 1000.');
+        if (!name.trim()) e.name = t('Enter a name.');
         return e;
       }}
       onSubmit={async () => {
@@ -274,7 +275,7 @@ function CreateAccountDialog({
     >
       {(errors) => (
         <>
-          <Field label="Code" required error={errors.code}>
+          <Field label={t('Code')} required error={errors.code}>
             <Input
               data-autofocus
               value={code}
@@ -283,15 +284,15 @@ function CreateAccountDialog({
               maxLength={50}
             />
           </Field>
-          <Field label="Name" required error={errors.name}>
+          <Field label={t('Name')} required error={errors.name}>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Cash at bank"
+              placeholder={t('Cash at bank')}
               maxLength={200}
             />
           </Field>
-          <Field label="Type" error={errors.accountType}>
+          <Field label={t('Type')} error={errors.accountType}>
             <Select
               value={accountType}
               onChange={(e) => {
@@ -306,9 +307,9 @@ function CreateAccountDialog({
               ))}
             </Select>
           </Field>
-          <Field label="Parent account" hint="Optional grouping." error={errors.parentId}>
+          <Field label={t('Parent account')} hint={t('Optional grouping.')} error={errors.parentId}>
             <Select value={parentId} onChange={(e) => setParentId(e.target.value)}>
-              <option value="">None</option>
+              <option value="">{t('None')}</option>
               {parents.map((a) => (
                 <option key={a.id} value={a.id}>
                   {accountLabel(a)}
@@ -335,16 +336,16 @@ function CreateYearDialog({
 
   return (
     <FormDialog
-      title="New financial year"
-      submitLabel="Create year"
+      title={t('New financial year')}
+      submitLabel={t('Create year')}
       size="sm"
       onClose={onClose}
       validate={() => {
         const e: Record<string, string> = {};
-        if (!label.trim()) e.label = 'Enter a label, e.g. FY2027.';
-        if (!startsOn) e.startsOn = 'Choose a start date.';
-        if (!endsOn) e.endsOn = 'Choose an end date.';
-        if (startsOn && endsOn && endsOn <= startsOn) e.endsOn = 'End must be after the start.';
+        if (!label.trim()) e.label = t('Enter a label, e.g. FY2027.');
+        if (!startsOn) e.startsOn = t('Choose a start date.');
+        if (!endsOn) e.endsOn = t('Choose an end date.');
+        if (startsOn && endsOn && endsOn <= startsOn) e.endsOn = t('End must be after the start.');
         return e;
       }}
       onSubmit={async () => {
@@ -357,20 +358,20 @@ function CreateYearDialog({
     >
       {(errors) => (
         <>
-          <Field label="Label" required error={errors.label}>
+          <Field label={t('Label')} required error={errors.label}>
             <Input
               data-autofocus
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="FY2027"
+              placeholder={t('FY2027')}
               maxLength={50}
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Starts on" required error={errors.startsOn}>
+            <Field label={t('Starts on')} required error={errors.startsOn}>
               <Input type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
             </Field>
-            <Field label="Ends on" required error={errors.endsOn}>
+            <Field label={t('Ends on')} required error={errors.endsOn}>
               <Input type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
             </Field>
           </div>

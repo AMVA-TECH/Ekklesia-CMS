@@ -18,6 +18,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import { cn } from '@/app/_ekklesia/ui/utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 type IdentifierKind = 'phone' | 'email';
 
@@ -40,7 +41,7 @@ export function SignInClient(): React.ReactElement {
   const [submitting, setSubmitting] = useState(false);
 
   const identifierLabel = useMemo(
-    () => (identifierKind === 'phone' ? 'Phone number' : 'Email address'),
+    () => (identifierKind === 'phone' ? t('Phone number') : t('Email address')),
     [identifierKind],
   );
 
@@ -60,14 +61,14 @@ export function SignInClient(): React.ReactElement {
       !/^\+255[67]\d{8}$/.test(trimmed)
     ) {
       nextFieldErrors.identifier =
-        'Enter a Tanzania mobile number, e.g. 0712 345 678.';
+        t('Enter a Tanzania mobile number, e.g. 0712 345 678.');
     } else if (identifierKind === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      nextFieldErrors.identifier = 'That email does not look right.';
+      nextFieldErrors.identifier = t('That email does not look right.');
     }
     if (pin.trim() === '') {
-      nextFieldErrors.pin = 'Please enter your PIN.';
+      nextFieldErrors.pin = t('Please enter your PIN.');
     } else if (!/^\d{4,8}$/.test(pin.trim())) {
-      nextFieldErrors.pin = 'Your PIN is 4 to 8 digits.';
+      nextFieldErrors.pin = t('Your PIN is 4 to 8 digits.');
     }
     setFieldErrors(nextFieldErrors);
     return Object.keys(nextFieldErrors).length === 0;
@@ -102,14 +103,14 @@ export function SignInClient(): React.ReactElement {
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 401 || e.status === 403) {
-          setError('That phone, email, or PIN did not match. Please try again.');
+          setError(t('That phone, email, or PIN did not match. Please try again.'));
         } else if (e.status === 429) {
-          setError('Too many attempts. Please wait a minute and try again.');
+          setError(t('Too many attempts. Please wait a minute and try again.'));
         } else {
-          setError(e.message || 'We could not sign you in just now.');
+          setError(e.message || t('We could not sign you in just now.'));
         }
       } else {
-        setError('We could not reach the server. Check your connection and try again.');
+        setError(t('We could not reach the server. Check your connection and try again.'));
       }
     } finally {
       setSubmitting(false);
@@ -120,19 +121,18 @@ export function SignInClient(): React.ReactElement {
     <div className="flex flex-col">
       <div className="mb-8 text-center lg:text-left">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-          Welcome back
+          {t('Welcome back')}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Sign in with the phone or email your church has on file.
+          {t('Sign in with the phone or email your church has on file.')}
         </p>
       </div>
 
       {showHelp ? (
         <div className="mb-6 rounded-xl border border-[color:var(--brand-gold-soft)] bg-[color:var(--brand-gold-tint)] px-4 py-3 text-sm text-foreground">
-          <p className="font-medium">Need a hand?</p>
+          <p className="font-medium">{t('Need a hand?')}</p>
           <p className="mt-1 text-muted-foreground">
-            If you have forgotten your PIN or your details changed, your church
-            office can reset them for you.
+            {t('If you have forgotten your PIN or your details changed, your church office can reset them for you.')}
           </p>
         </div>
       ) : null}
@@ -141,13 +141,13 @@ export function SignInClient(): React.ReactElement {
         {/* Segmented control — FundFlow-style switcher */}
         <div
           role="tablist"
-          aria-label="Sign-in method"
+          aria-label={t('Sign-in method')}
           className="flex rounded-xl border border-border bg-[color:var(--peach-soft)]/50 p-1"
         >
           {(
             [
-              { id: 'phone', label: 'Phone' },
-              { id: 'email', label: 'Email' },
+              { id: 'phone', label: t('Phone') },
+              { id: 'email', label: t('Email') },
             ] as const
           ).map((tab) => {
             const active = identifierKind === tab.id;
@@ -169,7 +169,7 @@ export function SignInClient(): React.ReactElement {
                     : 'text-muted-foreground hover:text-[color:var(--brand-gold-ink)]',
                 )}
               >
-                {tab.label}
+                {t(tab.label)}
               </button>
             );
           })}
@@ -180,8 +180,8 @@ export function SignInClient(): React.ReactElement {
           required
           hint={
             identifierKind === 'phone'
-              ? 'Tanzania mobile — type 0712 345 678 or +255…'
-              : 'The email your church office has for you'
+              ? t('Tanzania mobile — type 0712 345 678 or +255…')
+              : t('The email your church office has for you')
           }
           error={fieldErrors.identifier}
         >
@@ -201,9 +201,9 @@ export function SignInClient(): React.ReactElement {
         </Field>
 
         <Field
-          label="PIN"
+          label={t('PIN')}
           required
-          hint="4 to 8 digits — the one your church gave you."
+          hint={t('4 to 8 digits — the one your church gave you.')}
           error={fieldErrors.pin}
           labelAccessory={
             <button
@@ -213,7 +213,7 @@ export function SignInClient(): React.ReactElement {
               aria-pressed={showPin}
             >
               <Icon name={showPin ? 'eye-off' : 'eye'} size={14} />
-              {showPin ? 'Hide' : 'Show'}
+              {showPin ? t('Hide') : t('Show')}
             </button>
           }
         >
@@ -239,22 +239,21 @@ export function SignInClient(): React.ReactElement {
         ) : null}
 
         <Button type="submit" size="lg" block loading={submitting} className="mt-1">
-          {submitting ? 'Signing you in…' : 'Sign in'}
+          {submitting ? t('Signing you in…') : t('Sign in')}
         </Button>
 
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
-          By signing in you agree to your church&rsquo;s handling of your
-          information, kept private and never shared with other churches.
+          {t('By signing in you agree to your church’s handling of your information, kept private and never shared with other churches.')}
         </p>
       </form>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        New to this church?{' '}
+        {t('New to this church?')}{' '}
         <Link
           href="/register"
           className="link-ink font-medium underline-offset-2 hover:underline focus-ring rounded-sm"
         >
-          Request to join
+          {t('Request to join')}
         </Link>
       </p>
     </div>

@@ -1,5 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '../ui/utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<AppFooter>`. */
 export interface AppFooterProps extends HTMLAttributes<HTMLElement> {
@@ -34,8 +35,7 @@ export function AppFooter({
         <p className="text-xs text-muted-foreground">
           {tagline ?? (
             <>
-              <span className="font-semibold text-foreground">Ekklesia</span> ·
-              built for the local church
+              <span className="font-semibold text-foreground">{t('Ekklesia')}</span> {t('· built for the local church')}
             </>
           )}
         </p>

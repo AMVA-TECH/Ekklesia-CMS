@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ApiError } from '@/app/_ekklesia/session';
 import { Button } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface SessionBannerProps {
   error: ApiError | Error;
@@ -24,13 +25,13 @@ export function SessionBanner({ error }: SessionBannerProps): React.ReactElement
   const status = error instanceof ApiError ? error.status : undefined;
   const title =
     status === 401
-      ? 'Signed out'
+      ? t('Signed out')
       : status === 403
-        ? 'Session needs attention'
-        : 'Could not load your session';
+        ? t('Session needs attention')
+        : t('Could not load your session');
   const message =
     status === 401
-      ? 'Please sign in again to continue using the admin console.'
+      ? t('Please sign in again to continue using the admin console.')
       : error.message;
 
   return (
@@ -52,7 +53,7 @@ export function SessionBanner({ error }: SessionBannerProps): React.ReactElement
         variant="ghost"
         size="sm"
         onClick={() => setDismissed(true)}
-        aria-label="Dismiss"
+        aria-label={t('Dismiss')}
       >
         <Icon name="close" size={14} />
       </Button>

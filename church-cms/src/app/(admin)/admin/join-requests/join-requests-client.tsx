@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch, ApiError } from '@/app/_ekklesia/session';
 import { PageHeader, Button, StatusPill } from '@/app/_ekklesia/ui';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 type JoinRequest = {
   id: string;
@@ -34,7 +35,7 @@ export function JoinRequestsClient() {
     apiFetch<{ items: JoinRequest[] }>('/api/v1/join-requests?status=pending')
       .then((res) => setItems(res.items))
       .catch((err: unknown) =>
-        setError(err instanceof ApiError ? err.message : 'Failed to load'),
+        setError(err instanceof ApiError ? err.message : t('Failed to load')),
       );
   }, []);
 
@@ -58,7 +59,7 @@ export function JoinRequestsClient() {
       if (res.member) setIssued(res.member);
       reload();
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : 'Decision failed');
+      setError(err instanceof ApiError ? err.message : t('Decision failed'));
     } finally {
       setBusyId(null);
     }
@@ -67,31 +68,30 @@ export function JoinRequestsClient() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Join requests"
-        lede="Approve to attach the person to your church and issue a member PIN for Sign in."
+        title={t('Join requests')}
+        lede={t('Approve to attach the person to your church and issue a member PIN for Sign in.')}
       />
 
       {error ? <p className="text-destructive">{error}</p> : null}
 
       {issued ? (
         <div className="rounded-lg border border-border bg-surface p-4">
-          <p className="font-medium">Member credentials issued (once)</p>
+          <p className="font-medium">{t('Member credentials issued (once)')}</p>
           <p>
             {issued.phoneE164}
             {issued.email ? ` · ${issued.email}` : ''}
           </p>
           <p>
-            PIN: <code>{issued.initialPin}</code>
+            {t('PIN:')} <code>{issued.initialPin}</code>
           </p>
           <p className="text-sm text-muted-foreground">
-            Share securely for Sign in (phone + PIN). Attachment unlocks this
-            church’s services. PIN is not stored in audit logs.
+            {t('Share securely for Sign in (phone + PIN). Attachment unlocks this church’s services. PIN is not stored in audit logs.')}
           </p>
         </div>
       ) : null}
 
       {items.length === 0 ? (
-        <p className="text-muted-foreground">No pending join requests.</p>
+        <p className="text-muted-foreground">{t('No pending join requests.')}</p>
       ) : (
         <ul className="space-y-3">
           {items.map((item) => (
@@ -114,7 +114,7 @@ export function JoinRequestsClient() {
                   disabled={busyId === item.id}
                   onClick={() => void decide(item.id, 'approved')}
                 >
-                  Approve
+                  {t('Approve')}
                 </Button>
                 <Button
                   type="button"
@@ -123,7 +123,7 @@ export function JoinRequestsClient() {
                   disabled={busyId === item.id}
                   onClick={() => void decide(item.id, 'rejected')}
                 >
-                  Reject
+                  {t('Reject')}
                 </Button>
               </div>
             </li>

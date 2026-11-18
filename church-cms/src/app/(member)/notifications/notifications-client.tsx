@@ -15,6 +15,7 @@ import {
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type { MemberPreferences } from '../_shared/api-types';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 type Channel = 'smsOptIn' | 'whatsappOptIn' | 'emailOptIn';
 
@@ -28,20 +29,20 @@ interface ChannelMeta {
 const CHANNELS: readonly ChannelMeta[] = [
   {
     key: 'smsOptIn',
-    label: 'Text messages (SMS)',
-    description: 'Service times, prayer requests, and reminders.',
+    label: tk('Text messages (SMS)'),
+    description: tk('Service times, prayer requests, and reminders.'),
     icon: 'phone',
   },
   {
     key: 'whatsappOptIn',
-    label: 'WhatsApp',
-    description: 'Group updates and quick notices from ministry leaders.',
+    label: tk('WhatsApp'),
+    description: tk('Group updates and quick notices from ministry leaders.'),
     icon: 'chat',
   },
   {
     key: 'emailOptIn',
-    label: 'Email',
-    description: 'Longer newsletters, event summaries, and invitations.',
+    label: tk('Email'),
+    description: tk('Longer newsletters, event summaries, and invitations.'),
     icon: 'mail',
   },
 ];
@@ -77,7 +78,7 @@ export function NotificationsClient(): React.ReactElement {
         } else if (e instanceof ApiError) {
           setLoadError(e.message);
         } else {
-          setLoadError('Check your connection and try again.');
+          setLoadError(t('Check your connection and try again.'));
         }
       })
       .finally(() => {
@@ -116,18 +117,18 @@ export function NotificationsClient(): React.ReactElement {
       setOriginal(updated);
       push({
         tone: 'success',
-        title: 'Preferences saved',
-        message: 'We’ll follow your choices from now on.',
+        title: t('Preferences saved'),
+        message: t('We’ll follow your choices from now on.'),
       });
     } catch (e) {
       if (e instanceof ApiError) {
         push({
           tone: 'danger',
-          title: 'We couldn’t save',
-          message: e.message || 'Try again in a moment.',
+          title: t('We couldn’t save'),
+          message: e.message || t('Try again in a moment.'),
         });
       } else {
-        push({ tone: 'danger', message: 'Check your connection and try again.' });
+        push({ tone: 'danger', message: t('Check your connection and try again.') });
       }
     } finally {
       setSaving(false);
@@ -140,8 +141,8 @@ export function NotificationsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Notifications"
-        lede="Choose how your church talks to you. You can change this any time."
+        title={t('Notifications')}
+        lede={t('Choose how your church talks to you. You can change this any time.')}
       />
 
       {loading ? (
@@ -150,12 +151,12 @@ export function NotificationsClient(): React.ReactElement {
         <EmptyState
           icon="bell"
           tone="peach"
-          title="We couldn’t load your preferences"
+          title={t('We couldn’t load your preferences')}
           description={loadError}
         />
       ) : prefs ? (
         <>
-          <Panel title="Channels" subtitle="Turn these on or off to fit your week.">
+          <Panel title={t('Channels')} subtitle={t('Turn these on or off to fit your week.')}>
             <div className="flex flex-col gap-3">
               {CHANNELS.map((ch) => (
                 <ChannelToggle
@@ -178,10 +179,9 @@ export function NotificationsClient(): React.ReactElement {
                 className="mt-0.5 text-[color:var(--warning-ink)]"
               />
               <div>
-                <CardTitle>You’ll miss church messages</CardTitle>
+                <CardTitle>{t('You’ll miss church messages')}</CardTitle>
                 <CardSubtitle>
-                  With all channels off we can’t reach you for service changes,
-                  prayer requests, or event reminders. Consider keeping at least one on.
+                  {t('With all channels off we can’t reach you for service changes, prayer requests, or event reminders. Consider keeping at least one on.')}
                 </CardSubtitle>
               </div>
             </Card>
@@ -189,11 +189,11 @@ export function NotificationsClient(): React.ReactElement {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button onClick={() => void handleSave()} loading={saving} disabled={!dirty || saving}>
-              {dirty ? 'Save preferences' : 'All saved'}
+              {dirty ? t('Save preferences') : t('All saved')}
             </Button>
             {dirty && original ? (
               <Button variant="ghost" onClick={() => setPrefs(original)}>
-                Discard
+                {t('Discard')}
               </Button>
             ) : null}
           </div>
@@ -206,10 +206,9 @@ export function NotificationsClient(): React.ReactElement {
               <Icon name="shield" size={18} />
             </span>
             <div>
-              <CardTitle>Safety notices still reach you</CardTitle>
+              <CardTitle>{t('Safety notices still reach you')}</CardTitle>
               <CardSubtitle>
-                A few important messages — like account safety or sign-in alerts —
-                are always sent, even with channels turned off.
+                {t('A few important messages — like account safety or sign-in alerts — are always sent, even with channels turned off.')}
               </CardSubtitle>
             </div>
           </Card>
@@ -238,10 +237,10 @@ function ChannelToggle({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="font-medium text-foreground">{meta.label}</span>
+          <span className="font-medium text-foreground">{t(meta.label)}</span>
         </span>
         <span className="mt-0.5 block text-xs text-muted-foreground">
-          {meta.description}
+          {t(meta.description)}
         </span>
       </span>
       <input

@@ -12,6 +12,7 @@ import {
 import type { Participation, Person } from '../../_lib/api-types';
 import { asList } from '../../_lib/list';
 import { extractValidationErrors } from '../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface AddParticipationDialogProps {
   open: boolean;
@@ -91,7 +92,7 @@ export function AddParticipationDialog({
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: t('Pick a person from the search results.') });
       return;
     }
     setFieldErrors({});
@@ -120,7 +121,7 @@ export function AddParticipationDialog({
         setFormError(
           err instanceof Error
             ? err.message
-            : 'Could not add this participation.',
+            : t('Could not add this participation.'),
         );
       }
     } finally {
@@ -132,13 +133,13 @@ export function AddParticipationDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Add participation"
-      description={`Add someone to ${unitName}.`}
+      title={t('Add participation')}
+      description={t('Add someone to {0}.', unitName)}
       size="md"
       footer={
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
@@ -146,7 +147,7 @@ export function AddParticipationDialog({
             loading={submitting}
             iconLeft={submitting ? undefined : 'plus'}
           >
-            {submitting ? 'Saving…' : 'Add participation'}
+            {submitting ? t('Saving…') : t('Add participation')}
           </Button>
         </DialogFooter>
       }
@@ -168,9 +169,9 @@ export function AddParticipationDialog({
         ) : null}
 
         <Field
-          label="Person"
+          label={t('Person')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? t('Searching…') : t('Type at least 2 letters')}
           error={fieldErrors.personId}
         >
           <Input
@@ -181,7 +182,7 @@ export function AddParticipationDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Search by name…"
+            placeholder={t('Search by name…')}
           />
         </Field>
 
@@ -212,8 +213,8 @@ export function AddParticipationDialog({
         ) : null}
 
         <Field
-          label="Role in unit"
-          hint="Optional — e.g. Leader, Member"
+          label={t('Role in unit')}
+          hint={t('Optional — e.g. Leader, Member')}
           error={fieldErrors.roleInUnit}
         >
           <Input
@@ -224,8 +225,8 @@ export function AddParticipationDialog({
         </Field>
 
         <Field
-          label="Effective from"
-          hint="Optional — YYYY-MM-DD (defaults to today)"
+          label={t('Effective from')}
+          hint={t('Optional — YYYY-MM-DD (defaults to today)')}
           error={fieldErrors.effectiveFrom}
         >
           <Input

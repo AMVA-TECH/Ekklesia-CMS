@@ -6,29 +6,30 @@ import { Button, Card, Field, Input, PageHeader, useToast } from '@/app/_ekklesi
 import { Icon, type IconName } from '@/app/_ekklesia/icons';
 import { InlineAlert } from '../../_components/kit';
 import { errorMessage } from '../../_lib/errors';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 type Kind = 'people' | 'attendance' | 'finance';
 
 const KINDS: Array<{ kind: Kind; title: string; icon: IconName; body: string; needsRange: boolean }> = [
   {
     kind: 'people',
-    title: 'People',
+    title: tk('People'),
     icon: 'users',
-    body: 'Everyone on record with their main contacts.',
+    body: tk('Everyone on record with their main contacts.'),
     needsRange: false,
   },
   {
     kind: 'attendance',
-    title: 'Attendance',
+    title: tk('Attendance'),
     icon: 'calendar-check',
-    body: 'Attendance records for services and events in a date range.',
+    body: tk('Attendance records for services and events in a date range.'),
     needsRange: true,
   },
   {
     kind: 'finance',
-    title: 'Finance',
+    title: tk('Finance'),
     icon: 'wallet',
-    body: 'Posted journal lines in a date range, for your accountant.',
+    body: tk('Posted journal lines in a date range, for your accountant.'),
     needsRange: true,
   },
 ];
@@ -43,11 +44,11 @@ export function ExportsClient(): React.ReactElement {
   const download = async (kind: Kind, needsRange: boolean): Promise<void> => {
     setError(null);
     if (needsRange && (!from || !to)) {
-      setError('Choose a from and to date for attendance and finance exports.');
+      setError(t('Choose a from and to date for attendance and finance exports.'));
       return;
     }
     if (needsRange && from > to) {
-      setError('The from date must be on or before the to date.');
+      setError(t('The from date must be on or before the to date.'));
       return;
     }
     setBusy(kind);
@@ -68,11 +69,11 @@ export function ExportsClient(): React.ReactElement {
       URL.revokeObjectURL(url);
       push({
         tone: 'success',
-        title: 'Export ready',
-        message: `${res.headers.get('X-Export-Row-Count') ?? 'All'} rows in ${filename}.`,
+        title: t('Export ready'),
+        message: t('{0} rows in {1}.', res.headers.get('X-Export-Row-Count') ?? 'All', filename),
       });
     } catch (err) {
-      setError(errorMessage(err, 'Could not create the export.'));
+      setError(errorMessage(err, t('Could not create the export.')));
     } finally {
       setBusy(null);
     }
@@ -81,15 +82,15 @@ export function ExportsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Exports"
-        lede="Download data as CSV to open in Excel. You only see exports your role allows; every export is recorded in the audit log."
+        title={t('Exports')}
+        lede={t('Download data as CSV to open in Excel. You only see exports your role allows; every export is recorded in the audit log.')}
       />
 
       <div className="grid max-w-md gap-4 sm:grid-cols-2">
-        <Field label="From" hint="Attendance & finance">
+        <Field label={t('From')} hint={t('Attendance & finance')}>
           <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
         </Field>
-        <Field label="To">
+        <Field label={t('To')}>
           <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         </Field>
       </div>
@@ -102,9 +103,9 @@ export function ExportsClient(): React.ReactElement {
             <Card className="flex h-full flex-col gap-3 p-5">
               <div className="flex items-center gap-2 font-medium text-foreground">
                 <Icon name={k.icon} size={18} />
-                {k.title}
+                {t(k.title)}
               </div>
-              <p className="text-sm text-muted-foreground">{k.body}</p>
+              <p className="text-sm text-muted-foreground">{t(k.body)}</p>
               <Button
                 className="mt-auto self-start"
                 size="sm"
@@ -113,7 +114,7 @@ export function ExportsClient(): React.ReactElement {
                 disabled={busy !== null}
                 onClick={() => void download(k.kind, k.needsRange)}
               >
-                Download CSV
+                {t('Download CSV')}
               </Button>
             </Card>
           </li>

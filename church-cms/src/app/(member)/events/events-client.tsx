@@ -24,6 +24,7 @@ import {
   formatRelativeToToday,
   todayIso,
 } from '../_shared/formatters';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 type Filter = 'upcoming' | 'all';
 
@@ -50,9 +51,9 @@ export function MemberEventsClient(): React.ReactElement {
       .catch((e: unknown) => {
         if (cancelled) return;
         if (e instanceof ApiError) {
-          setError(e.message || 'We could not load events just now.');
+          setError(e.message || t('We could not load events just now.'));
         } else {
-          setError('Check your connection and try again.');
+          setError(t('Check your connection and try again.'));
         }
       })
       .finally(() => {
@@ -82,8 +83,8 @@ export function MemberEventsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Events"
-        lede="Services, gatherings, and special moments from your church."
+        title={t('Events')}
+        lede={t('Services, gatherings, and special moments from your church.')}
       />
 
       <Tabs
@@ -97,17 +98,17 @@ export function MemberEventsClient(): React.ReactElement {
         }}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabList aria-label="Event range">
-            <Tab value="upcoming">Upcoming</Tab>
-            <Tab value="all">All</Tab>
+          <TabList aria-label={t('Event range')}>
+            <Tab value="upcoming">{t('Upcoming')}</Tab>
+            <Tab value="all">{t('All')}</Tab>
           </TabList>
           <div className="sm:w-72">
             <SearchField
-              label="Search events"
+              label={t('Search events')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onClear={() => setSearch('')}
-              placeholder="Search by name or type"
+              placeholder={t('Search by name or type')}
             />
           </div>
         </div>
@@ -123,13 +124,13 @@ export function MemberEventsClient(): React.ReactElement {
               tone="sky"
               title={
                 filter === 'upcoming'
-                  ? 'Nothing on the calendar yet'
-                  : 'No events found'
+                  ? t('Nothing on the calendar yet')
+                  : t('No events found')
               }
               description={
                 filter === 'upcoming'
-                  ? 'When your church schedules the next service or gathering, it will show up here.'
-                  : 'Try a different search, or switch to “Upcoming”.'
+                  ? t('When your church schedules the next service or gathering, it will show up here.')
+                  : t('Try a different search, or switch to “Upcoming”.')
               }
             />
           ) : (
@@ -176,7 +177,7 @@ function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
         <div className="flex w-14 shrink-0 flex-col items-center rounded-md border border-border bg-surface px-1 py-1.5 text-center sm:hidden">
           <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {event.serviceDate.slice(5, 7) === '01'
-              ? 'Jan'
+              ? t('Jan')
               : monthShort(event.serviceDate)}
           </span>
           <span className="text-lg font-semibold leading-none text-foreground">
@@ -192,9 +193,9 @@ function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
             {time ? <span> · {time}</span> : null}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {event.status === 'cancelled' ? <Badge tone="peach">Cancelled</Badge> : null}
+            {event.status === 'cancelled' ? <Badge tone="peach">{t('Cancelled')}</Badge> : null}
             <Badge tone="sky">
-              {event.eventTypeName ?? 'Gathering'}
+              {event.eventTypeName ?? t('Gathering')}
             </Badge>
             <Badge tone="neutral">
               {formatRelativeToToday(event.serviceDate)}
@@ -214,7 +215,7 @@ function EventListCard({ event }: { event: MemberEvent }): React.ReactElement {
 function monthShort(iso: string): string {
   const m = Number(iso.slice(5, 7));
   return (
-    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][
+    [t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'), t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec')][
       m - 1
     ] ?? ''
   );
@@ -244,7 +245,7 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
     <Card padding="lg" className="flex flex-col items-start gap-3">
       <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--danger-ink)]">
         <Icon name="alert-circle" size={16} />
-        We couldn&apos;t load events
+        {t('We couldn\'t load events')}
       </div>
       <p className="text-sm text-muted-foreground">{message}</p>
       <Button
@@ -252,7 +253,7 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
         iconLeft="refresh"
         onClick={() => window.location.reload()}
       >
-        Try again
+        {t('Try again')}
       </Button>
     </Card>
   );

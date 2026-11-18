@@ -1,5 +1,6 @@
 import type { AnchorHTMLAttributes } from 'react';
 import { cn } from './utils';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<SkipLink>`. */
 export interface SkipLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
@@ -30,7 +31,7 @@ export function SkipLink({
       )}
       {...rest}
     >
-      {children ?? 'Skip to main content'}
+      {children ?? t('Skip to main content')}
     </a>
   );
 }

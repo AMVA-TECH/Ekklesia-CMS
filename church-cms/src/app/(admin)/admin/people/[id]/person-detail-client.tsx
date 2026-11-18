@@ -31,6 +31,7 @@ import { formatDate, titleCase } from '../../../_lib/format';
 import { asList } from '../../../_lib/list';
 import { AddContactDialog } from './add-contact-dialog';
 import { EditPersonDialog } from './edit-person-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface PersonDetailClientProps {
   personId: string;
@@ -63,7 +64,7 @@ export function PersonDetailClient({
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load this profile.',
+            : t('Unable to load this profile.'),
       );
       setPerson(null);
     } finally {
@@ -96,16 +97,14 @@ export function PersonDetailClient({
       setPerson(updated);
       push({
         tone: 'success',
-        title: nextOptIn ? 'Added to directory' : 'Removed from directory',
-        message: `${updated.displayName} is now ${
-          nextOptIn ? 'visible to members' : 'hidden from the directory'
-        }.`,
+        title: nextOptIn ? t('Added to directory') : t('Removed from directory'),
+        message: t('{0} is now {1}.', updated.displayName, nextOptIn ? 'visible to members' : 'hidden from the directory'),
       });
     } catch (err) {
       push({
         tone: 'danger',
-        title: 'Could not update',
-        message: err instanceof ApiError ? err.message : 'Please try again.',
+        title: t('Could not update'),
+        message: err instanceof ApiError ? err.message : t('Please try again.'),
       });
     }
   };
@@ -129,14 +128,14 @@ export function PersonDetailClient({
               className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
             >
               <Icon name="arrow-left" size={14} />
-              Back to people
+              {t('Back to people')}
             </Link>
           }
-          title="Person not found"
-          lede={error ?? 'We couldn\'t find this record in the directory.'}
+          title={t('Person not found')}
+          lede={error ?? t('We couldn\'t find this record in the directory.')}
           actions={
             <Link href="/admin/people" className={buttonClassName({ variant: 'secondary' })}>
-              Back to list
+              {t('Back to list')}
             </Link>
           }
         />
@@ -156,7 +155,7 @@ export function PersonDetailClient({
             className="inline-flex items-center gap-1 text-foreground hover:text-[color:var(--brand-gold-ink)]"
           >
             <Icon name="arrow-left" size={14} />
-            Back to people
+            {t('Back to people')}
           </Link>
         }
         title={
@@ -173,7 +172,7 @@ export function PersonDetailClient({
               iconLeft="edit"
               onClick={() => setEditOpen(true)}
             >
-              Edit
+              {t('Edit')}
             </Button>
             <Button
               variant="secondary"
@@ -182,7 +181,7 @@ export function PersonDetailClient({
                 void handleToggleDirectory();
               }}
             >
-              {person.directoryOptIn ? 'Hide from directory' : 'Show in directory'}
+              {person.directoryOptIn ? t('Hide from directory') : t('Show in directory')}
             </Button>
           </>
         }
@@ -191,26 +190,26 @@ export function PersonDetailClient({
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Identity</CardTitle>
+            <CardTitle>{t('Identity')}</CardTitle>
             <Badge tone="neutral">{person.preferredLocale.toUpperCase()}</Badge>
           </CardHeader>
           <dl className="space-y-3 text-sm">
-            <Row label="Display name" value={person.displayName} />
-            <Row label="Full name" value={person.fullName ?? '—'} />
+            <Row label={t('Display name')} value={person.displayName} />
+            <Row label={t('Full name')} value={person.fullName ?? '—'} />
             <Row
-              label="Date of birth"
+              label={t('Date of birth')}
               value={person.dateOfBirth ? formatDate(person.dateOfBirth) : '—'}
             />
-            <Row label="Added" value={formatDate(person.createdAt)} />
+            <Row label={t('Added')} value={formatDate(person.createdAt)} />
             <Row
-              label="Directory"
+              label={t('Directory')}
               value={
                 person.directoryOptIn ? (
                   <StatusPill tone="success" hideDot>
-                    Opted in
+                    {t('Opted in')}
                   </StatusPill>
                 ) : (
-                  <span className="text-muted-foreground">Private</span>
+                  <span className="text-muted-foreground">{t('Private')}</span>
                 )
               }
             />
@@ -219,7 +218,7 @@ export function PersonDetailClient({
 
         <Card>
           <CardHeader>
-            <CardTitle>Primary contact</CardTitle>
+            <CardTitle>{t('Primary contact')}</CardTitle>
           </CardHeader>
           {primaryContact ? (
             <div className="space-y-3 text-sm">
@@ -233,23 +232,23 @@ export function PersonDetailClient({
               </p>
               <p className="text-xs text-muted-foreground">
                 {person.contacts.length === 1
-                  ? 'Only contact on file.'
-                  : `+${person.contacts.length - 1} more on record.`}
+                  ? t('Only contact on file.')
+                  : t('+{0} more on record.', person.contacts.length - 1)}
               </p>
             </div>
           ) : (
             <EmptyState
               icon="phone"
               tone="sky"
-              title="No contact yet"
-              description="Add a phone or email so your team can reach this person."
+              title={t('No contact yet')}
+              description={t('Add a phone or email so your team can reach this person.')}
               action={
                 <Button
                   size="sm"
                   iconLeft="plus"
                   onClick={() => setContactOpen(true)}
                 >
-                  Add contact
+                  {t('Add contact')}
                 </Button>
               }
             />
@@ -258,12 +257,12 @@ export function PersonDetailClient({
 
         <Card>
           <CardHeader>
-            <CardTitle>Memberships</CardTitle>
+            <CardTitle>{t('Memberships')}</CardTitle>
             <Badge tone="neutral">{memberships.length}</Badge>
           </CardHeader>
           {memberships.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Not currently linked to any membership record.
+              {t('Not currently linked to any membership record.')}
             </p>
           ) : (
             <ul className="space-y-2 text-sm">
@@ -277,8 +276,8 @@ export function PersonDetailClient({
                       {titleCase(m.membershipType)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      From {formatDate(m.effectiveFrom)}
-                      {m.effectiveTo ? ` · to ${formatDate(m.effectiveTo)}` : ''}
+                      {t('From')} {formatDate(m.effectiveFrom)}
+                      {m.effectiveTo ? (' ' + t('· to {0}', formatDate(m.effectiveTo))) : ''}
                     </p>
                   </div>
                   <StatusPill tone={membershipStatusTone(m.status)}>
@@ -292,8 +291,8 @@ export function PersonDetailClient({
       </div>
 
       <Panel
-        title="All contact channels"
-        subtitle="Primary channel shown first."
+        title={t('All contact channels')}
+        subtitle={t('Primary channel shown first.')}
         flush
         actions={
           <Button
@@ -302,7 +301,7 @@ export function PersonDetailClient({
             iconLeft="plus"
             onClick={() => setContactOpen(true)}
           >
-            Add contact
+            {t('Add contact')}
           </Button>
         }
       >
@@ -310,15 +309,15 @@ export function PersonDetailClient({
           <EmptyState
             icon="mail"
             tone="neutral"
-            title="No channels on file"
-            description="Contact channels appear here once added to this person."
+            title={t('No channels on file')}
+            description={t('Contact channels appear here once added to this person.')}
             action={
               <Button
                 size="sm"
                 iconLeft="plus"
                 onClick={() => setContactOpen(true)}
               >
-                Add contact
+                {t('Add contact')}
               </Button>
             }
           />
@@ -327,9 +326,9 @@ export function PersonDetailClient({
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Channel</TH>
-                  <TH>Value</TH>
-                  <TH>Primary</TH>
+                  <TH>{t('Channel')}</TH>
+                  <TH>{t('Value')}</TH>
+                  <TH>{t('Primary')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -351,7 +350,7 @@ export function PersonDetailClient({
                       <TD>
                         {c.isPrimary ? (
                           <StatusPill tone="success" hideDot>
-                            Primary
+                            {t('Primary')}
                           </StatusPill>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
@@ -373,8 +372,8 @@ export function PersonDetailClient({
           setPerson(updated);
           push({
             tone: 'success',
-            title: 'Person updated',
-            message: `${updated.displayName}'s details were saved.`,
+            title: t('Person updated'),
+            message: t('{0}\'s details were saved.', updated.displayName),
           });
         }}
       />
@@ -386,8 +385,8 @@ export function PersonDetailClient({
           setPerson(updated);
           push({
             tone: 'success',
-            title: 'Contact added',
-            message: 'The new channel is on file.',
+            title: t('Contact added'),
+            message: t('The new channel is on file.'),
           });
         }}
       />
@@ -405,7 +404,7 @@ function Row({
   return (
     <div className="flex items-start justify-between gap-3">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
+        {t(label)}
       </dt>
       <dd className="text-right text-sm text-foreground">{value}</dd>
     </div>

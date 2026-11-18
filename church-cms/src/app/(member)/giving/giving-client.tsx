@@ -18,6 +18,7 @@ import { Icon } from '@/app/_ekklesia/icons';
 import type { MemberPledge } from '../_shared/api-types';
 import { formatMoney, formatRelativeToToday } from '../_shared/formatters';
 import { useNameLookup } from '../_shared/use-name-lookup';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 export function GivingClient(): React.ReactElement {
   const [pledges, setPledges] = useState<MemberPledge[] | null>(null);
@@ -40,7 +41,7 @@ export function GivingClient(): React.ReactElement {
         } else if (e instanceof ApiError) {
           setError(e.message);
         } else {
-          setError('Check your connection and try again.');
+          setError(t('Check your connection and try again.'));
         }
       })
       .finally(() => {
@@ -67,14 +68,14 @@ export function GivingClient(): React.ReactElement {
     return (
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Giving"
-          lede="Your pledges and offerings with this church."
+          title={t('Giving')}
+          lede={t('Your pledges and offerings with this church.')}
         />
         <EmptyState
           icon="hand"
           tone="gold"
-          title="Giving is private"
-          description="Giving details are shared with members as your church rolls them out. Your church office can tell you when this will be available for your account."
+          title={t('Giving is private')}
+          description={t('Giving details are shared with members as your church rolls them out. Your church office can tell you when this will be available for your account.')}
         />
       </div>
     );
@@ -83,8 +84,8 @@ export function GivingClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Giving"
-        lede="Your pledges and offerings with this church."
+        title={t('Giving')}
+        lede={t('Your pledges and offerings with this church.')}
       />
 
       {loading ? (
@@ -95,14 +96,14 @@ export function GivingClient(): React.ReactElement {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <Metric
-              label="Open pledges"
+              label={t('Open pledges')}
               value={summary.count.toString()}
               icon="hand"
               tone="gold"
-              hint={summary.count === 0 ? 'Nothing outstanding' : 'Still to pay'}
+              hint={summary.count === 0 ? t('Nothing outstanding') : t('Still to pay')}
             />
             <Metric
-              label="Remaining"
+              label={t('Remaining')}
               value={
                 summary.count === 0
                   ? '—'
@@ -112,7 +113,7 @@ export function GivingClient(): React.ReactElement {
               tone="gold"
             />
             <Metric
-              label="Pledged so far"
+              label={t('Pledged so far')}
               value={
                 summary.count === 0
                   ? '—'
@@ -124,15 +125,15 @@ export function GivingClient(): React.ReactElement {
           </div>
 
           <Panel
-            title="Open pledges"
-            subtitle="Promises you made to support a fund."
+            title={t('Open pledges')}
+            subtitle={t('Promises you made to support a fund.')}
           >
             {(pledges ?? []).length === 0 ? (
               <EmptyState
                 icon="hand"
                 tone="gold"
-                title="You’re all caught up"
-                description="You don’t have any open pledges. When you make a new pledge with your church, it will appear here."
+                title={t('You’re all caught up')}
+                description={t('You don’t have any open pledges. When you make a new pledge with your church, it will appear here.')}
               />
             ) : (
               <ul className="flex flex-col divide-y divide-border">
@@ -150,17 +151,17 @@ export function GivingClient(): React.ReactElement {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground">
-                            {fundNames.get(pledge.fundId) ?? 'Pledge to a church fund'}
+                            {fundNames.get(pledge.fundId) ?? t('Pledge to a church fund')}
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            Promised {formatMoney(pledge.amountMinor, pledge.currency)}
+                            {t('Promised')} {formatMoney(pledge.amountMinor, pledge.currency)}
                             {pledge.dueOn
-                              ? ` · Due ${formatRelativeToToday(pledge.dueOn)}`
+                              ? (' ' + t('· Due {0}', formatRelativeToToday(pledge.dueOn)))
                               : null}
                           </p>
                         </div>
                         <StatusPill tone={overdue ? 'warning' : 'pending'}>
-                          {overdue ? 'Overdue' : 'Open'}
+                          {overdue ? t('Overdue') : t('Open')}
                         </StatusPill>
                       </div>
                       <div className="mt-3">
@@ -170,7 +171,7 @@ export function GivingClient(): React.ReactElement {
                           aria-valuenow={progress}
                           aria-valuemin={0}
                           aria-valuemax={100}
-                          aria-label={`${progress}% paid`}
+                          aria-label={t('{0}% paid', progress)}
                         >
                           <div
                             className="h-full rounded-full bg-brand-gold motion-reduce:transition-none"
@@ -179,10 +180,10 @@ export function GivingClient(): React.ReactElement {
                         </div>
                         <p className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
                           <span>
-                            {formatMoney(applied, pledge.currency)} paid
+                            {formatMoney(applied, pledge.currency)} {t('paid')}
                           </span>
                           <span>
-                            {formatMoney(remaining, pledge.currency)} to go
+                            {formatMoney(remaining, pledge.currency)} {t('to go')}
                           </span>
                         </p>
                       </div>
@@ -201,15 +202,14 @@ export function GivingClient(): React.ReactElement {
               <Icon name="info" size={18} />
             </span>
             <div>
-              <CardTitle>How to pay</CardTitle>
+              <CardTitle>{t('How to pay')}</CardTitle>
               <CardSubtitle>
-                Your church will share payment instructions when mobile money or
-                bank options are set up. For now, drop by the church office to make a payment.
+                {t('Your church will share payment instructions when mobile money or bank options are set up. For now, drop by the church office to make a payment.')}
               </CardSubtitle>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Badge tone="neutral">M-Pesa · coming soon</Badge>
-                <Badge tone="neutral">Tigo Pesa · coming soon</Badge>
-                <Badge tone="neutral">Bank transfer · coming soon</Badge>
+                <Badge tone="neutral">{t('M-Pesa · coming soon')}</Badge>
+                <Badge tone="neutral">{t('Tigo Pesa · coming soon')}</Badge>
+                <Badge tone="neutral">{t('Bank transfer · coming soon')}</Badge>
               </div>
             </div>
           </Card>
@@ -241,7 +241,7 @@ function ErrorCard({ message }: { message: string }): React.ReactElement {
         className="text-[color:var(--danger-ink)] mt-0.5"
       />
       <div>
-        <CardTitle>We couldn’t load your giving</CardTitle>
+        <CardTitle>{t('We couldn’t load your giving')}</CardTitle>
         <CardSubtitle>{message}</CardSubtitle>
       </div>
     </Card>

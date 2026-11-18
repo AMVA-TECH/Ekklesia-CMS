@@ -11,6 +11,7 @@ import {
   Select,
   Textarea,
 } from '@/app/_ekklesia/ui';
+import { t, tk } from '@/app/_ekklesia/i18n/core';
 
 export interface MessageTemplateRow {
   id: string;
@@ -31,15 +32,15 @@ interface CreateTemplateDialogProps {
 }
 
 const CHANNELS = [
-  { value: 'sms', label: 'SMS' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'email', label: 'Email' },
-  { value: 'in_app', label: 'In-app' },
+  { value: 'sms', label: tk('SMS') },
+  { value: 'whatsapp', label: tk('WhatsApp') },
+  { value: 'email', label: tk('Email') },
+  { value: 'in_app', label: tk('In-app') },
 ] as const;
 
 const LOCALES = [
-  { value: 'en', label: 'English' },
-  { value: 'sw', label: 'Kiswahili' },
+  { value: 'en', label: tk('English') },
+  { value: 'sw', label: tk('Kiswahili') },
 ] as const;
 
 /**
@@ -148,8 +149,8 @@ export function CreateTemplateDialog({
           err instanceof Error
             ? err.message
             : editing
-              ? 'Could not save template.'
-              : 'Could not create template.',
+              ? t('Could not save template.')
+              : t('Could not create template.'),
         );
       }
       setSubmitting(false);
@@ -165,11 +166,11 @@ export function CreateTemplateDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title={editing ? 'Edit template' : 'New template'}
+      title={editing ? t('Edit template') : t('New template')}
       description={
         editing
-          ? 'Update the saved message your team can reuse when texting.'
-          : 'Save a message once, then reuse it when you send to the church.'
+          ? t('Update the saved message your team can reuse when texting.')
+          : t('Save a message once, then reuse it when you send to the church.')
       }
       size="md"
       footer={
@@ -179,14 +180,14 @@ export function CreateTemplateDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
             {submitting
-              ? 'Saving…'
+              ? t('Saving…')
               : editing
-                ? 'Save changes'
-                : 'Create template'}
+                ? t('Save changes')
+                : t('Create template')}
           </Button>
         </DialogFooter>
       }
@@ -208,26 +209,26 @@ export function CreateTemplateDialog({
         ) : null}
 
         <Field
-          label="Name"
+          label={t('Name')}
           required
-          hint="A plain label your team will recognise — e.g. Sunday welcome."
+          hint={t('A plain label your team will recognise — e.g. Sunday welcome.')}
           error={fieldErrors.name}
         >
           <Input
             data-autofocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Sunday welcome"
+            placeholder={t('Sunday welcome')}
             maxLength={120}
           />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="Send as"
+            label={t('Send as')}
             required
             error={fieldErrors.channel}
-            hint={editing ? 'Channel cannot be changed after create.' : undefined}
+            hint={editing ? t('Channel cannot be changed after create.') : undefined}
           >
             <Select
               value={channel}
@@ -236,17 +237,17 @@ export function CreateTemplateDialog({
             >
               {CHANNELS.map((c) => (
                 <option key={c.value} value={c.value}>
-                  {c.label}
+                  {t(c.label)}
                 </option>
               ))}
             </Select>
           </Field>
 
-          <Field label="Language" error={fieldErrors.locale}>
+          <Field label={t('Language')} error={fieldErrors.locale}>
             <Select value={locale} onChange={(e) => setLocale(e.target.value)}>
               {LOCALES.map((l) => (
                 <option key={l.value} value={l.value}>
-                  {l.label}
+                  {t(l.label)}
                 </option>
               ))}
             </Select>
@@ -254,7 +255,7 @@ export function CreateTemplateDialog({
         </div>
 
         <Field
-          label="Message"
+          label={t('Message')}
           required
           hint={smsHint ?? undefined}
           error={fieldErrors.body}
@@ -262,7 +263,7 @@ export function CreateTemplateDialog({
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Karibu — service starts at 10:00…"
+            placeholder={t('Karibu — service starts at 10:00…')}
             rows={5}
             maxLength={2000}
           />

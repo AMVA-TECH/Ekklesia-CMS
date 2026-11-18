@@ -1,3 +1,4 @@
+import { tk } from '@/app/_ekklesia/i18n/core';
 /**
  * Daily devotional pool.
  *
@@ -19,43 +20,43 @@ export interface Devotional {
 const POOL: readonly Devotional[] = [
   {
     quote:
-      'Blessed are those who dwell in your house; they are ever praising you.',
-    attribution: 'Psalm 84:4',
-    thought: 'Church is more than a place — it is a shared home. Welcome back.',
+      tk('Blessed are those who dwell in your house; they are ever praising you.'),
+    attribution: tk('Psalm 84:4'),
+    thought: tk('Church is more than a place — it is a shared home. Welcome back.'),
   },
   {
     quote:
-      'Let us consider how we may spur one another on toward love and good deeds.',
-    attribution: 'Hebrews 10:24',
-    thought: 'Who in your church family could use a kind word this week?',
+      tk('Let us consider how we may spur one another on toward love and good deeds.'),
+    attribution: tk('Hebrews 10:24'),
+    thought: tk('Who in your church family could use a kind word this week?'),
   },
   {
-    quote: 'The Lord is my shepherd; I lack nothing.',
-    attribution: 'Psalm 23:1',
-    thought: 'Pause for a breath. God sees the week you are carrying.',
-  },
-  {
-    quote:
-      'Be strong and courageous. Do not be afraid; for the Lord your God is with you wherever you go.',
-    attribution: 'Joshua 1:9',
-    thought: 'Take one small faithful step today.',
-  },
-  {
-    quote: 'Love is patient, love is kind.',
-    attribution: '1 Corinthians 13:4',
-    thought: 'Patience in small things builds a church family over time.',
+    quote: tk('The Lord is my shepherd; I lack nothing.'),
+    attribution: tk('Psalm 23:1'),
+    thought: tk('Pause for a breath. God sees the week you are carrying.'),
   },
   {
     quote:
-      'He has shown you, O mortal, what is good: to act justly, love mercy, and walk humbly with your God.',
-    attribution: 'Micah 6:8',
-    thought: 'Justice, mercy, humility — a simple map for today.',
+      tk('Be strong and courageous. Do not be afraid; for the Lord your God is with you wherever you go.'),
+    attribution: tk('Joshua 1:9'),
+    thought: tk('Take one small faithful step today.'),
+  },
+  {
+    quote: tk('Love is patient, love is kind.'),
+    attribution: tk('1 Corinthians 13:4'),
+    thought: tk('Patience in small things builds a church family over time.'),
   },
   {
     quote:
-      'Do not be anxious about anything, but in every situation, by prayer and petition, present your requests to God.',
-    attribution: 'Philippians 4:6',
-    thought: 'Lay today down. The Lord is near.',
+      tk('He has shown you, O mortal, what is good: to act justly, love mercy, and walk humbly with your God.'),
+    attribution: tk('Micah 6:8'),
+    thought: tk('Justice, mercy, humility — a simple map for today.'),
+  },
+  {
+    quote:
+      tk('Do not be anxious about anything, but in every situation, by prayer and petition, present your requests to God.'),
+    attribution: tk('Philippians 4:6'),
+    thought: tk('Lay today down. The Lord is near.'),
   },
 ];
 

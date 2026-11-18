@@ -13,6 +13,7 @@ import {
 import type { Fund, Person, Pledge } from '../../../_lib/api-types';
 import { asList } from '../../../_lib/list';
 import { extractValidationErrors } from '../../people/form-errors';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface CreatePledgeDialogProps {
   open: boolean;
@@ -93,12 +94,12 @@ export function CreatePledgeDialog({
     event.preventDefault();
     if (submitting) return;
     if (!personId) {
-      setFieldErrors({ personId: 'Pick a person from the search results.' });
+      setFieldErrors({ personId: t('Pick a person from the search results.') });
       return;
     }
     const amountNumber = Number(amount);
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-      setFieldErrors({ amountMinor: 'Enter an amount greater than zero.' });
+      setFieldErrors({ amountMinor: t('Enter an amount greater than zero.') });
       return;
     }
     setSubmitting(true);
@@ -125,7 +126,7 @@ export function CreatePledgeDialog({
         setFormError(parsed.formError ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create pledge.',
+          err instanceof Error ? err.message : t('Could not create pledge.'),
         );
       }
       setSubmitting(false);
@@ -138,8 +139,8 @@ export function CreatePledgeDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New pledge"
-      description="Record a promise of giving. Amount is entered in the major unit (e.g. TZS 10,000)."
+      title={t('New pledge')}
+      description={t('Record a promise of giving. Amount is entered in the major unit (e.g. TZS 10,000).')}
       size="sm"
       footer={
         <DialogFooter>
@@ -148,10 +149,10 @@ export function CreatePledgeDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Create pledge'}
+            {submitting ? t('Saving…') : t('Create pledge')}
           </Button>
         </DialogFooter>
       }
@@ -173,9 +174,9 @@ export function CreatePledgeDialog({
         ) : null}
 
         <Field
-          label="Person"
+          label={t('Person')}
           required
-          hint={searching ? 'Searching…' : 'Type at least 2 letters'}
+          hint={searching ? t('Searching…') : t('Type at least 2 letters')}
           error={fieldErrors.personId}
         >
           <Input
@@ -186,7 +187,7 @@ export function CreatePledgeDialog({
               if (e.target.value.trim().length < 2) setResults([]);
               setPersonId('');
             }}
-            placeholder="Name…"
+            placeholder={t('Name…')}
           />
         </Field>
 
@@ -223,14 +224,14 @@ export function CreatePledgeDialog({
 
         {selected ? (
           <p className="text-xs text-muted-foreground">
-            Selected: {selected.displayName}
+            {t('Selected:')} {selected.displayName}
           </p>
         ) : null}
 
         <Field
-          label="Amount"
+          label={t('Amount')}
           required
-          hint="Entered in the main currency unit (e.g. TZS)."
+          hint={t('Entered in the main currency unit (e.g. TZS).')}
           error={fieldErrors.amountMinor}
         >
           <Input
@@ -244,9 +245,9 @@ export function CreatePledgeDialog({
           />
         </Field>
 
-        <Field label="Fund" hint="Optional" error={fieldErrors.fundId}>
+        <Field label={t('Fund')} hint={t('Optional')} error={fieldErrors.fundId}>
           <Select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-            <option value="">Unassigned</option>
+            <option value="">{t('Unassigned')}</option>
             {funds.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name} ({f.code})
@@ -255,7 +256,7 @@ export function CreatePledgeDialog({
           </Select>
         </Field>
 
-        <Field label="Due date" hint="Optional" error={fieldErrors.dueOn}>
+        <Field label={t('Due date')} hint={t('Optional')} error={fieldErrors.dueOn}>
           <Input
             type="date"
             value={dueOn}

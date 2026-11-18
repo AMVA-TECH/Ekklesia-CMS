@@ -16,6 +16,7 @@ import {
 import type { OrganisationalUnit } from '../../_lib/api-types';
 import { asList } from '../../_lib/list';
 import { CreateUnitDialog } from '../ministries/create-unit-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 function buildTree(units: OrganisationalUnit[]): Array<{
   unit: OrganisationalUnit;
@@ -75,7 +76,7 @@ export function OrganisationClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load organisational structure',
+            : t('Unable to load organisational structure'),
       );
     } finally {
       setLoading(false);
@@ -98,7 +99,7 @@ export function OrganisationClient(): React.ReactElement {
       setUnits((prev) => prev.map((u) => (u.id === unit.id ? updated : u)));
       push({
         tone: 'success',
-        message: next === 'active' ? 'Unit activated.' : 'Unit deactivated.',
+        message: next === 'active' ? t('Unit activated.') : t('Unit deactivated.'),
       });
     } catch (err) {
       push({
@@ -106,7 +107,7 @@ export function OrganisationClient(): React.ReactElement {
         message:
           err instanceof ApiError
             ? err.message
-            : 'Could not update unit status.',
+            : t('Could not update unit status.'),
       });
     } finally {
       setTogglingId(null);
@@ -116,17 +117,17 @@ export function OrganisationClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Organisation"
-        lede="Hierarchical units for this church. Structure does not grant system permissions."
+        title={t('Organisation')}
+        lede={t('Hierarchical units for this church. Structure does not grant system permissions.')}
         actions={
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            Add unit
+            {t('Add unit')}
           </Button>
         }
       />
 
       {loading ? (
-        <Panel title="Structure">
+        <Panel title={t('Structure')}>
           <div className="flex flex-col gap-3 p-4">
             <Skeleton size="heading" />
             <Skeleton size="line" />
@@ -137,11 +138,11 @@ export function OrganisationClient(): React.ReactElement {
         <EmptyState
           icon="building"
           tone="gold"
-          title="Could not load structure"
+          title={t('Could not load structure')}
           description={error}
           action={
             <Button variant="secondary" onClick={() => void load()}>
-              Try again
+              {t('Try again')}
             </Button>
           }
         />
@@ -149,16 +150,16 @@ export function OrganisationClient(): React.ReactElement {
         <EmptyState
           icon="building"
           tone="gold"
-          title="No organisational units yet"
-          description="Create departments, ministries, teams, or branches for this church."
+          title={t('No organisational units yet')}
+          description={t('Create departments, ministries, teams, or branches for this church.')}
           action={
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              Add unit
+              {t('Add unit')}
             </Button>
           }
         />
       ) : (
-        <Panel title="Structure">
+        <Panel title={t('Structure')}>
           <ul className="divide-y divide-border">
             {tree.map(({ unit, depth }) => (
               <li
@@ -177,7 +178,7 @@ export function OrganisationClient(): React.ReactElement {
                     <Badge>{unit.code}</Badge>
                     <Badge>{unit.kind.replace('_', ' ')}</Badge>
                     {unit.metadata?.proposed === true ? (
-                      <Badge>Proposed</Badge>
+                      <Badge>{t('Proposed')}</Badge>
                     ) : null}
                     <StatusPill
                       tone={unit.status === 'active' ? 'success' : 'neutral'}
@@ -194,7 +195,7 @@ export function OrganisationClient(): React.ReactElement {
                 <div className="flex flex-wrap gap-2">
                   <Link href={`/admin/organisation/${unit.id}`}>
                     <Button size="sm" variant="secondary">
-                      Open
+                      {t('Open')}
                     </Button>
                   </Link>
                   <Button
@@ -203,7 +204,7 @@ export function OrganisationClient(): React.ReactElement {
                     loading={togglingId === unit.id}
                     onClick={() => void toggleStatus(unit)}
                   >
-                    {unit.status === 'active' ? 'Deactivate' : 'Activate'}
+                    {unit.status === 'active' ? t('Deactivate') : t('Activate')}
                   </Button>
                 </div>
               </li>
@@ -219,7 +220,7 @@ export function OrganisationClient(): React.ReactElement {
         onCreated={(unit) => {
           setUnits((prev) => [...prev, unit]);
           setCreateOpen(false);
-          push({ tone: 'success', message: 'Unit created.' });
+          push({ tone: 'success', message: t('Unit created.') });
         }}
       />
     </div>

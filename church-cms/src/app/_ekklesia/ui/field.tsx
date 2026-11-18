@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { cn } from './utils';
+import { t, tn } from '@/app/_ekklesia/i18n/core';
 
 /** Props for `<Field>` form row wrapper. */
 export interface FieldProps extends HTMLAttributes<HTMLDivElement> {
@@ -82,7 +83,7 @@ export function Field({
           htmlFor={controlId}
           className="text-sm font-medium text-foreground"
         >
-          {label}
+          {tn(label)}
           {required ? (
             <span
               aria-hidden="true"
@@ -91,7 +92,7 @@ export function Field({
               *
             </span>
           ) : null}
-          {required ? <span className="sr-only"> (required)</span> : null}
+          {required ? <span className="sr-only"> {t('(required)')}</span> : null}
         </label>
         {labelAccessory ? (
           <span className="text-xs text-muted-foreground">{labelAccessory}</span>
@@ -100,7 +101,7 @@ export function Field({
       {enriched}
       {hint && !error ? (
         <p id={hintId} className="text-xs text-muted-foreground">
-          {hint}
+          {tn(hint)}
         </p>
       ) : null}
       {error ? (

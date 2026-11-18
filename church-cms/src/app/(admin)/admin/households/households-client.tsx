@@ -25,6 +25,7 @@ import {
 import { Icon } from '@/app/_ekklesia/icons';
 import type { Household, ListEnvelope, ListMeta } from '../../_lib/api-types';
 import { CreateHouseholdDialog } from './create-household-dialog';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 const PAGE_SIZE = 25;
 
@@ -76,7 +77,7 @@ export function HouseholdsClient(): React.ReactElement {
           ? err.message
           : err instanceof Error
             ? err.message
-            : 'Unable to load households',
+            : t('Unable to load households'),
       );
     } finally {
       setLoading(false);
@@ -105,11 +106,11 @@ export function HouseholdsClient(): React.ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Households"
-        lede="Families and groups sharing a home or a primary contact. Add a household when a family wants to be contacted as one."
+        title={t('Households')}
+        lede={t('Families and groups sharing a home or a primary contact. Add a household when a family wants to be contacted as one.')}
         actions={
           <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            New household
+            {t('New household')}
           </Button>
         }
       />
@@ -117,8 +118,8 @@ export function HouseholdsClient(): React.ReactElement {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="max-w-md flex-1">
           <SearchField
-            label="Search households"
-            placeholder="Search by label"
+            label={t('Search households')}
+            placeholder={t('Search by label')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onClear={() => setSearch('')}
@@ -127,7 +128,7 @@ export function HouseholdsClient(): React.ReactElement {
         <p className="text-xs text-muted-foreground">
           {loading ? (
             <span className="inline-flex items-center gap-2">
-              <Spinner size="xs" label="Loading" /> Loading…
+              <Spinner size="xs" label={t('Loading')} /> {t('Loading…')}
             </span>
           ) : (
             `${households.length} shown`
@@ -138,13 +139,13 @@ export function HouseholdsClient(): React.ReactElement {
       <Panel
         title={
           debouncedSearch
-            ? `Results for "${debouncedSearch}"`
-            : 'All households'
+            ? t('Results for "{0}"', debouncedSearch)
+            : t('All households')
         }
         subtitle={
           error
-            ? 'We couldn\'t load households.'
-            : 'Grouped by label.'
+            ? t('We couldn\'t load households.')
+            : t('Grouped by label.')
         }
         flush
       >
@@ -153,7 +154,7 @@ export function HouseholdsClient(): React.ReactElement {
             {error}
             <div className="mt-3">
               <Button variant="secondary" size="sm" onClick={load}>
-                Try again
+                {t('Try again')}
               </Button>
             </div>
           </div>
@@ -166,11 +167,11 @@ export function HouseholdsClient(): React.ReactElement {
           <EmptyState
             icon="building"
             tone="peach"
-            title={debouncedSearch ? 'No matches' : 'No households yet'}
+            title={debouncedSearch ? t('No matches') : t('No households yet')}
             description={
               debouncedSearch
-                ? 'Try another label, or clear the search.'
-                : 'Add the first family to start grouping members.'
+                ? t('Try another label, or clear the search.')
+                : t('Add the first family to start grouping members.')
             }
             action={
               <Button
@@ -178,7 +179,7 @@ export function HouseholdsClient(): React.ReactElement {
                 iconLeft="plus"
                 onClick={() => setCreateOpen(true)}
               >
-                New household
+                {t('New household')}
               </Button>
             }
           />
@@ -187,10 +188,10 @@ export function HouseholdsClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
-                  <TH>Household</TH>
-                  <TH>Members</TH>
-                  <TH>Children</TH>
-                  <TH>Emergency contact</TH>
+                  <TH>{t('Household')}</TH>
+                  <TH>{t('Members')}</TH>
+                  <TH>{t('Children')}</TH>
+                  <TH>{t('Emergency contact')}</TH>
                   <TH className="w-10" />
                 </TR>
               </THead>
@@ -202,7 +203,7 @@ export function HouseholdsClient(): React.ReactElement {
                         href={`/admin/households/${h.id}`}
                         className="focus-ring rounded-sm"
                       >
-                        <p className="font-medium text-foreground">{h.label}</p>
+                        <p className="font-medium text-foreground">{t(h.label)}</p>
                         {h.sharedAddress ? (
                           <p className="text-xs text-muted-foreground">
                             {h.sharedAddress}
@@ -232,14 +233,14 @@ export function HouseholdsClient(): React.ReactElement {
                         </span>
                       ) : (
                         <span className="text-xs text-muted-foreground">
-                          Not set
+                          {t('Not set')}
                         </span>
                       )}
                     </TD>
                     <TD className="text-right">
                       <Link
                         href={`/admin/households/${h.id}`}
-                        aria-label={`Open ${h.label}`}
+                        aria-label={t('Open {0}', h.label)}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-ring"
                       >
                         <Icon name="chevron-right" size={16} />
@@ -268,8 +269,8 @@ export function HouseholdsClient(): React.ReactElement {
         onCreated={(h) => {
           push({
             tone: 'success',
-            title: 'Household added',
-            message: `${h.label} is on your list.`,
+            title: t('Household added'),
+            message: t('{0} is on your list.', h.label),
           });
           setCreateOpen(false);
           void load();

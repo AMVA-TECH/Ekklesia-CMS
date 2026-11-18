@@ -11,6 +11,7 @@ import {
   Textarea,
 } from '@/app/_ekklesia/ui';
 import type { Household } from '../../_lib/api-types';
+import { t } from '@/app/_ekklesia/i18n/core';
 
 interface CreateHouseholdDialogProps {
   open: boolean;
@@ -93,7 +94,7 @@ export function CreateHouseholdDialog({
         setFormError(body?.error ?? err.message);
       } else {
         setFormError(
-          err instanceof Error ? err.message : 'Could not create this household.',
+          err instanceof Error ? err.message : t('Could not create this household.'),
         );
       }
       setSubmitting(false);
@@ -104,8 +105,8 @@ export function CreateHouseholdDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      title="New household"
-      description="Just a label and optional shared contact details to get started. You can link people once it's created."
+      title={t('New household')}
+      description={t('Just a label and optional shared contact details to get started. You can link people once it\'s created.')}
       size="md"
       footer={
         <DialogFooter>
@@ -114,10 +115,10 @@ export function CreateHouseholdDialog({
             onClick={handleClose}
             disabled={submitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="submit" form={formId} loading={submitting}>
-            {submitting ? 'Saving…' : 'Create household'}
+            {submitting ? t('Saving…') : t('Create household')}
           </Button>
         </DialogFooter>
       }
@@ -139,9 +140,9 @@ export function CreateHouseholdDialog({
         ) : null}
 
         <Field
-          label="Label"
+          label={t('Label')}
           required
-          hint="e.g. 'The Noah household' or 'Mwakimi family'."
+          hint={t('e.g. \'The Noah household\' or \'Mwakimi family\'.')}
           error={fieldErrors.label}
         >
           <Input
@@ -153,8 +154,8 @@ export function CreateHouseholdDialog({
         </Field>
 
         <Field
-          label="Shared address"
-          hint="Used in pastoral visits and emergency contact."
+          label={t('Shared address')}
+          hint={t('Used in pastoral visits and emergency contact.')}
           error={fieldErrors.sharedAddress}
         >
           <Textarea
@@ -166,7 +167,7 @@ export function CreateHouseholdDialog({
         </Field>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Emergency contact name" error={fieldErrors.emergencyContactName}>
+          <Field label={t('Emergency contact name')} error={fieldErrors.emergencyContactName}>
             <Input
               value={emergencyName}
               onChange={(e) => setEmergencyName(e.target.value)}
@@ -174,8 +175,8 @@ export function CreateHouseholdDialog({
             />
           </Field>
           <Field
-            label="Emergency phone"
-            hint="E.164 format, e.g. +255712345678"
+            label={t('Emergency phone')}
+            hint={t('E.164 format, e.g. +255712345678')}
             error={fieldErrors.emergencyContactPhone}
           >
             <Input
