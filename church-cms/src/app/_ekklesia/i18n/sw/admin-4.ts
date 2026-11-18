@@ -302,6 +302,10 @@ export const swAdmin4: Record<string, string> = {
   'Optional — YYYY-MM-DD': 'Si lazima — YYYY-MM-DD',
   'Opt in to appear in the church directory.': 'Kubali kuonekana kwenye orodha ya washirika.',
 
+  'The member': 'Mshirika',
+  'This member': 'Mshirika huyu',
+  'This household': 'Familia hii',
+
   // Admin shell and shared kit
   'Signed in': 'Umeingia',
   Admin: 'Msimamizi',

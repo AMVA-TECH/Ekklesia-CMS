@@ -150,7 +150,7 @@ export function ReportsClient({
                               setRunError(null);
                             }}
                           >
-                            {r.name}
+                            {t(r.name)}
                             <span className="ml-1 text-xs text-muted-foreground">{r.id}</span>
                           </button>
                         </li>
@@ -204,7 +204,7 @@ export function ReportsClient({
         </div>
 
         <Panel
-          title={current ? current.name : t('Choose a report')}
+          title={current ? t(current.name) : t('Choose a report')}
           subtitle={
             result ? t('Generated {0}', formatDateTime(result.generatedAt)) : current?.id
           }

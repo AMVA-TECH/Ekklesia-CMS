@@ -13,8 +13,10 @@ import { swAdmin4 } from './sw/admin-4';
 import { swAuth } from './sw/auth';
 import { swLabels } from './sw/labels';
 import { swMember } from './sw/member';
+import { swReports } from './sw/reports';
 
 export const sw: Readonly<Record<string, string>> = {
+  ...swReports,
   ...swLabels,
   ...swAdmin4,
   ...swAdmin3,

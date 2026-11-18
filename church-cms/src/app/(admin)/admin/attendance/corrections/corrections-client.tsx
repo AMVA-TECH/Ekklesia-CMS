@@ -149,7 +149,7 @@ export function CorrectionsClient(): React.ReactElement {
                             onClick={() =>
                               void run(c.id, () => resolve(c, 'approve'), {
                                 success: t('Attendance updated'),
-                                detail: t('{0} is now marked {1}.', names[c.personId] ?? 'The member', c.requestedPresence),
+                                detail: t('{0} is now marked {1}.', names[c.personId] ?? t('The member'), titleCase(c.requestedPresence).toLowerCase()),
                                 failure: t('Could not approve'),
                               })
                             }

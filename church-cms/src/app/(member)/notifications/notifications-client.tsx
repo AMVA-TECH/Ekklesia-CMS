@@ -248,7 +248,7 @@ function ChannelToggle({
         checked={value}
         onChange={onChange}
         className="mt-1 h-5 w-5 shrink-0 rounded-sm border-border accent-[color:var(--brand-gold-ink)] focus:outline-none"
-        aria-label={`${meta.label} ${value ? 'on' : 'off'}`}
+        aria-label={t(value ? '{0} on' : '{0} off', t(meta.label))}
       />
     </label>
   );

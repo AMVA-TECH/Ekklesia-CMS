@@ -279,7 +279,7 @@ export function PledgesClient(): React.ReactElement {
       {paying ? (
         <RecordPaymentDialog
           pledge={paying}
-          pledgerName={paying.personId ? (pledgers[paying.personId] ?? 'This member') : 'This household'}
+          pledgerName={paying.personId ? (pledgers[paying.personId] ?? t('This member')) : t('This household')}
           onClose={() => setPaying(null)}
           onRecorded={(amountMinor) => {
             push({

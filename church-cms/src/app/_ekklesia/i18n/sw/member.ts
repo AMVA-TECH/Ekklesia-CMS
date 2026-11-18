@@ -44,7 +44,7 @@ export const swMember: Record<string, string> = {
   'Your attendance': 'Mahudhurio yako',
   'Here is a quiet look at your recent services. It fills in after a few Sundays.':
     'Huu ni muhtasari wa ibada zako za hivi karibuni. Utajaa baada ya Jumapili chache.',
-  'Absence noted': 'Kutokuwepo kumetambuliwa',
+  'Absence noted': 'Aliaga',
   Away: 'Hakuwepo',
   'Family attendance': 'Mahudhurio ya familia',
   "How your household has been gathering, and a quick way to let the church know you'll be away.":
@@ -111,6 +111,11 @@ export const swMember: Record<string, string> = {
   'Help with {0}': 'Saidia katika {0}',
   "Tell the team how you'd like to help (optional).": 'Iambie timu jinsi ungependa kusaidia (si lazima).',
   'I can help on Saturdays with setup.': 'Naweza kusaidia Jumamosi kuandaa.',
+
+  'Not on file': 'Haijaandikwa',
+  'Hidden — ask your church office to reset it': 'Imefichwa — omba ofisi ya kanisa iiweke upya',
+  '{0} on': '{0} imewashwa',
+  '{0} off': '{0} imezimwa',
 
   // Navigation and shell
   Home: 'Mwanzo',

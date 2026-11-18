@@ -348,7 +348,7 @@ export function ProfileClient(): React.ReactElement {
             label={t('Primary phone')}
             value={
               person.contacts.find((c) => c.channel === 'phone' && c.isPrimary)
-                ?.value ?? user?.phoneE164 ?? 'Not on file'
+                ?.value ?? user?.phoneE164 ?? t('Not on file')
             }
           />
           <AccountFact
@@ -356,13 +356,13 @@ export function ProfileClient(): React.ReactElement {
             label={t('Primary email')}
             value={
               person.contacts.find((c) => c.channel === 'email' && c.isPrimary)
-                ?.value ?? user?.email ?? 'Not on file'
+                ?.value ?? user?.email ?? t('Not on file')
             }
           />
           <AccountFact
             icon="key"
             label={t('PIN')}
-            value="Hidden — ask your church office to reset it"
+            value={t('Hidden — ask your church office to reset it')}
           />
         </div>
       </Panel>
@@ -414,9 +414,10 @@ function AccountFact({
   );
 }
 
+/** Status/type code → translated label (shares the labels used everywhere). */
 function titleize(s: string): string {
   if (!s) return '';
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase().replace(/_/g, ' ');
+  return t(s.toLowerCase().replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
 }
 
 function ProfileSkeleton(): React.ReactElement {
