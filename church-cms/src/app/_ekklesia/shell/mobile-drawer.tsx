@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
@@ -41,6 +42,7 @@ export function MobileDrawer({
   footer,
   churchName,
 }: MobileDrawerProps): React.ReactElement | null {
+  const t = useTranslations('Common');
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export function MobileDrawer({
     <div className="fixed inset-0 z-50 lg:hidden">
       <button
         type="button"
-        aria-label="Close navigation"
+        aria-label={t('closeNav')}
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 bg-foreground/40"
@@ -114,7 +116,7 @@ export function MobileDrawer({
         ref={rootRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Primary navigation"
+        aria-label={t('primaryNav')}
         className={cn(
           'absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col shadow-pop',
           'border-r border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-background)] text-[color:var(--sidebar-foreground)]',
@@ -130,7 +132,7 @@ export function MobileDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close navigation"
+            aria-label={t('closeNav')}
             className="inline-flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--sidebar-muted)] hover:bg-[color:var(--sidebar-hover)] hover:text-[color:var(--sidebar-foreground)] focus-ring"
           >
             <Icon name="close" size={18} />

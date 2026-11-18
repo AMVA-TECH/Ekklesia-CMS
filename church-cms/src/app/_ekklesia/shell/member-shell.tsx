@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState, type ReactNode } from 'react';
 import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
@@ -58,6 +59,7 @@ export function MemberShell({
   footerProps,
   children,
 }: MemberShellProps): React.ReactElement {
+  const t = useTranslations('Common');
   const [drawerOpen, setDrawerOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -94,11 +96,12 @@ export function MemberShell({
 
 /** lg+ member navigation: brand mark plus a row of primary links. */
 function DesktopNav({ items }: { items: readonly BottomNavItem[] }): React.ReactElement {
+  const t = useTranslations('Common');
   const pathname = usePathname() ?? '';
   return (
     <div className="flex min-w-0 flex-1 items-center gap-6">
       <BrandMark href="/home" size={28} variant="symbol" surface="light" />
-      <nav aria-label="Primary" className="flex min-w-0 items-center gap-1 overflow-x-auto">
+      <nav aria-label={t('primary')} className="flex min-w-0 items-center gap-1 overflow-x-auto">
         {items.map((item) => {
           const active =
             item.href === '/home' ? pathname === '/home' : pathname.startsWith(item.href);

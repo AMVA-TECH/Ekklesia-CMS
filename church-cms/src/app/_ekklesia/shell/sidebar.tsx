@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Icon } from '../icons';
 import { BrandMark } from '../ui/brand-mark';
 import { cn } from '../ui/utils';
@@ -37,7 +38,14 @@ export function Sidebar({
   churchName,
   footer,
 }: SidebarProps): React.ReactElement {
-  const [collapsed, setCollapsed] = useState<boolean>(readInitialCollapsed);
+  const t = useTranslations('Common');
+  // Always start expanded on server + first client paint so localStorage
+  // cannot mismatch SSR HTML (hydration).
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(readInitialCollapsed());
+  }, []);
 
   // The admin rail is long; keep the current page's link in view so deep
   // pages (e.g. Settings → Audit log) don't open with their item hidden.
@@ -71,7 +79,7 @@ export function Sidebar({
           ? 'w-[var(--layout-sidebar-collapsed)]'
           : 'w-[var(--layout-sidebar-width)]',
       )}
-      aria-label="Primary navigation"
+      aria-label={t('primaryNav')}
     >
       <div
         className={cn(
@@ -108,7 +116,7 @@ export function Sidebar({
         type="button"
         onClick={toggle}
         aria-pressed={collapsed}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
         className={cn(
           'border-t border-[color:var(--sidebar-border)] py-2 text-xs font-medium',
           'text-[color:var(--sidebar-muted)] hover:bg-[color:var(--sidebar-hover)] hover:text-[color:var(--sidebar-foreground)] focus-ring',
@@ -116,15 +124,16 @@ export function Sidebar({
         )}
       >
         <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={14} />
-        {collapsed ? null : <span>Collapse</span>}
+        {collapsed ? null : <span>{t('collapse')}</span>}
       </button>
     </aside>
   );
 }
 
 function CollapsedNav({ groups }: { groups: readonly NavGroup[] }): React.ReactElement {
+  const t = useTranslations('Common');
   return (
-    <nav aria-label="Primary (collapsed)" className="flex flex-col items-center gap-1 py-2">
+    <nav aria-label={t('primaryNavCollapsed')} className="flex flex-col items-center gap-1 py-2">
       {groups.flatMap((g) =>
         g.items.map((item) => (
           <a

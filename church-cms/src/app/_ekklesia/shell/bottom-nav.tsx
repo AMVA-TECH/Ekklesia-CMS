@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import type { IconName } from '../icons';
 import { NavLink } from '../ui/nav-link';
 import { cn } from '../ui/utils';
@@ -29,9 +30,10 @@ export interface BottomNavProps {
  * desktop widths; member screens typically use a top sticky header there.
  */
 export function BottomNav({ items, className }: BottomNavProps): React.ReactElement {
+  const t = useTranslations('Common');
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t('primary')}
       className={cn(
         'sticky bottom-0 z-30 flex items-stretch border-t border-border bg-surface md:hidden',
         'pb-[env(safe-area-inset-bottom)]',
