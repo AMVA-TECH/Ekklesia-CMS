@@ -2,12 +2,34 @@ import { can } from '@/modules/access-control/can';
 import type { Ctx } from '@/platform/auth';
 import { forbidden } from '@/platform/errors';
 
-export function assertCanReadEvents(ctx: Ctx): void {
-  if (!can(ctx, 'events:read')) throw forbidden();
+export function assertCanReadEvents(
+  ctx: Ctx,
+  organisationalUnitId?: string,
+): void {
+  if (
+    !can(
+      ctx,
+      'events:read',
+      organisationalUnitId ? { organisationalUnitId } : undefined,
+    )
+  ) {
+    throw forbidden();
+  }
 }
 
-export function assertCanWriteEvents(ctx: Ctx): void {
-  if (!can(ctx, 'events:write')) throw forbidden();
+export function assertCanWriteEvents(
+  ctx: Ctx,
+  organisationalUnitId?: string,
+): void {
+  if (
+    !can(
+      ctx,
+      'events:write',
+      organisationalUnitId ? { organisationalUnitId } : undefined,
+    )
+  ) {
+    throw forbidden();
+  }
 }
 
 export function assertCanRegisterForEvents(ctx: Ctx): void {
@@ -22,12 +44,34 @@ export function assertCanListRegistrations(ctx: Ctx): void {
   }
 }
 
-export function assertCanReadAttendance(ctx: Ctx): void {
-  if (!can(ctx, 'attendance:read')) throw forbidden();
+export function assertCanReadAttendance(
+  ctx: Ctx,
+  organisationalUnitId?: string,
+): void {
+  if (
+    !can(
+      ctx,
+      'attendance:read',
+      organisationalUnitId ? { organisationalUnitId } : undefined,
+    )
+  ) {
+    throw forbidden();
+  }
 }
 
-export function assertCanRecordAttendance(ctx: Ctx): void {
-  if (!can(ctx, 'attendance:record')) throw forbidden();
+export function assertCanRecordAttendance(
+  ctx: Ctx,
+  organisationalUnitId?: string,
+): void {
+  if (
+    !can(
+      ctx,
+      'attendance:record',
+      organisationalUnitId ? { organisationalUnitId } : undefined,
+    )
+  ) {
+    throw forbidden();
+  }
 }
 
 export function assertCanIssueAbsenceNotice(ctx: Ctx): void {

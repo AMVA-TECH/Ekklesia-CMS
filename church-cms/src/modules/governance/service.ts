@@ -3,10 +3,12 @@ import { getDb } from '@/platform/db/client';
 import { writeAudit } from '@/platform/audit';
 import { conflict, forbidden, notFound, validationFailed } from '@/platform/errors';
 import { can } from '@/modules/access-control/can';
+import { assertAssignerMayGrantPermissions } from '@/modules/access-control/delegation';
 import { postApprovedExpense } from '@/modules/finance/service';
 import { applyAnnouncementApprovalDecision } from '@/modules/messaging/service';
 import { getPersonInChurch } from '@/modules/people/repository';
 import {
+  countActiveAppointmentsForPosition,
   getPositionById,
   getUnitById,
   insertAppointment,
@@ -418,6 +420,8 @@ export async function createDelegation(ctx: Ctx, body: CreateDelegationBody) {
       },
     ]);
   }
+  assertAssignerMayGrantPermissions(ctx, body.grants);
+
   const db = getDb();
   const id = await repo.insertDelegation(db, ctx, body);
   await writeAudit(db, ctx, {
@@ -554,16 +558,46 @@ export async function decideAppointmentRequest(
   if (existing.status !== 'pending') {
     throw conflict('Appointment request already decided.');
   }
+  if (existing.requestedByUserId === ctx.actor.userAccountId) {
+    throw forbidden('You cannot decide on a request you submitted.');
+  }
 
   let resultingAppointmentId: string | undefined;
   if (body.action === 'approve') {
+    const position = await getPositionById(db, ctx, existing.positionId);
+    if (!position) throw notFound();
+    if (position.occupancyPolicy === 'single') {
+      const active = await countActiveAppointmentsForPosition(
+        db,
+        ctx,
+        existing.positionId,
+      );
+      if (active > 0) {
+        throw conflict(
+          'This position allows only one active occupant. End the current appointment first.',
+        );
+      }
+    }
     const effectiveFrom =
       body.effectiveFrom ?? new Date().toISOString().slice(0, 10);
     resultingAppointmentId = await insertAppointment(db, ctx, {
       positionId: existing.positionId,
       personId: existing.personId,
       organisationalUnitId: existing.organisationalUnitId ?? undefined,
+      appointmentKind: body.appointmentKind ?? 'substantive',
       effectiveFrom,
+      effectiveTo: body.effectiveTo,
+    });
+    await writeAudit(db, ctx, {
+      action: 'organisation.appointment.created',
+      entityType: 'appointment',
+      entityId: resultingAppointmentId,
+      metadata: {
+        positionId: existing.positionId,
+        personId: existing.personId,
+        grantsPermissions: false,
+        via: 'appointment_request',
+      },
     });
   }
 

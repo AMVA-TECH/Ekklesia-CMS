@@ -16,6 +16,18 @@ describe('appointment RBAC separation', () => {
     const source = readFileSync(servicePath, 'utf8');
     assert.match(source, /Appointments never grant RBAC/);
     assert.match(source, /grantsPermissions:\s*false/);
-    assert.equal(/role-assignments|assignRole|user_role_assignments/i.test(source), false);
+    // createAppointment path must not insert role assignments; endAppointment may
+    // *review* related assignments but must not auto-revoke.
+    const createBlock = source.slice(
+      source.indexOf('export async function createAppointment'),
+      source.indexOf('export async function endAppointment'),
+    );
+    assert.equal(
+      /role-assignments|assignRole|user_role_assignments|insertRoleAssignment/i.test(
+        createBlock,
+      ),
+      false,
+    );
+    assert.match(source, /autoRevoked:\s*false/);
   });
 });

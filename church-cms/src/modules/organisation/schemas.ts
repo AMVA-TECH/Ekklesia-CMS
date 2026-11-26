@@ -30,11 +30,17 @@ export const updateUnitBodySchema = z
     parentId: z.guid().nullable().optional(),
     status: z.enum(UNIT_STATUSES).optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
+    /** Required when status/parent change would affect active unit-scoped role assignments. */
+    confirmStructuralChange: z.literal(true).optional(),
   })
   .strict()
-  .refine((v) => Object.keys(v).length > 0, {
-    message: 'At least one field is required',
-  });
+  .refine(
+    (v) =>
+      Object.keys(v).filter((k) => k !== 'confirmStructuralChange').length > 0,
+    {
+      message: 'At least one field is required',
+    },
+  );
 
 export type UpdateUnitBody = z.infer<typeof updateUnitBodySchema>;
 
@@ -66,6 +72,18 @@ export const createProgrammeUnderUnitBodySchema = createProgrammeBodySchema.omit
 export type CreateProgrammeUnderUnitBody = z.infer<
   typeof createProgrammeUnderUnitBodySchema
 >;
+
+export const updateProgrammeBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(200).optional(),
+    status: z.enum(PROGRAMME_STATUSES).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export type UpdateProgrammeBody = z.infer<typeof updateProgrammeBodySchema>;
 
 export const unitResponseSchema = z.object({
   id: z.guid(),

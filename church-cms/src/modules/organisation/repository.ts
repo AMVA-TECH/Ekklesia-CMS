@@ -337,6 +337,37 @@ export async function insertAppointment(
   return id;
 }
 
+export async function listAppointmentHistory(db: Db, appointmentId: string) {
+  return db
+    .select()
+    .from(appointmentHistory)
+    .where(eq(appointmentHistory.appointmentId, appointmentId))
+    .orderBy(asc(appointmentHistory.changedAt));
+}
+
+export async function updateProgramme(
+  db: Db,
+  ctx: Ctx,
+  programmeId: string,
+  body: { name?: string; status?: string },
+) {
+  await db
+    .update(programmes)
+    .set({
+      ...(body.name !== undefined ? { name: body.name } : {}),
+      ...(body.status !== undefined ? { status: body.status } : {}),
+      updatedBy: ctx.actor.userAccountId,
+      updatedAt: sql`now()`,
+    })
+    .where(
+      and(
+        eq(programmes.id, programmeId),
+        eq(programmes.churchId, ctx.churchId),
+        isNull(programmes.deletedAt),
+      ),
+    );
+}
+
 export async function endAppointment(
   db: Db,
   ctx: Ctx,

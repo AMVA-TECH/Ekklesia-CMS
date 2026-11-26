@@ -95,11 +95,37 @@ export function OrganisationClient(): React.ReactElement {
     if (togglingId) return;
     setTogglingId(unit.id);
     const next = unit.status === 'active' ? 'inactive' : 'active';
+    const patch = async (confirmStructuralChange?: true) =>
+      apiFetch<OrganisationalUnit>(`/api/v1/organisational-units/${unit.id}`, {
+        method: 'PATCH',
+        json: {
+          status: next,
+          ...(confirmStructuralChange ? { confirmStructuralChange } : {}),
+        },
+      });
     try {
-      const updated = await apiFetch<OrganisationalUnit>(
-        `/api/v1/organisational-units/${unit.id}`,
-        { method: 'PATCH', json: { status: next } },
-      );
+      let updated: OrganisationalUnit;
+      try {
+        updated = await patch();
+      } catch (err) {
+        const fieldErrs =
+          err instanceof ApiError
+            ? ((err.body as {
+                errors?: Array<{ code?: string }>;
+                details?: Array<{ code?: string }>;
+              } | null)?.errors ??
+              (err.body as { details?: Array<{ code?: string }> } | null)
+                ?.details ??
+              [])
+            : [];
+        const needsConfirm = fieldErrs.some(
+          (d) => d.code === 'confirmation_required',
+        );
+        if (!needsConfirm) throw err;
+        const ok = window.confirm(to('structuralConfirm'));
+        if (!ok) return;
+        updated = await patch(true);
+      }
       setUnits((prev) => prev.map((u) => (u.id === unit.id ? updated : u)));
       push({
         tone: 'success',

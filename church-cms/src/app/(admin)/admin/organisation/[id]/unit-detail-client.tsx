@@ -154,19 +154,43 @@ export function UnitDetailClient({
     event.preventDefault();
     if (saving || !unit) return;
     setSaving(true);
-    try {
-      const updated = await apiFetch<OrganisationalUnit>(
-        `/api/v1/organisational-units/${unit.id}`,
-        {
-          method: 'PATCH',
-          json: {
-            name: name.trim(),
-            description: description.trim() || null,
-            status,
-            parentId: parentId || null,
-          },
+    const payload = {
+      name: name.trim(),
+      description: description.trim() || null,
+      status,
+      parentId: parentId || null,
+    };
+    const patch = async (confirmStructuralChange?: true) =>
+      apiFetch<OrganisationalUnit>(`/api/v1/organisational-units/${unit.id}`, {
+        method: 'PATCH',
+        json: {
+          ...payload,
+          ...(confirmStructuralChange ? { confirmStructuralChange } : {}),
         },
-      );
+      });
+    try {
+      let updated: OrganisationalUnit;
+      try {
+        updated = await patch();
+      } catch (err) {
+        const fieldErrs =
+          err instanceof ApiError
+            ? ((err.body as {
+                errors?: Array<{ code?: string }>;
+                details?: Array<{ code?: string }>;
+              } | null)?.errors ??
+              (err.body as { details?: Array<{ code?: string }> } | null)
+                ?.details ??
+              [])
+            : [];
+        const needsConfirm = fieldErrs.some(
+          (d) => d.code === 'confirmation_required',
+        );
+        if (!needsConfirm) throw err;
+        const ok = window.confirm(to('structuralConfirm'));
+        if (!ok) return;
+        updated = await patch(true);
+      }
       setUnit(updated);
       setEditing(false);
       push({ tone: 'success', message: to('unitProfileSaved') });
@@ -246,6 +270,12 @@ export function UnitDetailClient({
         }
         actions={
           <>
+            <Link
+              href={`/admin/roles?tab=assignments&organisationalUnitId=${unit.id}`}
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              {to('configureAccess')}
+            </Link>
             {editing ? (
               <>
                 <Button
