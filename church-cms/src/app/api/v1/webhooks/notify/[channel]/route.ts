@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { getEnv } from '@/platform/config';
 import { resolveRequestId, REQUEST_ID_HEADER, toProblemResponse } from '@/platform/http';
 import { applyProviderDeliveryUpdate } from '@/modules/messaging';
+import { recordAndProcessIncomingWebhook } from '@/modules/platform-ops/integrations-service';
 import { unauthorized, validationFailed } from '@/platform/errors';
 import { z } from 'zod';
 
@@ -56,9 +57,31 @@ export async function POST(request: Request, routeCtx: RouteCtx): Promise<Respon
         })),
       );
     }
-    const result = await applyProviderDeliveryUpdate(parsedBody.data);
+
+    let deliveryResult: Awaited<
+      ReturnType<typeof applyProviderDeliveryUpdate>
+    > | null = null;
+    const recorded = await recordAndProcessIncomingWebhook({
+      integrationCode: 'notify.http',
+      eventType: `delivery.${parsedBody.data.status}`,
+      correlationId: requestId,
+      idempotencyKey: `notify:${channel}:${parsedBody.data.providerRef}:${parsedBody.data.status}`,
+      payload: { ...parsedBody.data, channel },
+      process: async () => {
+        deliveryResult = await applyProviderDeliveryUpdate(parsedBody.data);
+        return { result: deliveryResult };
+      },
+    });
+
     return Response.json(
-      { data: { ...result, channel } },
+      {
+        data: {
+          ...(deliveryResult ?? {}),
+          channel,
+          platformEventId: recorded.eventId,
+          replayed: recorded.replayed,
+        },
+      },
       { headers: { [REQUEST_ID_HEADER]: requestId } },
     );
   } catch (error) {
@@ -85,7 +108,6 @@ function assertWebhookAuth(request: Request, raw: string, secret: string): void 
   if (signature) {
     const expected = createHmac('sha256', secret).update(raw).digest('hex');
     if (safeEqual(signature, expected)) return;
-    throw unauthorized();
   }
 
   throw unauthorized();

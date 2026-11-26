@@ -4,6 +4,7 @@ import { verifyBriqSignature } from '@/platform/notify/briq-webhook';
 import { resolveRequestId, REQUEST_ID_HEADER, toProblemResponse } from '@/platform/http';
 import { unauthorized, validationFailed } from '@/platform/errors';
 import { applyBriqWebhookEvent } from '@/modules/messaging';
+import { recordAndProcessIncomingWebhook } from '@/modules/platform-ops/integrations-service';
 
 /**
  * Briq Karibu SMS/WhatsApp webhooks.
@@ -50,15 +51,32 @@ export async function POST(request: Request): Promise<Response> {
       throw unauthorized('Unexpected Briq app_id');
     }
 
-    const result = await applyBriqWebhookEvent({
-      event: envelope.data.event,
-      jobId: envelope.data.data.job_id,
-      messageId: envelope.data.data.message_id,
-      error: envelope.data.data.status,
+    const recorded = await recordAndProcessIncomingWebhook({
+      integrationCode: 'notify.briq',
+      eventType: envelope.data.event,
+      correlationId: requestId,
+      idempotencyKey: `briq:${envelope.data.id}`,
+      payload: envelope.data,
+      process: async () => {
+        const result = await applyBriqWebhookEvent({
+          event: envelope.data.event,
+          jobId: envelope.data.data.job_id,
+          messageId: envelope.data.data.message_id,
+          error: envelope.data.data.status,
+        });
+        return { result };
+      },
     });
 
     return Response.json(
-      { data: { accepted: true, eventId: envelope.data.id, ...result } },
+      {
+        data: {
+          accepted: true,
+          eventId: envelope.data.id,
+          platformEventId: recorded.eventId,
+          replayed: recorded.replayed,
+        },
+      },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
   } catch (error) {
