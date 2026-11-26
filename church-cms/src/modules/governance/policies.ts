@@ -99,3 +99,8 @@ export function assertCanReadMinutes(ctx: Ctx): void {
     throw forbidden();
   }
 }
+
+/** Grants a delegator is trying to hand over without holding them. */
+export function grantsNotHeld(ctx: Ctx, grants: readonly string[]): string[] {
+  return grants.filter((g) => !ctx.permissions.has(g));
+}

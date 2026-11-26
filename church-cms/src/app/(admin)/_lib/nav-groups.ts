@@ -133,6 +133,14 @@ export function buildAdminGroups(
       icon: 'hand',
     });
   }
+  if (moduleOn(modules, 'organisation') && can(permissions, 'participations:approve')) {
+    ministryItems.push({
+      label: labels.ministryRequests,
+      hint: labels.ministryRequestsHint,
+      href: '/admin/ministries/requests',
+      icon: 'user-plus',
+    });
+  }
   if (
     moduleOn(modules, 'organisation') &&
     (can(permissions, 'positions:write') || can(permissions, 'units:read'))

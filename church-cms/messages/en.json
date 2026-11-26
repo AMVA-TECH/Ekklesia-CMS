@@ -547,7 +547,16 @@
     "reasonHint": "A few words is fine — e.g. travelling for a funeral.",
     "chooseDateReason": "Choose the date and add a short reason.",
     "letChurchKnow": "Let the church know",
-    "sendFail": "Could not send. Try again."
+    "sendFail": "Could not send. Try again.",
+    "correctionSent": "Correction sent",
+    "correctionSentBody": "Your church team will review it and update your record.",
+    "iWasThere": "I was there",
+    "fixMyAttendance": "Fix my attendance",
+    "fixMyAttendanceDesc": "Tell the church you were at the service on {date}.",
+    "cancel": "Cancel",
+    "send": "Send",
+    "note": "Note",
+    "correctionNoteHint": "Optional — e.g. I came late and missed the scan."
   },
   "MemberGiving": {
     "title": "Giving",
@@ -694,7 +703,9 @@
     "exports": "Exports",
     "exportsHint": "CSV downloads",
     "auditLog": "Audit log",
-    "auditLogHint": "Who did what"
+    "auditLogHint": "Who did what",
+    "ministryRequests": "Ministry requests",
+    "ministryRequestsHint": "Members asking to join"
   },
   "AdminRoles": {
     "title": "Roles & permissions",
@@ -914,16 +925,10 @@
     "membershipApplicationsDescription": "Review and decide membership applications.",
     "joinRequestsTitle": "Join requests",
     "joinRequestsDescription": "Approve or reject people who asked to join this church.",
-    "registerChurchTitle": "Register your church",
-    "registerChurchDescription": "Apply to register a new church tenant on Ekklesia.",
-    "registerChurchStatusTitle": "Application status",
-    "registerChurchStatusDescription": "Track your church registration from verification to activation.",
-    "registerChurchVerifyTitle": "Verify your email",
-    "registerChurchVerifyDescription": "Confirm the email used for your church application.",
-    "activateChurchTitle": "Activate your church",
-    "activateChurchDescription": "Set your administrator PIN to finish church setup.",
-    "registerStatusTitle": "Join request status",
-    "registerStatusDescription": "Track your request to join a church on Ekklesia."
+    "ministryRequestsTitle": "Ministry join requests",
+    "ministryRequestsDescription": "Members asking to join a ministry.",
+    "attendanceCorrectionsTitle": "Attendance corrections",
+    "attendanceCorrectionsDescription": "Requests to fix attendance records."
   },
   "AdminDashboard": {
     "backendUnreachable": "Could not reach the backend.",
@@ -1235,7 +1240,25 @@
     "label": "Label",
     "labelPlaceholder": "FY2027",
     "startsOn": "Starts on",
-    "endsOn": "Ends on"
+    "endsOn": "Ends on",
+    "pledgedBy": "Pledged by",
+    "householdPledge": "Household pledge",
+    "recordPayment": "Record payment",
+    "recordPaymentTitle": "Record pledge payment",
+    "recordPaymentDesc": "{name} pledged {pledged}; {owed} is still owed.",
+    "recordPaymentJournalRequired": "Choose the posted entry where this money was recorded.",
+    "recordPaymentAmountRequired": "Enter an amount greater than zero.",
+    "receivedIn": "Received in",
+    "receivedInHint": "Record the money as an offering or journal and post it first, then link it here.",
+    "loadingPostedEntries": "Loading posted entries…",
+    "noPostedEntries": "No posted entries yet",
+    "choosePostedEntry": "Choose a posted entry…",
+    "nothingPostedYet": "Nothing posted yet. <offering>Record an offering</offering> or <journal>post a journal</journal>.",
+    "amountInCurrency": "Amount ({currency})",
+    "thisMember": "This member",
+    "thisHousehold": "This household",
+    "paymentRecorded": "Payment recorded",
+    "paymentRecordedBody": "{amount} applied to the pledge."
   },
   "AdminOrganisation": {
     "unableLoadStructure": "Unable to load organisational structure",
@@ -1339,7 +1362,8 @@
     "pickPerson": "Pick a person from the search results.",
     "roleHint": "Optional — e.g. Leader, Member",
     "effectiveFrom": "Effective from",
-    "effectiveFromHint": "Optional — YYYY-MM-DD (defaults to today)"
+    "effectiveFromHint": "Optional — YYYY-MM-DD (defaults to today)",
+    "joinRequests": "Join requests"
   },
   "AdminPeople": {
     "loadingPeople": "Loading people",
@@ -1977,7 +2001,19 @@
     "keepCurrentPoster": "Keep current poster",
     "noEventTypesConfigured": "No event types are configured yet. Ask an administrator to add one (e.g. “Sunday service”) before scheduling.",
     "previewAppearsHere": "Preview appears here",
-    "emDash": "—"
+    "emDash": "—",
+    "registrations": "Registrations",
+    "registrationsLoading": "Loading…",
+    "registrationsSummary": "{coming} coming",
+    "registrationsSummaryCancelled": "{coming} coming · {cancelled} cancelled",
+    "hideCancelled": "Hide cancelled",
+    "showCancelled": "Show cancelled",
+    "noRegistrations": "No registrations yet",
+    "noRegistrationsBody": "Members can register for this event from the app.",
+    "allRegistrationsCancelled": "Everyone who registered has cancelled",
+    "registeredOn": "Registered {date}",
+    "registrationComing": "Coming",
+    "registrationCancelled": "Cancelled"
   },
   "AdminAttendance": {
     "unableLoad": "Unable to load attendance.",
@@ -2089,7 +2125,27 @@
     "openCheckIn": "Open check-in",
     "serviceDate": "Service date",
     "reason": "Reason",
-    "attendanceQr": "Attendance QR"
+    "attendanceQr": "Attendance QR",
+    "corrections": "Corrections",
+    "leadershipSubtitleNudge": "How consistently each leader is showing up, and a suggested next step.",
+    "showingFollowUps": "Showing follow-ups",
+    "needsFollowUpOnly": "Needs follow-up only",
+    "suggestedFollowUp": "Suggested follow-up",
+    "tooEarlyToTell": "Too early to tell",
+    "nudge": {
+      "congratulate": {
+        "label": "Say thank you",
+        "hint": "Consistently present — a word of thanks goes a long way."
+      },
+      "encourage": {
+        "label": "Encourage",
+        "hint": "Coming some weeks — check in warmly."
+      },
+      "remind": {
+        "label": "Reach out",
+        "hint": "Missing recently — a call or visit may help."
+      }
+    }
   },
   "AdminProjects": {
     "newProject": "New project",
@@ -2426,31 +2482,64 @@
     "user": "User",
     "emDash": "—"
   },
-  "RegisterStatus": {
-    "eyebrow": "Join request",
-    "missingIdTitle": "Join request status",
-    "missingIdBody": "Missing request id. Start a new",
-    "missingIdLink": "join request",
-    "resumeTitle": "Resume your join request",
-    "resumeBody": "Open this page from the browser where you submitted, or ask the church office for help.",
-    "resumeLink": "Start a new join request",
-    "loadFailedTitle": "Could not load status",
-    "loadFailed": "Could not load join request status.",
-    "networkError": "Network error. Try again.",
-    "retry": "Try again",
-    "none": "No status available.",
-    "staleRefresh": "Last refresh failed — showing previous status.",
-    "refresh": "Refresh status",
-    "backToSignIn": "Back to sign in",
-    "signInCta": "Sign in now",
-    "stepSubmitted": "Request submitted",
-    "stepReview": "Church review",
-    "stepReady": "Ready to sign in",
-    "stagePendingLabel": "Waiting for your church",
-    "stagePendingMessage": "{churchName} will review your request. You cannot sign in yet.",
-    "stageApprovedLabel": "Approved — you can sign in",
-    "stageApprovedMessage": "Use your phone and the PIN your church shared (also sent by SMS/email when configured).",
-    "stageRejectedLabel": "Not approved",
-    "stageRejectedMessage": "Your join request was not approved. Contact the church office if you have questions."
+  "AdminMinistryRequests": {
+    "ministries": "Ministries",
+    "ministry": "Ministry",
+    "title": "Ministry join requests",
+    "lede": "Members asking to join a team. Approving adds them to the ministry straight away. Ministry leaders see requests for their own ministries.",
+    "requestStatus": "Request status",
+    "status": "{status, select, pending {Pending} approved {Approved} rejected {Declined} other {{status}}}",
+    "allMyMinistries": "All my ministries",
+    "panelTitle": "{status, select, pending {Pending} approved {Approved} rejected {Declined} other {{status}}} requests",
+    "loading": "Loading…",
+    "shown": "{count} shown",
+    "emptyPending": "No one is waiting to join",
+    "emptyOther": "No {status, select, approved {approved} rejected {declined} other {{status}}} requests",
+    "emptyPendingBody": "When members ask to join a ministry from the app, their requests appear here.",
+    "member": "Member",
+    "requested": "Requested",
+    "statusHeader": "Status",
+    "decision": "Decision",
+    "approve": "Approve",
+    "decline": "Decline",
+    "declined": "Request declined",
+    "declinedBody": "The member will see it was not approved.",
+    "declineFailed": "Could not decline",
+    "thisMember": "this member",
+    "approveTitle": "Approve join request",
+    "approveDesc": "{member} will join {ministry} from today.",
+    "roleInMinistry": "Role in ministry",
+    "roleInMinistryHint": "Optional, e.g. Singer or Usher."
+  },
+  "AdminCorrections": {
+    "attendance": "Attendance",
+    "title": "Attendance corrections",
+    "lede": "Members who say their attendance was recorded wrongly. Approving updates their record for that service, including finalized totals.",
+    "correctionStatus": "Correction status",
+    "status": "{status, select, pending {Pending} approved {Approved} rejected {Rejected} other {{status}}}",
+    "panelTitle": "{status, select, pending {Pending} approved {Approved} rejected {Rejected} other {{status}}} corrections",
+    "loading": "Loading…",
+    "shown": "{count} shown",
+    "emptyPending": "No corrections to review",
+    "emptyOther": "No {status, select, approved {approved} rejected {rejected} other {{status}}} corrections",
+    "member": "Member",
+    "service": "Service",
+    "asksToBeMarked": "Asks to be marked",
+    "note": "Note",
+    "statusHeader": "Status",
+    "decision": "Decision",
+    "askedOn": "Asked {date}",
+    "presence": "{presence, select, present {Present} absent {Absent} late {Late} other {{presence}}}",
+    "reply": "Reply: {note}",
+    "approved": "Attendance updated",
+    "approvedBody": "{member} is now marked {presence, select, present {present} absent {absent} late {late} other {{presence}}}.",
+    "theMember": "The member",
+    "approveFailed": "Could not approve",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectTitle": "Reject correction",
+    "rejectDesc": "The attendance record stays as it is.",
+    "replyToMember": "Reply to the member",
+    "optional": "Optional."
   }
 }

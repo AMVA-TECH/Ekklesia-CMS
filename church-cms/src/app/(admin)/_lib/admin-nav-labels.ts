@@ -20,6 +20,8 @@ export const DEFAULT_ADMIN_NAV_LABELS = {
   organisationHint: 'Structure and hierarchy',
   ministries: 'Ministries',
   ministriesHint: 'Units and participation',
+  ministryRequests: 'Ministry requests',
+  ministryRequestsHint: 'Members asking to join',
   leadership: 'Leadership',
   leadershipHint: 'Positions and reporting',
   events: 'Events',

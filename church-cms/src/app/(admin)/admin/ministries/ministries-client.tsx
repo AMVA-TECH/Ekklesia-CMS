@@ -23,6 +23,7 @@ import {
   THead,
   TR,
   useToast,
+  buttonClassName,
 } from '@/app/_ekklesia/ui';
 import { Icon } from '@/app/_ekklesia/icons';
 import type {
@@ -217,9 +218,17 @@ export function MinistriesClient(): React.ReactElement {
         title={t('ministries')}
         lede={t('ministriesLede')}
         actions={
-          <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
-            {to('newUnit')}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/ministries/requests"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              {to('joinRequests')}
+            </Link>
+            <Button iconLeft="plus" onClick={() => setCreateOpen(true)}>
+              {to('newUnit')}
+            </Button>
+          </div>
         }
       />
 

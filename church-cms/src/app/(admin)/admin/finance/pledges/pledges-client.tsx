@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiFetch, ApiError, useLoadEffect } from '@/app/_ekklesia/session';
@@ -26,7 +27,9 @@ import {
 import type { Fund, Pledge } from '../../../_lib/api-types';
 import { formatDate, formatMoney, titleCase } from '../../../_lib/format';
 import { asList } from '../../../_lib/list';
+import { usePeopleNames } from '../../../_lib/use-people-names';
 import { AddFollowUpDialog } from './add-follow-up-dialog';
+import { RecordPaymentDialog } from './record-payment-dialog';
 import { CreatePledgeDialog } from './create-pledge-dialog';
 
 const FILTER_VALUES = ['all', 'open', 'partial', 'fulfilled'] as const;
@@ -43,6 +46,7 @@ export function PledgesClient(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [paying, setPaying] = useState<Pledge | null>(null);
   const [followUpPledgeId, setFollowUpPledgeId] = useState<string | null>(
     null,
   );
@@ -125,6 +129,7 @@ export function PledgesClient(): React.ReactElement {
         return titleCase(status);
     }
   };
+  const pledgers = usePeopleNames(pledges.map((p) => p.personId));
 
   return (
     <div className="flex flex-col gap-6">
@@ -213,13 +218,14 @@ export function PledgesClient(): React.ReactElement {
             <Table>
               <THead>
                 <TR noHover>
+                  <TH>{tf('pledgedBy')}</TH>
                   <TH>{tf('amount')}</TH>
                   <TH>{tf('received')}</TH>
                   <TH>{tf('outstanding')}</TH>
                   <TH>{tf('fund')}</TH>
                   <TH>{tf('due')}</TH>
                   <TH>{tf('status')}</TH>
-                  <TH className="w-32">
+                  <TH className="text-right">
                     <span className="sr-only">{tf('actions')}</span>
                   </TH>
                 </TR>
@@ -232,6 +238,15 @@ export function PledgesClient(): React.ReactElement {
                   );
                   return (
                     <TR key={p.id}>
+                      <TD className="font-medium text-foreground">
+                        {p.personId ? (
+                          <Link href={`/admin/people/${p.personId}`} className="hover:underline">
+                            {pledgers[p.personId] ?? '…'}
+                          </Link>
+                        ) : (
+                          tf('householdPledge')
+                        )}
+                      </TD>
                       <TD className="font-medium tabular-nums">
                         {formatMoney(p.amountMinor, p.currency)}
                       </TD>
@@ -252,16 +267,21 @@ export function PledgesClient(): React.ReactElement {
                           {statusLabel(p.status)}
                         </StatusPill>
                       </TD>
-                      <TD>
+                      <TD className="text-right">
                         {p.status !== 'cancelled' &&
                         p.status !== 'fulfilled' ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setFollowUpPledgeId(p.id)}
-                          >
-                            {tf('followUp')}
-                          </Button>
+                          <div className="inline-flex gap-2">
+                            <Button size="sm" iconLeft="coin" onClick={() => setPaying(p)}>
+                              {tf('recordPayment')}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFollowUpPledgeId(p.id)}
+                            >
+                              {tf('followUp')}
+                            </Button>
+                          </div>
                         ) : null}
                       </TD>
                     </TR>
@@ -287,6 +307,25 @@ export function PledgesClient(): React.ReactElement {
           void load();
         }}
       />
+
+      {paying ? (
+        <RecordPaymentDialog
+          pledge={paying}
+          pledgerName={paying.personId ? (pledgers[paying.personId] ?? tf('thisMember')) : tf('thisHousehold')}
+          onClose={() => setPaying(null)}
+          onRecorded={(amountMinor) => {
+            push({
+              tone: 'success',
+              title: tf('paymentRecorded'),
+              message: tf('paymentRecordedBody', {
+                amount: formatMoney(amountMinor, paying.currency),
+              }),
+            });
+            setPaying(null);
+            void load();
+          }}
+        />
+      ) : null}
 
       <AddFollowUpDialog
         open={followUpPledgeId !== null}

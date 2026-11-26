@@ -758,12 +758,16 @@ export async function listCorrectionRequests(
       resolvedByUserId: attendanceCorrectionRequests.resolvedByUserId,
       resolvedAt: attendanceCorrectionRequests.resolvedAt,
       createdAt: attendanceCorrectionRequests.createdAt,
+      // Context for reviewers: which service the request is about.
+      serviceDate: events.serviceDate,
+      eventTitle: events.title,
     })
     .from(attendanceCorrectionRequests)
     .innerJoin(
       attendanceSessions,
       eq(attendanceSessions.id, attendanceCorrectionRequests.sessionId),
     )
+    .innerJoin(events, eq(events.id, attendanceSessions.eventId))
     .where(
       and(
         eq(attendanceSessions.churchId, ctx.churchId),
@@ -840,6 +844,29 @@ export async function listFinalizedServiceDates(
     ORDER BY e.service_date
   `);
   return rowsOf(result).map((r) => String(r.serviceDate));
+}
+
+/** One finalized session per service date (latest finalized), for the
+ * member calendar so a day can be linked to a correction request. */
+export async function listFinalizedSessionIdsByDate(
+  db: Db,
+  ctx: Ctx,
+  from: string,
+  to: string,
+) {
+  const result = await db.execute(sql`
+    SELECT DISTINCT ON (e.service_date) e.service_date AS "serviceDate", s.id AS "sessionId"
+    FROM attendance_sessions s
+    JOIN events e ON e.id = s.event_id
+    WHERE s.church_id = ${ctx.churchId}::uuid
+      AND s.status = 'finalized'
+      AND s.deleted_at IS NULL
+      AND e.deleted_at IS NULL
+      AND e.service_date >= ${from}
+      AND e.service_date <= ${to}
+    ORDER BY e.service_date, s.finalized_at DESC NULLS LAST
+  `);
+  return new Map(rowsOf(result).map((r) => [String(r.serviceDate), String(r.sessionId)]));
 }
 
 export async function listPersonPresenceByDate(

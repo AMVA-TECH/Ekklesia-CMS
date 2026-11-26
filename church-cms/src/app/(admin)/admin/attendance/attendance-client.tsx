@@ -38,6 +38,7 @@ interface LeadershipStatsEnvelope {
     sessionsHeld: number;
     rate: number | null;
     band: string;
+    suggestedNudge?: 'congratulate' | 'encourage' | 'remind' | null;
   }>;
 }
 
@@ -56,6 +57,7 @@ export function AttendanceClient(): React.ReactElement {
   >({});
   const [stats, setStats] = useState<LeadershipStatsEnvelope | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [followUpOnly, setFollowUpOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -164,6 +166,12 @@ export function AttendanceClient(): React.ReactElement {
               className={buttonClassName({ variant: 'secondary' })}
             >
               {ta('absenceNotices')}
+            </Link>
+            <Link
+              href="/admin/attendance/corrections"
+              className={buttonClassName({ variant: 'secondary' })}
+            >
+              {ta('corrections')}
             </Link>
             <Button
               variant="primary"
@@ -334,7 +342,19 @@ export function AttendanceClient(): React.ReactElement {
 
       <Panel
         title={ta('leadershipAttendance')}
-        subtitle={ta('leadershipSubtitle')}
+        subtitle={ta('leadershipSubtitleNudge')}
+        actions={
+          stats && stats.people.length > 0 ? (
+            <Button
+              size="sm"
+              variant={followUpOnly ? 'primary' : 'secondary'}
+              aria-pressed={followUpOnly}
+              onClick={() => setFollowUpOnly((v) => !v)}
+            >
+              {followUpOnly ? ta('showingFollowUps') : ta('needsFollowUpOnly')}
+            </Button>
+          ) : null
+        }
       >
         {statsError ? (
           <div className="rounded-md border border-[color:var(--warning-soft)] bg-[color:var(--warning-soft)] px-3 py-2 text-sm text-[color:var(--warning-ink)]">
@@ -358,10 +378,14 @@ export function AttendanceClient(): React.ReactElement {
                   <TH>{ta('sessionsAttended')}</TH>
                   <TH>{ta('rate')}</TH>
                   <TH>{ta('band')}</TH>
+                  <TH>{ta('suggestedFollowUp')}</TH>
                 </TR>
               </THead>
               <TBody>
-                {stats.people.slice(0, 15).map((p) => (
+                {stats.people
+                  .filter((p) => !followUpOnly || p.band === 'irregular' || p.band === 'missing')
+                  .slice(0, followUpOnly ? 50 : 15)
+                  .map((p) => (
                   <TR key={p.personId}>
                     <TD>
                       <Link
@@ -381,6 +405,20 @@ export function AttendanceClient(): React.ReactElement {
                       <StatusPill tone={bandTone(p.band)}>
                         {titleCase(p.band)}
                       </StatusPill>
+                    </TD>
+                    <TD className="text-sm">
+                      {p.suggestedNudge ? (
+                        <>
+                          <span className="font-medium text-foreground">
+                            {ta(`nudge.${p.suggestedNudge}.label`)}
+                          </span>
+                          <div className="text-xs text-muted-foreground">
+                            {ta(`nudge.${p.suggestedNudge}.hint`)}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">{ta('tooEarlyToTell')}</span>
+                      )}
                     </TD>
                   </TR>
                 ))}
@@ -470,6 +508,10 @@ function bandTone(
     case 'strong':
     case 'consistent':
       return 'success';
+    case 'irregular':
+      return 'warning';
+    case 'missing':
+      return 'danger';
     case 'drifting':
       return 'warning';
     case 'at_risk':
