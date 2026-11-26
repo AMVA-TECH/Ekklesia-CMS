@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Icon } from '@/app/_ekklesia/icons';
 import {
@@ -25,6 +26,7 @@ type Church = {
   slug: string;
   timezone: string;
   defaultLocale: string;
+  lifecycleStatus?: string;
   createdAt: string;
 };
 
@@ -80,6 +82,10 @@ export function ChurchesClient() {
   const [items, setItems] = useState<Church[]>([]);
   const [selected, setSelected] = useState('');
   const [reason, setReason] = useState('');
+  const [accessLevel, setAccessLevel] = useState<'read' | 'interactive'>(
+    'read',
+  );
+  const [expiresInMinutes, setExpiresInMinutes] = useState(60);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [entering, setEntering] = useState(false);
@@ -108,9 +114,14 @@ export function ChurchesClient() {
   const [failureOpen, setFailureOpen] = useState(false);
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
   const [failureTitle, setFailureTitle] = useState('Request failed');
+  const [filterQ, setFilterQ] = useState('');
+  const [filterLifecycle, setFilterLifecycle] = useState('');
 
   const reload = useCallback(() => {
-    platformApi<{ items: Church[] }>('/api/v1/platform/churches')
+    const qs = new URLSearchParams({ limit: '100' });
+    if (filterQ.trim()) qs.set('q', filterQ.trim());
+    if (filterLifecycle) qs.set('lifecycleStatus', filterLifecycle);
+    platformApi<{ items: Church[] }>(`/api/v1/platform/churches?${qs}`)
       .then((res) => {
         setItems(res.items);
         setLoadError(null);
@@ -119,7 +130,7 @@ export function ChurchesClient() {
       .catch((err: unknown) =>
         setLoadError(humanizePlatformError(err)),
       );
-  }, []);
+  }, [filterQ, filterLifecycle]);
 
   useEffect(() => {
     reload();
@@ -246,10 +257,14 @@ export function ChurchesClient() {
       }>(`/api/v1/platform/tenants/${selected}/enter`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ reason: reason.trim() }),
+        body: JSON.stringify({
+          reason: reason.trim(),
+          accessLevel,
+          expiresInMinutes,
+        }),
       });
       setSuccessMessage(
-        `Entered ${res.churchName}. Reason recorded.${
+        `Entered ${res.churchName} (${accessLevel}, ${expiresInMinutes}m). Reason recorded.${
           res.devHint
             ? ` Dev headers: ${JSON.stringify(res.devHint)}`
             : ''
@@ -257,6 +272,8 @@ export function ChurchesClient() {
       );
       setSuccessOpen(true);
       setReason('');
+      setAccessLevel('read');
+      setExpiresInMinutes(60);
       setEnterFieldErrors({});
     } catch (err: unknown) {
       showFailure('Could not enter church', humanizePlatformError(err));
@@ -266,14 +283,7 @@ export function ChurchesClient() {
   }
 
   return (
-    <>
-      <h1 className="platform-h1">Churches</h1>
-      <p className="platform-lead">
-        Create tenants and issue the first church administrator credentials
-        (DEC-032). Enter a church with a written reason for support — every
-        entry is audited.
-      </p>
-
+    <div className="flex flex-col gap-6">
       {loadError ? (
         <div className="platform-status platform-status-danger" role="alert">
           <span className="platform-status-icon">
@@ -480,11 +490,34 @@ export function ChurchesClient() {
           <h2>Inventory</h2>
           <span className="platform-muted">{items.length} churches</span>
         </div>
+        <div className="flex flex-wrap gap-2 border-b border-border px-4 py-3">
+          <input
+            className="platform-input max-w-xs"
+            placeholder="Filter name or slug"
+            value={filterQ}
+            onChange={(e) => setFilterQ(e.target.value)}
+          />
+          <select
+            className="platform-select max-w-[12rem]"
+            value={filterLifecycle}
+            onChange={(e) => setFilterLifecycle(e.target.value)}
+          >
+            <option value="">All lifecycles</option>
+            <option value="active">active</option>
+            <option value="pending_activation">pending_activation</option>
+            <option value="suspended">suspended</option>
+            <option value="closed">closed</option>
+          </select>
+          <Button type="button" size="sm" variant="secondary" onClick={reload}>
+            Apply
+          </Button>
+        </div>
         <table className="platform-table">
           <thead>
             <tr>
               <th>Name</th>
               <th>Slug</th>
+              <th>Lifecycle</th>
               <th>Timezone</th>
               <th>Locale</th>
             </tr>
@@ -492,8 +525,16 @@ export function ChurchesClient() {
           <tbody>
             {items.map((c) => (
               <tr key={c.id}>
-                <td>{c.name}</td>
+                <td>
+                  <Link
+                    href={`/platform/churches/${c.id}`}
+                    className="font-medium text-foreground hover:text-[color:var(--brand-gold-ink)]"
+                  >
+                    {c.name}
+                  </Link>
+                </td>
                 <td className="platform-muted">{c.slug}</td>
+                <td>{c.lifecycleStatus ?? '—'}</td>
                 <td>{c.timezone}</td>
                 <td>{c.defaultLocale}</td>
               </tr>
@@ -562,6 +603,40 @@ export function ChurchesClient() {
               </span>
             ) : null}
           </div>
+          <div>
+            <label className="platform-muted" htmlFor="accessLevel">
+              Access level (default read)
+            </label>
+            <select
+              id="accessLevel"
+              className="platform-select"
+              value={accessLevel}
+              onChange={(e) =>
+                setAccessLevel(e.target.value as 'read' | 'interactive')
+              }
+            >
+              <option value="read">read</option>
+              <option value="interactive">interactive</option>
+            </select>
+          </div>
+          <div>
+            <label className="platform-muted" htmlFor="expiresInMinutes">
+              Expires in (minutes)
+            </label>
+            <input
+              id="expiresInMinutes"
+              type="number"
+              min={5}
+              max={1440}
+              className="platform-input"
+              value={expiresInMinutes}
+              onChange={(e) =>
+                setExpiresInMinutes(
+                  Math.min(1440, Math.max(5, Number(e.target.value) || 60)),
+                )
+              }
+            />
+          </div>
         </div>
       </form>
 
@@ -625,6 +700,6 @@ export function ChurchesClient() {
           </p>
         </div>
       </Dialog>
-    </>
+    </div>
   );
 }
