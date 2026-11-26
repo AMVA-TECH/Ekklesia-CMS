@@ -9,8 +9,8 @@ import { cn } from './utils';
 export type BrandSurface = 'light' | 'dark' | 'auto';
 
 /**
- * `symbol` — transparent fish (sidebar, inline chrome).
- * `logo` — squircle app icon (light headers, splash, favicons).
+ * `symbol` — official transparent fish (sidebar, inline chrome).
+ * `logo` — official squircle app icon (light headers, splash).
  */
 export type BrandMarkVariant = 'symbol' | 'logo';
 
@@ -45,14 +45,17 @@ export interface BrandMarkProps {
   tone?: 'default' | 'inverse';
 }
 
+/**
+ * Transparent fish/cross mark (square tile removed). Masters in `/public/brand/`.
+ */
 const ASSETS = {
   symbol: {
-    light: '/branding/ekklesia-symbol-light.svg',
-    dark: '/branding/ekklesia-symbol-dark.svg',
+    light: '/brand/ekklesia-app-icon-light.png?v=6',
+    dark: '/brand/ekklesia-app-icon-dark.png?v=6',
   },
   logo: {
-    light: '/branding/ekklesia-logo-light.svg',
-    dark: '/branding/ekklesia-logo-dark.svg',
+    light: '/brand/ekklesia-app-icon-light.png?v=6',
+    dark: '/brand/ekklesia-app-icon-dark.png?v=6',
   },
 } as const;
 
@@ -86,14 +89,14 @@ function MarkImage({
   className?: string;
 }): React.ReactElement {
   return (
-    // SVG brand marks — next/image adds little value and complicates SVG.
+    // Official PNG masters — keep <img> so SVG tooling cannot substitute geometry.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt=""
       width={size}
       height={size}
-      className={cn('shrink-0', className)}
+      className={cn('shrink-0 object-contain', className)}
       decoding="async"
     />
   );
@@ -102,8 +105,8 @@ function MarkImage({
 /**
  * Official Ekklesia brand mark + optional typeset wordmark.
  *
- * Asset selection is centralized here so shells never pick light/dark paths
- * themselves. Geometry comes from `/public/branding/*` (approved fish + cross).
+ * Asset selection is centralized here so shells never pick paths themselves.
+ * Geometry comes from `/public/brand/*` (the supplied fish + cross masters).
  */
 export function BrandMark({
   size = 32,

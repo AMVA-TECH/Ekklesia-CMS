@@ -192,7 +192,7 @@ export function DashboardClient(): React.ReactElement {
           <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/92 to-surface/35" />
         </div>
         <div className="relative flex min-h-[11rem] flex-col justify-center gap-2 px-5 py-7 sm:px-8 sm:py-9 lg:max-w-[58%]">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium tracking-normal text-muted-foreground">
             {sessionLoading ? '…' : churchLabel}
           </p>
           <h1

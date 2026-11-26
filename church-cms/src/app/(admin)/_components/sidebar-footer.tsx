@@ -86,7 +86,7 @@ export function SidebarFooter(): React.ReactElement | null {
             {displayName}
           </p>
           {showAdmin ? (
-            <span className="shrink-0 rounded-md bg-[color:var(--sidebar-active-bg)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-active-accent)] ring-1 ring-inset ring-[color:var(--sidebar-active-border)]">
+            <span className="shrink-0 rounded-md bg-[color:var(--sidebar-active-bg)] px-1.5 py-0.5 text-[10px] font-medium tracking-normal text-[color:var(--sidebar-active-accent)] ring-1 ring-inset ring-[color:var(--sidebar-active-border)]">
               {t('admin')}
             </span>
           ) : null}

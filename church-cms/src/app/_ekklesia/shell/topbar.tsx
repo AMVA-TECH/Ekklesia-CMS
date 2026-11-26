@@ -43,8 +43,7 @@ export function Topbar({
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 flex h-[var(--layout-topbar-height,3.5rem)] items-center gap-2 border-b border-border bg-surface/95 px-4 backdrop-blur',
-        variant === 'member' && 'bg-surface',
+        'sticky top-0 z-30 flex h-[var(--layout-topbar-height,3.5rem)] items-center gap-2 border-b border-border bg-surface px-4',
         className,
       )}
     >

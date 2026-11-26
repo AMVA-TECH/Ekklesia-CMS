@@ -31,17 +31,17 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: t("homeDescription"),
     icons: {
+      // Transparent fish mark (no square tile). ?v=6 busts prior favicon caches.
       icon: [
-        { url: "/branding/favicon.svg", type: "image/svg+xml" },
-        { url: "/branding/favicon-32.png", sizes: "32x32", type: "image/png" },
-        { url: "/branding/favicon-48.png", sizes: "48x48", type: "image/png" },
-        { url: "/favicon.ico", sizes: "16x16 32x32 48x48", type: "image/x-icon" },
+        { url: "/branding/favicon-32.png?v=6", sizes: "32x32", type: "image/png" },
+        { url: "/branding/favicon-48.png?v=6", sizes: "48x48", type: "image/png" },
+        { url: "/favicon.ico?v=6", sizes: "16x16 32x32 48x48", type: "image/x-icon" },
       ],
-      shortcut: "/branding/favicon.svg",
+      shortcut: "/branding/favicon-32.png?v=6",
       apple: [
         {
-          url: "/branding/apple-touch-icon.png",
-          sizes: "180x180",
+          url: "/brand/ekklesia-app-icon-dark.png?v=6",
+          sizes: "1024x1024",
           type: "image/png",
         },
       ],
