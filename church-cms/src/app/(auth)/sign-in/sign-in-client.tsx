@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, type FormEvent } from 'react';
@@ -30,7 +30,6 @@ type IdentifierKind = 'phone' | 'email';
 export function SignInClient(): React.ReactElement {
   const t = useTranslations('SignIn');
   const tCommon = useTranslations('Common');
-  const router = useRouter();
   const params = useSearchParams();
   const showHelp = params?.get('help') === '1';
   const requestedRedirect = sanitizeAppRedirect(params?.get('redirect'));
@@ -95,11 +94,13 @@ export function SignInClient(): React.ReactElement {
         const verifyQs = requestedRedirect
           ? `?redirect=${encodeURIComponent(requestedRedirect)}`
           : '';
-        router.push(`/verify${verifyQs}`);
+        // Hard nav so the Better Auth 2FA challenge cookie from login is
+        // present when /verify auto-sends OTP (soft push can race).
+        window.location.assign(`/verify${verifyQs}`);
         return;
       }
       const destination = await resolvePostAuthPath(requestedRedirect);
-      router.push(destination);
+      window.location.assign(destination);
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 401 || e.status === 403) {
@@ -253,6 +254,15 @@ export function SignInClient(): React.ReactElement {
           className="link-ink font-medium underline-offset-2 hover:underline focus-ring rounded-sm"
         >
           {t('requestJoin')}
+        </Link>
+      </p>
+      <p className="mt-2 text-center text-sm text-muted-foreground">
+        {t('churchRegisterPrompt')}{' '}
+        <Link
+          href="/register-church"
+          className="link-ink font-medium underline-offset-2 hover:underline focus-ring rounded-sm"
+        >
+          {t('churchRegisterLink')}
         </Link>
       </p>
     </div>
