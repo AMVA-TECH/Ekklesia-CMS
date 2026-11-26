@@ -8,6 +8,7 @@ export {
 export {
   searchPublicChurches,
   createPublicJoinRequest,
+  getPublicJoinRequestStatus,
   listJoinRequests,
   decideJoinRequest,
 } from './join-requests';
@@ -16,7 +17,9 @@ export {
   createJoinRequestBodySchema,
   listJoinRequestsQuerySchema,
   decideJoinRequestBodySchema,
+  publicJoinRequestStatusQuerySchema,
 } from './join-request-schemas';
+
 export {
   MEMBERSHIP_STATUSES,
   MEMBERSHIP_TYPES,

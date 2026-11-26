@@ -17,6 +17,10 @@ import {
   TANZANIA_PHONE_EXAMPLE_LOCAL,
   normalizeTanzaniaPhoneE164,
 } from '@/platform/phone';
+import {
+  joinStatusPath,
+  storeJoinAccessToken,
+} from './applicant-access';
 
 type ChurchHit = {
   id: string;
@@ -27,8 +31,10 @@ type ChurchHit = {
 };
 
 type SuccessState = {
+  requestId: string;
   churchName: string;
   message: string;
+  accessToken: string | null;
 };
 
 /**
@@ -138,9 +144,16 @@ export function RegisterClient(): React.ReactElement {
         throw new Error(body?.detail || body?.title || t('requestFailed'));
       }
       const payload = body.data ?? body;
+      const accessToken =
+        typeof payload.accessToken === 'string' ? payload.accessToken : null;
+      if (payload.id && accessToken) {
+        storeJoinAccessToken(payload.id, accessToken);
+      }
       setSuccess({
+        requestId: payload.id,
         churchName: church.name,
         message: payload.message || t('successDefaultMessage'),
+        accessToken,
       });
       setSuccessOpen(true);
     } catch (err: unknown) {
@@ -149,6 +162,12 @@ export function RegisterClient(): React.ReactElement {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function goToStatus(): void {
+    if (!success?.requestId) return;
+    setSuccessOpen(false);
+    router.push(joinStatusPath(success.requestId, success.accessToken));
   }
 
   function closeSuccessDialog(): void {
@@ -178,11 +197,19 @@ export function RegisterClient(): React.ReactElement {
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--success)] text-white">
             <Icon name="check-circle" size={20} />
           </span>
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="font-semibold">{t('receivedTitle')}</p>
             <p className="mt-1 opacity-90">
               {t('receivedBody', { churchName: success.churchName })}
             </p>
+            <Button
+              type="button"
+              size="sm"
+              className="mt-3"
+              onClick={goToStatus}
+            >
+              {t('trackStatus')}
+            </Button>
           </div>
         </div>
       ) : null}
@@ -371,14 +398,8 @@ export function RegisterClient(): React.ReactElement {
             <Button variant="secondary" onClick={closeSuccessDialog}>
               {t('stayHere')}
             </Button>
-            <Button
-              data-autofocus
-              onClick={() => {
-                setSuccessOpen(false);
-                router.push('/sign-in');
-              }}
-            >
-              {t('goToSignIn')}
+            <Button data-autofocus onClick={goToStatus}>
+              {t('trackStatus')}
             </Button>
           </DialogFooter>
         }
@@ -402,6 +423,9 @@ export function RegisterClient(): React.ReactElement {
               </p>
               <p className="mt-1 text-sm text-[color:var(--brand-gold-ink)] opacity-90">
                 {t('waitingBody', { churchName: success.churchName })}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--brand-gold-ink)] opacity-90">
+                {t('successNext')}
               </p>
             </div>
           </div>

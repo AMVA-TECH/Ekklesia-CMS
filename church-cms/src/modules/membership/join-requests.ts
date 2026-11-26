@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { createHash, randomBytes, randomInt } from 'node:crypto';
 import { and, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm';
 
 import type { Ctx } from '@/platform/auth';
@@ -34,6 +34,15 @@ import type {
   ListJoinRequestsQuery,
   PublicChurchSearchQuery,
 } from './join-request-schemas';
+import { notifyJoinApproved } from './join-request-notify';
+
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+function newOpaqueToken(): string {
+  return randomBytes(32).toString('base64url');
+}
 
 function isUniqueViolation(error: unknown): boolean {
   return (
@@ -70,6 +79,7 @@ export async function searchPublicChurches(query: PublicChurchSearchQuery) {
     .where(
       and(
         isNull(churches.deletedAt),
+        eq(churches.lifecycleStatus, 'active'),
         or(
           ilike(churches.name, `%${q}%`),
           ilike(churches.slug, `%${q}%`),
@@ -97,11 +107,18 @@ export async function createPublicJoinRequest(body: CreateJoinRequestBody) {
   const phone = body.phoneE164.trim();
 
   const church = await db
-    .select({ id: churches.id, name: churches.name })
+    .select({
+      id: churches.id,
+      name: churches.name,
+      lifecycleStatus: churches.lifecycleStatus,
+    })
     .from(churches)
     .where(and(eq(churches.id, body.churchId), isNull(churches.deletedAt)))
     .limit(1);
   if (!church[0]) throw notFound('Church not found.');
+  if (church[0].lifecycleStatus !== 'active') {
+    throw conflict('This church is not accepting join requests yet.');
+  }
 
   if (email) {
     const existingAccount = await db
@@ -127,6 +144,7 @@ export async function createPublicJoinRequest(body: CreateJoinRequestBody) {
   }
 
   const id = newId();
+  const accessToken = newOpaqueToken();
   try {
     await db.insert(churchJoinRequests).values({
       id,
@@ -136,6 +154,7 @@ export async function createPublicJoinRequest(body: CreateJoinRequestBody) {
       phoneE164: phone,
       preferredLocale: body.preferredLocale,
       status: 'pending',
+      applicantAccessTokenHash: hashToken(accessToken),
     });
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -149,8 +168,90 @@ export async function createPublicJoinRequest(body: CreateJoinRequestBody) {
     churchId: body.churchId,
     churchName: church[0].name,
     status: 'pending' as const,
+    accessToken,
     message:
       'Your request was submitted. The church will review it before you can sign in.',
+  };
+}
+
+/** Public: applicant status poll (access token required). */
+export async function getPublicJoinRequestStatus(
+  requestId: string,
+  accessToken: string,
+) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: churchJoinRequests.id,
+      status: churchJoinRequests.status,
+      displayName: churchJoinRequests.displayName,
+      preferredLocale: churchJoinRequests.preferredLocale,
+      decisionReason: churchJoinRequests.decisionReason,
+      createdAt: churchJoinRequests.createdAt,
+      decidedAt: churchJoinRequests.decidedAt,
+      applicantAccessTokenHash: churchJoinRequests.applicantAccessTokenHash,
+      churchId: churchJoinRequests.churchId,
+      churchName: churches.name,
+    })
+    .from(churchJoinRequests)
+    .innerJoin(churches, eq(churches.id, churchJoinRequests.churchId))
+    .where(
+      and(
+        eq(churchJoinRequests.id, requestId),
+        isNull(churchJoinRequests.deletedAt),
+      ),
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) throw notFound('Join request not found.');
+  if (
+    !row.applicantAccessTokenHash ||
+    row.applicantAccessTokenHash !== hashToken(accessToken)
+  ) {
+    throw notFound('Join request not found.');
+  }
+
+  const stage =
+    row.status === 'approved'
+      ? ('approved' as const)
+      : row.status === 'rejected'
+        ? ('rejected' as const)
+        : ('pending' as const);
+
+  const steps = [
+    { key: 'submitted', state: 'done' as const },
+    {
+      key: 'review',
+      state:
+        stage === 'pending'
+          ? ('current' as const)
+          : stage === 'rejected'
+            ? ('failed' as const)
+            : ('done' as const),
+    },
+    {
+      key: 'ready',
+      state:
+        stage === 'approved'
+          ? ('current' as const)
+          : stage === 'rejected'
+            ? ('upcoming' as const)
+            : ('upcoming' as const),
+    },
+  ];
+
+  return {
+    id: row.id,
+    status: row.status,
+    stage,
+    displayName: row.displayName,
+    churchName: row.churchName,
+    preferredLocale: row.preferredLocale,
+    createdAt: row.createdAt.toISOString(),
+    decidedAt: row.decidedAt?.toISOString() ?? null,
+    decisionReason:
+      stage === 'rejected' ? row.decisionReason?.trim() || null : null,
+    steps,
   };
 }
 
@@ -385,6 +486,19 @@ export async function decideJoinRequest(
     }),
   });
 
+  const churchRow = await db
+    .select({ name: churches.name })
+    .from(churches)
+    .where(eq(churches.id, ctx.churchId))
+    .limit(1);
+  const notify = await notifyJoinApproved({
+    churchName: churchRow[0]?.name ?? 'your church',
+    phoneE164: phone,
+    email,
+    pin,
+    locale: request.preferredLocale,
+  });
+
   return {
     id: requestId,
     status: 'approved' as const,
@@ -396,5 +510,6 @@ export async function decideJoinRequest(
       /** Shown once to the approving admin — not stored in audit. */
       initialPin: pin,
     },
+    notify,
   };
 }

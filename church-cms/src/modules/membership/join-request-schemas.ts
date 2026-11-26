@@ -43,3 +43,13 @@ export const decideJoinRequestBodySchema = z
   .strict();
 
 export type DecideJoinRequestBody = z.infer<typeof decideJoinRequestBodySchema>;
+
+export const publicJoinRequestStatusQuerySchema = z
+  .object({
+    accessToken: z.string().trim().min(16).max(200),
+  })
+  .strict();
+
+export type PublicJoinRequestStatusQuery = z.infer<
+  typeof publicJoinRequestStatusQuerySchema
+>;
