@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0](https://github.com/AMVA-TECH/Ekklesia-CMS/compare/v0.3.0...v0.4.0) (2026-11-26)
+
+
+### Features
+
+* **access:** expand RBAC catalogue, role admin, and isolation tests ([d3eedb8](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/d3eedb83c00eefb146b989b9ef1e620967c519e4))
+* **auth:** add public church registration and activation journey ([4ab42d9](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/4ab42d9221ae2b86a21e2f2d962f34b4adf44c6d))
+* **db:** add migrations 0022–0029 for RBAC, platform ops, and join tokens ([164b492](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/164b492eb98c588ee70eb04781cd75c09f1fa699))
+* **i18n:** localize church registration and member join journeys ([5321bbe](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/5321bbefca7762509a580a6581686e8883b54d96))
+* **membership:** add join-request status tracking and approval notice ([36cb278](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/36cb27898f18c2d0dffafaa0da8bc79594e648c2))
+* **organisation:** tighten appointment RBAC and structural access rules ([fdc8443](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/fdc844300632b0cdabab4a19ff95f723e38f4d2a))
+* platform onboarding, church registration, and member join journeys ([0eb1665](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/0eb1665dcc2659dd925d165871fcf44870c22891))
+* **platform-ops:** add registration KYC, provisioning, and operator APIs ([1071b9a](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/1071b9a76fb1dce8ffd483857ee4eeea465a91c9))
+* **platform:** deepen console UI with verification queue and alerts ([81fef7c](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/81fef7c389470a61ab42fed03e5ba2ace24d500a))
+
+
+### Bug Fixes
+
+* **auth:** harden locale switch and post-auth redirects ([bda9ed2](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/bda9ed28d4a33f56aa873727579105945460d256))
+* **notify:** tighten Briq and channel webhook handlers ([b010955](https://github.com/AMVA-TECH/Ekklesia-CMS/commit/b01095538ad977cfd9b946fb1a2be805e43e1a52))
+
 ## [0.3.0](https://github.com/AMVA-TECH/Ekklesia-CMS/compare/v0.2.0...v0.3.0) (2026-11-18)
 
 
