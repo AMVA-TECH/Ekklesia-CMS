@@ -155,6 +155,62 @@
       "when": 1794360000000,
       "tag": "0021_church_profile_org_leadership",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794370000000,
+      "tag": "0022_permission_catalogue_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794380000000,
+      "tag": "0023_assignment_source_appointment",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794390000000,
+      "tag": "0024_church_registration_provisioning",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794400000000,
+      "tag": "0025_platform_accounts_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794410000000,
+      "tag": "0026_platform_integrations_webhooks",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794420000000,
+      "tag": "0027_platform_support_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794430000000,
+      "tag": "0028_platform_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794440000000,
+      "tag": "0029_join_request_access_token",
+      "breakpoints": true
     }
   ]
 }
