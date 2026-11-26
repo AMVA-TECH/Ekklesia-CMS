@@ -18,7 +18,10 @@ export interface Ctx {
   locale: 'sw' | 'en';
   /** Effective permission codes for this request (roles + active delegations). */
   permissions: ReadonlySet<PermissionCode | string>;
+  /** Per-permission assignment scopes. Absent ⇒ church-wide for listed permissions. */
   scopesByPermission?: ReadonlyMap<string, AuthScope[]>;
+  /** Households the actor’s person belongs to (for household scope checks). */
+  actorHouseholdIds?: ReadonlySet<string>;
   /** True when the actor is an active platform operator (ADR-0003). */
   isPlatformOperator?: boolean;
 }

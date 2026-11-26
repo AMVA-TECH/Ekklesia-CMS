@@ -43,6 +43,12 @@ describe('buildAdminGroups', () => {
     assert.ok(!links.includes('/admin/settings'));
   });
 
+  it('shows roles workspace for roles:read or roles:assign', () => {
+    assert.ok(hrefs(['roles:read']).includes('/admin/roles'));
+    assert.ok(hrefs(['roles:assign']).includes('/admin/roles'));
+    assert.ok(!hrefs(['people:read']).includes('/admin/roles'));
+  });
+
   it('hides modules switched off for the church', () => {
     const session = {
       permissions: ['journals:read', 'projects:read'],

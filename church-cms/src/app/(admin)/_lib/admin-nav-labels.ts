@@ -64,6 +64,8 @@ export const DEFAULT_ADMIN_NAV_LABELS = {
   settingsGroup: 'Settings',
   churchProfile: 'Church profile',
   churchProfileHint: 'Organisation and access',
+  rolesAccess: 'Roles & permissions',
+  rolesAccessHint: 'Roles, matrix, assignments',
   exports: 'Exports',
   exportsHint: 'CSV downloads',
   auditLog: 'Audit log',

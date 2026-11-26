@@ -33,7 +33,7 @@
 - [ ] Implement approved people and membership workflows.
 - [ ] Implement only approved church operations modules.
 - [ ] Implement finance only if approved and controls are specified.
-- [ ] Complete role-based and negative-permission tests.
+- [x] Complete role-based and negative-permission tests. (RBAC: can/scope, delegation subset, catalogue, nav roles link; expand API cross-tenant suite ongoing)
 - [ ] Prepare data migration and UAT.
 
 ## Backlog hygiene
