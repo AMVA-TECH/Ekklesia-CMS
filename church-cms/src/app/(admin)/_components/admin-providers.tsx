@@ -84,6 +84,16 @@ export function AdminProviders({ children }: AdminProvidersProps): React.ReactEl
   );
   const churchName = session?.church?.name;
 
+  useEffect(() => {
+    if (loading) return;
+    if (session) return;
+    if (typeof window === 'undefined') return;
+    const next = encodeURIComponent(
+      `${window.location.pathname}${window.location.search}`,
+    );
+    window.location.replace(`/login?redirect=${next}`);
+  }, [loading, session]);
+
   return (
     <SessionProvider session={session} loading={loading}>
       <ToastProvider>

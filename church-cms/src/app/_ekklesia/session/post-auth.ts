@@ -1,6 +1,5 @@
 import { normalizeTanzaniaPhoneE164 } from '@/platform/phone';
 import { apiFetch } from './api-fetch';
-import { ROLE_CODES } from './types';
 
 /**
  * Slim `/api/v1/auth/me` fields used for post-login routing.
@@ -8,16 +7,26 @@ import { ROLE_CODES } from './types';
  */
 interface AuthMeForRedirect {
   mfaRequired?: boolean;
+  permissions?: ReadonlyArray<string>;
   roles?: ReadonlyArray<{ code: string }>;
+  user?: { isPlatformOperator?: boolean };
 }
 
-const ADMIN_ROLE_CODES = new Set<string>([
-  ROLE_CODES.churchAdministrator,
-  ROLE_CODES.financeOfficer,
-  ROLE_CODES.pastor,
-  ROLE_CODES.ministryLeader,
-  ROLE_CODES.platformOperator,
-]);
+/** Permissions that indicate admin dashboard access (not role titles). */
+const ADMIN_HINT_PERMISSIONS = [
+  'roles:assign',
+  'roles:read',
+  'church:update',
+  'people:create',
+  'memberships:approve',
+  'funds:write',
+  'journals:draft',
+  'events:write',
+  'units:write',
+  'exports:run',
+  'imports:run',
+  'audit:read',
+] as const;
 
 /**
  * Normalize phone for Tanzania pilot forms.
@@ -44,14 +53,17 @@ export function sanitizeAppRedirect(raw: string | null | undefined): string | nu
 
 function isAdminMe(me: AuthMeForRedirect): boolean {
   if (me.mfaRequired) return true;
-  return (me.roles ?? []).some((role) => ADMIN_ROLE_CODES.has(role.code));
+  if (me.user?.isPlatformOperator) return true;
+  const perms = new Set(me.permissions ?? []);
+  return ADMIN_HINT_PERMISSIONS.some((code) => perms.has(code));
 }
 
 /**
  * After PIN (or MFA) succeeds, pick where to send the user.
  *
  * - Explicit safe `redirect` query wins when present.
- * - Otherwise admins land on `/admin/dashboard`, everyone else on `/home`.
+ * - Platform operators land on `/platform`.
+ * - Otherwise church admins land on `/admin/dashboard`, members on `/home`.
  */
 export async function resolvePostAuthPath(
   requestedRedirect?: string | null,
@@ -63,6 +75,7 @@ export async function resolvePostAuthPath(
     const me = await apiFetch<AuthMeForRedirect>('/api/v1/auth/me', {
       skipDevAuth: true,
     });
+    if (me.user?.isPlatformOperator) return '/platform';
     return isAdminMe(me) ? '/admin/dashboard' : '/home';
   } catch {
     return '/home';

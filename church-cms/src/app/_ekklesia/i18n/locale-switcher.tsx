@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { apiFetch } from '@/app/_ekklesia/session';
 import { cn } from '@/app/_ekklesia/ui/utils';
 import {
   APP_LOCALES,
@@ -36,19 +37,23 @@ export function LocaleSwitcher({
     setPending(true);
 
     try {
-      await fetch('/api/locale', {
+      const cookieRes = await fetch('/api/locale', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ locale: next }),
       });
+      if (!cookieRes.ok) {
+        setPending(false);
+        return;
+      }
 
       if (persistProfile) {
         try {
-          await fetch('/api/v1/people/me', {
+          // apiFetch attaches session / x-dev-* headers; bare fetch 403'd and
+          // left preferredLocale stale so the next /auth/me sync undid the cookie.
+          await apiFetch('/api/v1/people/me', {
             method: 'PATCH',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ preferredLocale: next }),
-            credentials: 'include',
+            json: { preferredLocale: next },
           });
         } catch {
           // Cookie still applied; profile sync can retry from settings.
