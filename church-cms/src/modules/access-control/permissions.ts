@@ -86,11 +86,9 @@ export type PermissionCode = (typeof PERMISSIONS)[number];
 
 /** Seed role codes (per church). */
 export const ROLE_CODES = [
-  'platform_operator',
   'senior_pastor',
   'pastoral_leadership',
   'church_administrator',
-  'pogs',
   'finance_officer',
   'chief_financial_steward',
   'ministry_leader',
@@ -98,6 +96,7 @@ export const ROLE_CODES = [
   'registrar',
   'event_recorder',
   'announcer',
+  'auditor',
   'member',
 ] as const;
 

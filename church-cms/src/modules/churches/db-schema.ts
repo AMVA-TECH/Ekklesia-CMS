@@ -13,6 +13,8 @@ export const churches = pgTable('churches', {
   slug: text('slug').notNull().unique(),
   timezone: text('timezone').notNull().default('Africa/Dar_es_Salaam'),
   defaultLocale: text('default_locale').notNull().default('sw'),
+  /** pending_activation | active | suspended | closed */
+  lifecycleStatus: text('lifecycle_status').notNull().default('active'),
   ...auditColumns,
 });
 

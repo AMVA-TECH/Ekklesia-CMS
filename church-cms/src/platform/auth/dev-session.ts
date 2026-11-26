@@ -1,5 +1,9 @@
-import { PERMISSIONS } from '@/modules/access-control/permissions';
 import type { SessionClaims } from './require-ctx';
+import {
+  churchWideScopesForPermissions,
+  serializeScopesByPermission,
+} from './permissions-for-user';
+import { churchPermissionsForSupportAccess } from '@/modules/platform-ops/support-access';
 
 /**
  * Temporary request-header session for local/dev until clients use Better Auth cookies.
@@ -9,6 +13,8 @@ import type { SessionClaims } from './require-ctx';
  *   x-dev-user-id, x-dev-church-id?, x-dev-person-id?, x-dev-permissions (comma-separated)
  *   x-dev-platform-operator=1 — grants platform scope (ADR-0003)
  *   x-dev-platform-permissions — optional comma-separated platform perms
+ *   x-dev-support-access-level=read|interactive — church-plane support posture
+ *     (default read when platform operator + church id)
  */
 export function readDevSession(request: Request): SessionClaims | null {
   if (process.env.NODE_ENV === 'production') {
@@ -34,9 +40,11 @@ export function readDevSession(request: Request): SessionClaims | null {
     .map((p) => p.trim())
     .filter(Boolean);
 
-  // Support enter-tenant: full church permission set for platform operators.
+  // Controlled support enter-tenant (default read).
   if (isPlatformOperator && activeChurchId) {
-    permissions = [...PERMISSIONS];
+    const raw = request.headers.get('x-dev-support-access-level');
+    const level = raw === 'interactive' ? 'interactive' : 'read';
+    permissions = [...churchPermissionsForSupportAccess(level)];
   }
 
   const platformHeader = request.headers.get('x-dev-platform-permissions');
@@ -48,11 +56,17 @@ export function readDevSession(request: Request): SessionClaims | null {
         .filter(Boolean)
     : undefined;
 
+  const scopesByPermission =
+    permissions.length > 0
+      ? serializeScopesByPermission(churchWideScopesForPermissions(permissions))
+      : undefined;
+
   return {
     userAccountId,
     activeChurchId: activeChurchId || null,
     personId: request.headers.get('x-dev-person-id') ?? undefined,
     permissions,
+    scopesByPermission,
     isPlatformOperator: isPlatformOperator || undefined,
     platformPermissions,
   };

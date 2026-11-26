@@ -37,7 +37,7 @@ export function PageHeader({
     >
       <div className="min-w-0">
         {eyebrow ? (
-          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="mb-2 text-xs font-medium tracking-normal text-muted-foreground">
             {eyebrow}
           </div>
         ) : null}

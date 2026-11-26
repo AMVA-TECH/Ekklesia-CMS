@@ -14,7 +14,7 @@
 | Person-scoped RLS hardening | migration `0007_rls_stage5_person_scoped` | Applied |
 | UAT script | [UAT_CHECKLIST.md](./UAT_CHECKLIST.md) | Draft for CrossLife reps |
 | Auth decision | ADR-0002 Better Auth (C) | **Accepted** — member PIN (email/phone); admin OTP MFA |
-| Platform operator console | ADR-0003 · subdomain `platform.*` · migration `0018` | **Implemented** — overview, security, audit, access, growth, fault, churches (`src/proxy.ts`) |
+| Platform operator console | ADR-0003 · path `/platform` · migration `0018` | **Implemented** — overview, security, audit, access, growth, fault, churches (legacy subdomain redirects via `src/proxy.ts`) |
 | Training / support | TBD with CrossLife admin | Not started |
 | Defect triage process | Use GitHub/issue tracker during UAT | Not started |
 | Legal / PDPA pre-launch | Lawyer confirm Tanzania PDPA obligations (`04-security` §5) | Owner |

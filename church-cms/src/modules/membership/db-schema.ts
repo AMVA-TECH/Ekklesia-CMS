@@ -104,6 +104,8 @@ export const churchJoinRequests = pgTable(
     decisionReason: text('decision_reason'),
     personId: uuid('person_id').references(() => people.id),
     userAccountId: uuid('user_account_id').references(() => userAccounts.id),
+    /** Opaque token hash so the applicant can poll public status (no session). */
+    applicantAccessTokenHash: text('applicant_access_token_hash'),
     ...auditColumns,
   },
   (table) => [

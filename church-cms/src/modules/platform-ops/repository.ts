@@ -4,8 +4,10 @@ import {
   desc,
   eq,
   gte,
+  ilike,
   isNull,
   lte,
+  or,
   sql,
 } from 'drizzle-orm';
 
@@ -153,7 +155,24 @@ export async function countAuthFailureAuditsSince(
   return Number(platform[0]?.n ?? 0) + Number(church[0]?.n ?? 0);
 }
 
-export async function listChurches(db: Db) {
+export async function listChurches(
+  db: Db,
+  query: {
+    q?: string;
+    lifecycleStatus?: string;
+    limit?: number;
+  } = {},
+) {
+  const conditions = [isNull(churches.deletedAt)];
+  if (query.lifecycleStatus) {
+    conditions.push(eq(churches.lifecycleStatus, query.lifecycleStatus));
+  }
+  if (query.q?.trim()) {
+    const needle = `%${query.q.trim()}%`;
+    conditions.push(
+      or(ilike(churches.name, needle), ilike(churches.slug, needle))!,
+    );
+  }
   return db
     .select({
       id: churches.id,
@@ -161,11 +180,13 @@ export async function listChurches(db: Db) {
       slug: churches.slug,
       timezone: churches.timezone,
       defaultLocale: churches.defaultLocale,
+      lifecycleStatus: churches.lifecycleStatus,
       createdAt: churches.createdAt,
     })
     .from(churches)
-    .where(isNull(churches.deletedAt))
-    .orderBy(desc(churches.createdAt));
+    .where(and(...conditions))
+    .orderBy(desc(churches.createdAt))
+    .limit(query.limit ?? 100);
 }
 
 export async function getChurchById(db: Db, churchId: string) {
@@ -176,6 +197,7 @@ export async function getChurchById(db: Db, churchId: string) {
       slug: churches.slug,
       timezone: churches.timezone,
       defaultLocale: churches.defaultLocale,
+      lifecycleStatus: churches.lifecycleStatus,
       createdAt: churches.createdAt,
     })
     .from(churches)
@@ -215,6 +237,22 @@ export async function listPlatformAudit(
   if (query.from) conditions.push(gte(platformAuditEvents.createdAt, new Date(query.from)));
   if (query.to) conditions.push(lte(platformAuditEvents.createdAt, new Date(query.to)));
   if (query.action) conditions.push(eq(platformAuditEvents.action, query.action));
+  if (query.outcome) conditions.push(eq(platformAuditEvents.outcome, query.outcome));
+  if (query.q?.trim()) {
+    const needle = `%${query.q.trim()}%`;
+    conditions.push(
+      or(
+        ilike(platformAuditEvents.action, needle),
+        ilike(platformAuditEvents.reason, needle),
+        ilike(platformAuditEvents.entityType, needle),
+        ilike(platformAuditEvents.requestId, needle),
+        sql`${platformAuditEvents.entityId}::text ilike ${needle}`,
+      )!,
+    );
+  }
+  if (query.entityType) {
+    conditions.push(eq(platformAuditEvents.entityType, query.entityType));
+  }
   if (query.churchId) conditions.push(eq(platformAuditEvents.churchId, query.churchId));
   if (query.actorUserId) {
     conditions.push(eq(platformAuditEvents.actorUserId, query.actorUserId));
@@ -242,6 +280,188 @@ export async function listPlatformAudit(
     .limit(query.limit);
 
   return items;
+}
+
+export async function getPlatformAuditById(db: Db, id: string) {
+  const rows = await db
+    .select({
+      id: platformAuditEvents.id,
+      actorUserId: platformAuditEvents.actorUserId,
+      action: platformAuditEvents.action,
+      outcome: platformAuditEvents.outcome,
+      churchId: platformAuditEvents.churchId,
+      entityType: platformAuditEvents.entityType,
+      entityId: platformAuditEvents.entityId,
+      requestId: platformAuditEvents.requestId,
+      reason: platformAuditEvents.reason,
+      metadata: platformAuditEvents.metadata,
+      createdAt: platformAuditEvents.createdAt,
+    })
+    .from(platformAuditEvents)
+    .where(eq(platformAuditEvents.id, id))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function listPlatformAuditByRequestId(
+  db: Db,
+  requestId: string,
+  limit = 25,
+) {
+  return db
+    .select({
+      id: platformAuditEvents.id,
+      action: platformAuditEvents.action,
+      outcome: platformAuditEvents.outcome,
+      entityType: platformAuditEvents.entityType,
+      createdAt: platformAuditEvents.createdAt,
+    })
+    .from(platformAuditEvents)
+    .where(eq(platformAuditEvents.requestId, requestId))
+    .orderBy(desc(platformAuditEvents.createdAt))
+    .limit(limit);
+}
+
+/** Church-plane `audit_events` — tenant user activity across churches. */
+export async function listTenantAudit(
+  db: Db,
+  query: ListPlatformAuditQuery,
+) {
+  const conditions = [];
+  if (query.from) conditions.push(gte(auditEvents.createdAt, new Date(query.from)));
+  if (query.to) conditions.push(lte(auditEvents.createdAt, new Date(query.to)));
+  if (query.action) conditions.push(eq(auditEvents.action, query.action));
+  if (query.q?.trim()) {
+    const needle = `%${query.q.trim()}%`;
+    conditions.push(
+      or(
+        ilike(auditEvents.action, needle),
+        ilike(auditEvents.entityType, needle),
+        sql`${auditEvents.entityId}::text ilike ${needle}`,
+      )!,
+    );
+  }
+  if (query.entityType) {
+    conditions.push(eq(auditEvents.entityType, query.entityType));
+  }
+  if (query.churchId) conditions.push(eq(auditEvents.churchId, query.churchId));
+  if (query.actorUserId) {
+    conditions.push(eq(auditEvents.actorUserId, query.actorUserId));
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  return db
+    .select({
+      id: auditEvents.id,
+      actorUserId: auditEvents.actorUserId,
+      action: auditEvents.action,
+      churchId: auditEvents.churchId,
+      entityType: auditEvents.entityType,
+      entityId: auditEvents.entityId,
+      metadata: auditEvents.metadata,
+      createdAt: auditEvents.createdAt,
+    })
+    .from(auditEvents)
+    .where(where)
+    .orderBy(desc(auditEvents.createdAt))
+    .limit(query.limit);
+}
+
+export async function getTenantAuditById(db: Db, id: string) {
+  const rows = await db
+    .select({
+      id: auditEvents.id,
+      actorUserId: auditEvents.actorUserId,
+      action: auditEvents.action,
+      churchId: auditEvents.churchId,
+      entityType: auditEvents.entityType,
+      entityId: auditEvents.entityId,
+      metadata: auditEvents.metadata,
+      createdAt: auditEvents.createdAt,
+    })
+    .from(auditEvents)
+    .where(eq(auditEvents.id, id))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function deletePlatformAudit(
+  db: Db,
+  before?: Date,
+): Promise<number> {
+  if (before) {
+    const deleted = await db
+      .delete(platformAuditEvents)
+      .where(lte(platformAuditEvents.createdAt, before))
+      .returning({ id: platformAuditEvents.id });
+    return deleted.length;
+  }
+  const deleted = await db
+    .delete(platformAuditEvents)
+    .returning({ id: platformAuditEvents.id });
+  return deleted.length;
+}
+
+export async function deleteTenantAudit(
+  db: Db,
+  before?: Date,
+): Promise<number> {
+  if (before) {
+    const deleted = await db
+      .delete(auditEvents)
+      .where(lte(auditEvents.createdAt, before))
+      .returning({ id: auditEvents.id });
+    return deleted.length;
+  }
+  const deleted = await db
+    .delete(auditEvents)
+    .returning({ id: auditEvents.id });
+  return deleted.length;
+}
+
+export async function countPlatformAudit(db: Db, before?: Date) {
+  if (before) {
+    const rows = await db
+      .select({ n: count() })
+      .from(platformAuditEvents)
+      .where(lte(platformAuditEvents.createdAt, before));
+    return Number(rows[0]?.n ?? 0);
+  }
+  const rows = await db.select({ n: count() }).from(platformAuditEvents);
+  return Number(rows[0]?.n ?? 0);
+}
+
+export async function countTenantAudit(db: Db, before?: Date) {
+  if (before) {
+    const rows = await db
+      .select({ n: count() })
+      .from(auditEvents)
+      .where(lte(auditEvents.createdAt, before));
+    return Number(rows[0]?.n ?? 0);
+  }
+  const rows = await db.select({ n: count() }).from(auditEvents);
+  return Number(rows[0]?.n ?? 0);
+}
+
+export async function listDistinctAuditEntityTypes(
+  db: Db,
+  scope: 'platform' | 'tenant',
+) {
+  if (scope === 'tenant') {
+    const rows = await db
+      .selectDistinct({ entityType: auditEvents.entityType })
+      .from(auditEvents)
+      .orderBy(auditEvents.entityType)
+      .limit(100);
+    return rows.map((r) => r.entityType).filter(Boolean);
+  }
+  const rows = await db
+    .selectDistinct({ entityType: platformAuditEvents.entityType })
+    .from(platformAuditEvents)
+    .orderBy(platformAuditEvents.entityType)
+    .limit(100);
+  return rows.map((r) => r.entityType).filter(Boolean);
 }
 
 export async function listFindings(db: Db, query: ListFindingsQuery) {
@@ -553,6 +773,7 @@ export async function insertChurch(
     timezone: string;
     defaultLocale: string;
     actorUserId: string;
+    lifecycleStatus?: string;
   },
 ) {
   await db.insert(churches).values({
@@ -561,6 +782,7 @@ export async function insertChurch(
     slug: input.slug,
     timezone: input.timezone,
     defaultLocale: input.defaultLocale,
+    lifecycleStatus: input.lifecycleStatus ?? 'active',
     createdBy: input.actorUserId,
     updatedBy: input.actorUserId,
   });

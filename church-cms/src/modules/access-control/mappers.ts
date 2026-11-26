@@ -22,6 +22,7 @@ export function toRoleAssignmentResponse(row: AssignmentRow) {
     roleId: row.roleId,
     scopeType: row.scopeType,
     organisationalUnitId: row.organisationalUnitId,
+    sourceAppointmentId: row.sourceAppointmentId ?? null,
     effectiveFrom: row.effectiveFrom.toISOString(),
     effectiveTo: row.effectiveTo ? row.effectiveTo.toISOString() : null,
   };

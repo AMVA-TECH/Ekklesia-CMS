@@ -162,19 +162,34 @@ export function PositionDetailClient({
 
   const activeAppointments = appointments.filter((a) => a.status === 'active');
 
+  const [accessHandoffPath, setAccessHandoffPath] = useState<string | null>(
+    null,
+  );
+  const [accessHandoffLabel, setAccessHandoffLabel] = useState<
+    'review' | 'assign'
+  >('review');
+
   const handleEndAppointment = async (
     appointmentId: string,
   ): Promise<void> => {
     if (endingId) return;
     setEndingId(appointmentId);
     try {
-      await apiFetch(`/api/v1/appointments/${appointmentId}/end`, {
+      const ended = await apiFetch<{
+        accessReview?: {
+          reviewPath?: string;
+          relatedAssignments?: unknown[];
+        };
+      }>(`/api/v1/appointments/${appointmentId}/end`, {
         method: 'POST',
         json: {},
       });
+      const reviewPath = ended.accessReview?.reviewPath ?? null;
+      setAccessHandoffLabel('review');
+      setAccessHandoffPath(reviewPath);
       push({
         tone: 'success',
-        message: tl('appointmentEnded'),
+        message: tl('appointmentEndedReview'),
       });
       void load();
     } catch (err) {
@@ -265,6 +280,36 @@ export function PositionDetailClient({
 
   return (
     <div className="flex flex-col gap-6">
+      {accessHandoffPath ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-[color:var(--surface-muted)] px-4 py-3 text-sm"
+        >
+          <span>
+            {accessHandoffLabel === 'assign'
+              ? tl('configureAccessAfterAppoint')
+              : tl('reviewAccessAfterEnd')}
+          </span>
+          <div className="flex gap-2">
+            <Link
+              href={accessHandoffPath}
+              className={buttonClassName({ variant: 'primary', size: 'sm' })}
+            >
+              {accessHandoffLabel === 'assign'
+                ? tl('openConfigureAccess')
+                : tl('openAccessReview')}
+            </Link>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setAccessHandoffPath(null)}
+            >
+              {tc('close')}
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <PageHeader
         eyebrow={
           <Link
@@ -623,13 +668,21 @@ export function PositionDetailClient({
         positionId={positionId}
         positionTitle={position.title}
         onClose={() => setAppointOpen(false)}
-        onCreated={() => {
+        onCreated={(appointment) => {
           push({
             tone: 'success',
-            message:
-              tl('leaderAppointed'),
+            message: tl('leaderAppointedConfigure'),
           });
           void load();
+          const unit =
+            appointment.organisationalUnitId ??
+            position.organisationalUnitId ??
+            '';
+          const qs = new URLSearchParams({ tab: 'assignments' });
+          if (unit) qs.set('organisationalUnitId', unit);
+          qs.set('sourceAppointmentId', appointment.id);
+          setAccessHandoffLabel('assign');
+          setAccessHandoffPath(`/admin/roles?${qs.toString()}`);
         }}
       />
     </div>

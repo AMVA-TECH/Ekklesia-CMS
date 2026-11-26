@@ -1,126 +1,91 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Host-based routing for the Platform Operator console (ADR-0003).
+ * Platform Operator console is path-based on the main app host for now:
+ *   http://localhost:3000/platform
  *
- * Public access is via subdomain (default `platform.<root>`), not a path on the
- * main church app. Proxy only rewrites; auth/authorisation stay in handlers.
- *
- * Local: http://platform.localhost:3000
- * Prod:  https://platform.example.com  (set NEXT_PUBLIC_ROOT_DOMAIN)
+ * Subdomain entry (`platform.localhost`) redirects to the same-origin path
+ * so old bookmarks still work locally. Auth stays in handlers (ADR-0003).
  */
 
 const PLATFORM_SUBDOMAIN =
   process.env.NEXT_PUBLIC_PLATFORM_SUBDOMAIN?.trim() || 'platform';
-
-function rootDomain(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim();
-  if (fromEnv) return fromEnv;
-
-  const appUrl = process.env.APP_URL?.trim();
-  if (appUrl) {
-    try {
-      const u = new URL(appUrl);
-      // Subdomains need a real DNS label; prefer localhost over 127.0.0.1.
-      const host = u.hostname === '127.0.0.1' ? 'localhost' : u.hostname;
-      return u.port ? `${host}:${u.port}` : host;
-    } catch {
-      // fall through
-    }
-  }
-
-  return 'localhost:3000';
-}
 
 function hostnameOf(request: NextRequest): string {
   const host = request.headers.get('host') ?? '';
   return host.split(':')[0]?.toLowerCase() ?? '';
 }
 
-function isPlatformHost(request: NextRequest): boolean {
+function isLegacyPlatformHost(request: NextRequest): boolean {
   const hostname = hostnameOf(request);
-  const rootHost = rootDomain().split(':')[0]?.toLowerCase() ?? 'localhost';
-
   if (hostname === `${PLATFORM_SUBDOMAIN}.localhost`) return true;
-  if (hostname === `${PLATFORM_SUBDOMAIN}.${rootHost}`) return true;
 
-  // Explicit full host override (e.g. ops.custom-domain.com)
   const explicit = process.env.NEXT_PUBLIC_PLATFORM_HOST?.trim()?.toLowerCase();
   if (explicit && hostname === explicit.split(':')[0]) return true;
+
+  const root =
+    process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() ||
+    (() => {
+      try {
+        return process.env.APP_URL
+          ? new URL(process.env.APP_URL).hostname
+          : '';
+      } catch {
+        return '';
+      }
+    })();
+  const rootHost = root.split(':')[0]?.toLowerCase();
+  if (
+    rootHost &&
+    rootHost !== 'localhost' &&
+    rootHost !== '127.0.0.1' &&
+    hostname === `${PLATFORM_SUBDOMAIN}.${rootHost}`
+  ) {
+    return true;
+  }
 
   return false;
 }
 
-function platformOrigin(request: NextRequest): string {
+function mainAppOrigin(request: NextRequest): string {
   const proto = request.nextUrl.protocol || 'http:';
-  const port = request.nextUrl.port;
-  const root = rootDomain();
-  const rootHost = root.split(':')[0] ?? 'localhost';
-  const rootPort = root.includes(':') ? root.split(':')[1] : port;
-
-  const explicit = process.env.NEXT_PUBLIC_PLATFORM_HOST?.trim();
-  if (explicit) {
-    const hasProtocol = explicit.startsWith('http');
-    return hasProtocol ? explicit.replace(/\/$/, '') : `${proto}//${explicit}`;
+  const host = request.headers.get('host') ?? 'localhost:3000';
+  // Prefer the non-subdomain host when we arrived via platform.*
+  const hostname = hostnameOf(request);
+  if (hostname.startsWith(`${PLATFORM_SUBDOMAIN}.`)) {
+    const stripped = hostname.slice(PLATFORM_SUBDOMAIN.length + 1);
+    const port = request.nextUrl.port;
+    const portSuffix = port ? `:${port}` : '';
+    // platform.localhost → localhost; platform.example.com → example.com
+    const mainHost =
+      stripped === 'localhost' || stripped === '127.0.0.1'
+        ? `localhost${portSuffix || ':3000'}`
+        : port
+          ? `${stripped}:${port}`
+          : stripped;
+    return `${proto}//${mainHost}`;
   }
-
-  const hostWithPort =
-    rootHost === 'localhost' || rootHost === '127.0.0.1'
-      ? `${PLATFORM_SUBDOMAIN}.localhost${rootPort ? `:${rootPort}` : ''}`
-      : `${PLATFORM_SUBDOMAIN}.${rootHost}`;
-
-  return `${proto}//${hostWithPort}`;
+  return `${proto}//${host}`;
 }
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const onPlatform = isPlatformHost(request);
 
-  // Main app: send /platform UI to the operator subdomain (independent entry).
-  if (!onPlatform && (pathname === '/platform' || pathname.startsWith('/platform/'))) {
-    const dest = new URL(pathname.replace(/^\/platform/, '') || '/', platformOrigin(request));
+  // Legacy subdomain bookmarks → same-origin /platform paths.
+  if (isLegacyPlatformHost(request)) {
+    const dest = new URL(mainAppOrigin(request));
+    if (pathname === '/' || pathname === '') {
+      dest.pathname = '/platform';
+    } else if (pathname.startsWith('/platform')) {
+      dest.pathname = pathname;
+    } else {
+      dest.pathname = `/platform${pathname}`;
+    }
     dest.search = request.nextUrl.search;
     return NextResponse.redirect(dest, 308);
   }
 
-  if (!onPlatform) {
-    return NextResponse.next();
-  }
-
-  // Platform host: allow auth + platform APIs + local API docs + static assets.
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/v1/auth') ||
-    pathname.startsWith('/api/v1/platform') ||
-    pathname === '/api/docs' ||
-    pathname === '/api/openapi.json'
-  ) {
-    return NextResponse.next();
-  }
-
-  // Block unrelated APIs on the operator host (routing hygiene, not auth).
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.json(
-      {
-        type: 'about:blank',
-        title: 'Not Found',
-        status: 404,
-        detail: 'API not available on platform operator host',
-      },
-      { status: 404 },
-    );
-  }
-
-  // Rewrite clean subdomain paths → /platform/* app routes.
-  if (pathname === '/platform' || pathname.startsWith('/platform/')) {
-    return NextResponse.next();
-  }
-
-  const url = request.nextUrl.clone();
-  url.pathname = pathname === '/' ? '/platform' : `/platform${pathname}`;
-  return NextResponse.rewrite(url);
+  return NextResponse.next();
 }
 
 export const config = {

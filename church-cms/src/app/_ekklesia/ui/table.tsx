@@ -132,7 +132,7 @@ export function THead({
   return (
     <thead
       className={cn(
-        'sticky top-0 z-10 bg-surface border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground',
+        'sticky top-0 z-10 bg-surface border-b border-border text-xs font-medium tracking-normal text-muted-foreground',
         className,
       )}
       {...rest}

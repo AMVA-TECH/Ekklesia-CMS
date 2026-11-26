@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ApiError,
   apiFetch,
-  resolvePostAuthPath,
   sanitizeAppRedirect,
 } from '@/app/_ekklesia/session';
 import {
@@ -25,7 +24,6 @@ const RESEND_COOLDOWN_SECONDS = 30;
 export function VerifyClient(): React.ReactElement {
   const t = useTranslations('Verify');
   const tCommon = useTranslations('Common');
-  const router = useRouter();
   const params = useSearchParams();
   const requestedRedirect = sanitizeAppRedirect(params?.get('redirect'));
 
@@ -82,7 +80,7 @@ export function VerifyClient(): React.ReactElement {
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 401 || e.status === 403) {
-          router.push('/sign-in');
+          window.location.assign('/sign-in');
           return;
         }
         setError(e.message || t('errorSend'));
@@ -110,8 +108,11 @@ export function VerifyClient(): React.ReactElement {
         json: { code: trimmed, trustDevice },
         skipDevAuth: true,
       });
-      const destination = await resolvePostAuthPath(requestedRedirect);
-      router.push(destination);
+      // MFA is admin-only. Prefer an explicit redirect, else admin home.
+      // Hard navigation so the new session cookie is visible to RSC/shell
+      // (soft router.push under Cache Components can land unsigned-in).
+      const safe = sanitizeAppRedirect(requestedRedirect);
+      window.location.assign(safe ?? '/admin/dashboard');
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 400 || e.status === 401 || e.status === 422) {
@@ -179,7 +180,7 @@ export function VerifyClient(): React.ReactElement {
             className="rounded-xl border-2 border-[color:var(--success)] bg-[color:var(--success-soft)] px-4 py-3 text-center"
             role="status"
           >
-            <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--success-ink)]">
+            <p className="text-xs font-medium tracking-normal text-[color:var(--success-ink)]">
               {t('devTitle')}
             </p>
             <p className="mt-1 font-mono text-2xl font-semibold tracking-[0.35em] text-[color:var(--success-ink)]">

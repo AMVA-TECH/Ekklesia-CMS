@@ -12,6 +12,7 @@ import {
   assertCanReadOwnProfile,
   assertCanReadPeople,
   assertCanUpdatePeople,
+  canReadRestrictedPeopleFields,
 } from './policies';
 import type {
   CreatePersonBody,
@@ -36,6 +37,14 @@ async function requireActorPersonId(ctx: Ctx): Promise<string> {
   }
   return personId;
 }
+
+function personDtoOptions(ctx: Ctx, personId: string) {
+  const isSelf = ctx.actor.personId === personId;
+  return {
+    includeRestricted: isSelf || canReadRestrictedPeopleFields(ctx),
+  };
+}
+
 export async function listPeople(ctx: Ctx, query: ListPeopleQuery) {
   assertCanReadPeople(ctx);
   const db = getDb();
@@ -49,7 +58,7 @@ export async function listPeople(ctx: Ctx, query: ListPeopleQuery) {
   const data = await Promise.all(
     page.map(async (row) => {
       const contacts = await repo.listContactsForPerson(db, row.id);
-      return toPersonResponse(row, contacts);
+      return toPersonResponse(row, contacts, personDtoOptions(ctx, row.id));
     }),
   );
   return {
@@ -68,7 +77,7 @@ export async function getPerson(ctx: Ctx, personId: string) {
   const row = await repo.getPersonInChurch(db, ctx, personId);
   if (!row) throw notFound();
   const contacts = await repo.listContactsForPerson(db, personId);
-  return toPersonResponse(row, contacts);
+  return toPersonResponse(row, contacts, personDtoOptions(ctx, personId));
 }
 
 export async function createPerson(ctx: Ctx, body: CreatePersonBody) {
@@ -86,7 +95,7 @@ export async function createPerson(ctx: Ctx, body: CreatePersonBody) {
   const row = await repo.getPersonInChurch(db, ctx, personId);
   if (!row) throw notFound();
   const contacts = await repo.listContactsForPerson(db, personId);
-  return toPersonResponse(row, contacts);
+  return toPersonResponse(row, contacts, personDtoOptions(ctx, personId));
 }
 
 export async function updatePerson(ctx: Ctx, personId: string, body: UpdatePersonBody) {
@@ -105,7 +114,7 @@ export async function updatePerson(ctx: Ctx, personId: string, body: UpdatePerso
   const row = await repo.getPersonInChurch(db, ctx, personId);
   if (!row) throw notFound();
   const contacts = await repo.listContactsForPerson(db, personId);
-  return toPersonResponse(row, contacts);
+  return toPersonResponse(row, contacts, personDtoOptions(ctx, personId));
 }
 
 export async function getMyProfile(ctx: Ctx) {
@@ -115,12 +124,18 @@ export async function getMyProfile(ctx: Ctx) {
   const row = await repo.getPersonInChurch(db, ctx, personId);
   if (!row) throw notFound();
   const contacts = await repo.listContactsForPerson(db, personId);
-  return toPersonResponse(row, contacts);
+  return toPersonResponse(row, contacts, { includeRestricted: true });
 }
 
 export async function updateMyProfile(ctx: Ctx, body: UpdateMyProfileBody) {
+  // requireActorPersonId resolves the org-linked person — that is self by
+  // definition. Do not gate on preferences:self / actor.personId claim: admin
+  // sessions sometimes omit personId on claims while still having an org link,
+  // which 403'd language switching after the cookie was set.
   const personId = await requireActorPersonId(ctx);
-  assertCanEditOwnProfile(ctx, personId);
+  if (ctx.actor.personId && ctx.actor.personId !== personId) {
+    assertCanEditOwnProfile(ctx, personId);
+  }
   const db = getDb();
   const existing = await repo.getPersonInChurch(db, ctx, personId);
   if (!existing) throw notFound();
@@ -155,7 +170,7 @@ export async function updateMyProfile(ctx: Ctx, body: UpdateMyProfileBody) {
   const row = await repo.getPersonInChurch(db, ctx, personId);
   if (!row) throw notFound();
   const contacts = await repo.listContactsForPerson(db, personId);
-  return toPersonResponse(row, contacts);
+  return toPersonResponse(row, contacts, { includeRestricted: true });
 }
 
 export async function addPersonContact(
@@ -184,7 +199,7 @@ export async function addPersonContact(
   const row = await repo.getPersonInChurch(db, ctx, personId);
   if (!row) throw notFound();
   const contacts = await repo.listContactsForPerson(db, personId);
-  return toPersonResponse(row, contacts);
+  return toPersonResponse(row, contacts, personDtoOptions(ctx, personId));
 }
 
 export async function listDirectory(ctx: Ctx, query: ListDirectoryQuery) {

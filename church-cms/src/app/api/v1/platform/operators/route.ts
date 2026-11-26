@@ -4,13 +4,13 @@ import {
   REQUEST_ID_HEADER,
 } from '@/platform/http';
 import {
-  listOperators,
+  listOperatorsDetailed,
   addOperator,
   addOperatorBodySchema,
 } from '@/modules/platform-ops';
 
 export const GET = withPlatformApiHandler(async (ctx) => {
-  const result = await listOperators(ctx);
+  const result = await listOperatorsDetailed(ctx);
   return Response.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } });
 });
 

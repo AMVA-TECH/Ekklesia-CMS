@@ -21,7 +21,7 @@ import {
   allocateChurchCode,
   codeNamespaceForUnitKind,
 } from '@/modules/organisation/code-sequences';
-import { assertPlatformAdmin } from './policies';
+import { assertPlatformChurchesWrite } from './policies';
 import * as repo from './repository';
 import {
   CROSSLIFE_PILOT_DEPARTMENTS,
@@ -60,7 +60,7 @@ export async function applyChurchTemplate(
   churchId: string,
   body: { templateId: string; force?: boolean },
 ) {
-  assertPlatformAdmin(platformCtx);
+  assertPlatformChurchesWrite(platformCtx);
 
   if (!KNOWN_TEMPLATES.includes(body.templateId as ChurchTemplateId)) {
     throw validationFailed([

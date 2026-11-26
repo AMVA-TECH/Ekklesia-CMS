@@ -120,6 +120,8 @@ export const decideAppointmentRequestBodySchema = z
     action: z.enum(APPROVAL_ACTIONS),
     note: z.string().trim().min(1).max(1000).optional(),
     effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    effectiveTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    appointmentKind: z.enum(['substantive', 'acting']).optional(),
   })
   .strict();
 export type DecideAppointmentRequestBody = z.infer<

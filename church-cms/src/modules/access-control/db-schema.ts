@@ -17,6 +17,10 @@ export const permissions = pgTable('permissions', {
   id: uuid('id').primaryKey().defaultRandom(),
   code: text('code').notNull().unique(),
   description: text('description'),
+  /** Logical module: people, finance, access, … */
+  module: text('module'),
+  /** standard | sensitive | high_risk */
+  sensitivity: text('sensitivity'),
 });
 
 /** Per-church role (labels configurable; codes stable). */
@@ -69,6 +73,8 @@ export const userRoleAssignments = pgTable(
       .references(() => roles.id),
     scopeType: text('scope_type').notNull().default('church'),
     organisationalUnitId: uuid('organisational_unit_id'),
+    /** Optional provenance link to a leadership appointment (never auto-granted). */
+    sourceAppointmentId: uuid('source_appointment_id'),
     effectiveFrom: timestamp('effective_from', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -79,6 +85,9 @@ export const userRoleAssignments = pgTable(
     index('user_role_assignments_church_user_idx').on(
       table.churchId,
       table.userAccountId,
+    ),
+    index('user_role_assignments_source_appointment_idx').on(
+      table.sourceAppointmentId,
     ),
   ],
 );

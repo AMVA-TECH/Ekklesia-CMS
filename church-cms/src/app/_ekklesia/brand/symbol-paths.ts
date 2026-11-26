@@ -22,11 +22,12 @@ export const EKKLESIA_WHITE_OPACITY = 0.85;
 export const EKKLESIA_WHITE_TRANSFORM = 'translate(-0.6 -1.0)';
 
 /** Canonical asset URLs for non-animated presentation. */
+/** User-supplied app icons — used as-is (no crop / cutout). */
 export const EKKLESIA_ASSETS = {
-  symbolDark: '/branding/ekklesia-symbol-dark.svg',
-  symbolLight: '/branding/ekklesia-symbol-light.svg',
-  logoDark: '/branding/ekklesia-logo-dark.svg',
-  logoLight: '/branding/ekklesia-logo-light.svg',
+  symbolDark: '/brand/ekklesia-app-icon-dark.png?v=6',
+  symbolLight: '/brand/ekklesia-app-icon-light.png?v=6',
+  logoDark: '/brand/ekklesia-app-icon-dark.png?v=6',
+  logoLight: '/brand/ekklesia-app-icon-light.png?v=6',
   /** Cinematic raster for dark surfaces (supplied landing mark). */
   cinematicRaster: '/brand/imagery/landing-ichthys-v7.png',
 } as const;

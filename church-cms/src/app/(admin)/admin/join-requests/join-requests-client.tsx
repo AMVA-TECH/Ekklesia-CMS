@@ -23,6 +23,11 @@ type DecideResult = {
     phoneE164: string | null;
     initialPin: string;
   };
+  notify?: {
+    sms: 'sent' | 'skipped' | 'failed';
+    email: 'sent' | 'skipped' | 'failed';
+    detail: string | null;
+  };
 };
 
 export function JoinRequestsClient() {
@@ -31,7 +36,9 @@ export function JoinRequestsClient() {
   const [items, setItems] = useState<JoinRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [issued, setIssued] = useState<DecideResult['member'] | null>(null);
+  const [notify, setNotify] = useState<DecideResult['notify'] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const reload = useCallback(() => {
     apiFetch<{ items: JoinRequest[] }>('/api/v1/join-requests?status=pending')
@@ -48,6 +55,8 @@ export function JoinRequestsClient() {
   async function decide(id: string, outcome: 'approved' | 'rejected') {
     setError(null);
     setIssued(null);
+    setNotify(null);
+    setCopied(false);
     setBusyId(id);
     try {
       const res = await apiFetch<DecideResult>(
@@ -59,6 +68,7 @@ export function JoinRequestsClient() {
         },
       );
       if (res.member) setIssued(res.member);
+      if (res.notify) setNotify(res.notify);
       reload();
     } catch (err: unknown) {
       setError(err instanceof ApiError ? err.message : tj('decisionFailed'));
@@ -66,6 +76,23 @@ export function JoinRequestsClient() {
       setBusyId(null);
     }
   }
+
+  async function copyPin(): Promise<void> {
+    if (!issued?.initialPin) return;
+    try {
+      await navigator.clipboard.writeText(issued.initialPin);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  }
+
+  const notifyOk =
+    notify &&
+    (notify.sms === 'sent' || notify.email === 'sent') &&
+    notify.sms !== 'failed' &&
+    notify.email !== 'failed';
 
   return (
     <div className="space-y-6">
@@ -77,18 +104,34 @@ export function JoinRequestsClient() {
       {error ? <p className="text-destructive">{error}</p> : null}
 
       {issued ? (
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-lg border border-border bg-surface p-4 space-y-2">
           <p className="font-medium">{tj('credentialsIssued')}</p>
           <p>
             {issued.phoneE164}
             {issued.email ? ` · ${issued.email}` : ''}
           </p>
-          <p>
-            {tj('pinLabel')} <code>{issued.initialPin}</code>
+          <p className="flex flex-wrap items-center gap-2">
+            <span>
+              {tj('pinLabel')} <code>{issued.initialPin}</code>
+            </span>
+            <Button type="button" size="sm" variant="secondary" onClick={() => void copyPin()}>
+              {copied ? tj('copied') : tj('copyPin')}
+            </Button>
           </p>
           <p className="text-sm text-muted-foreground">
             {tj('credentialsHint')}
           </p>
+          {notify ? (
+            <p className="text-sm text-muted-foreground">
+              {notifyOk
+                ? tj('credentialsNotifyOk')
+                : tj('credentialsNotifyPartial', {
+                    detail:
+                      notify.detail ||
+                      `sms=${notify.sms}, email=${notify.email}`,
+                  })}
+            </p>
+          ) : null}
         </div>
       ) : null}
 

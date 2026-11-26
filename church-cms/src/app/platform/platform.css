@@ -1,155 +1,86 @@
-.platform-console {
-  --p-bg: #0f1419;
-  --p-surface: #171d25;
-  --p-border: #2a3441;
-  --p-text: #e8eef5;
-  --p-muted: #8b9bb0;
-  --p-accent: #3d9a7a;
-  --p-accent-2: #d4a017;
-  --p-danger: #e05a5a;
-  --p-warn: #e0a04a;
-  --p-info: #5a8fd4;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, #1a2a33 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #1c2430 0%, transparent 50%),
-    var(--p-bg);
-  color: var(--p-text);
-  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
-}
-
-.platform-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem 1.5rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--p-border);
-  background: color-mix(in srgb, var(--p-bg) 88%, transparent);
-  backdrop-filter: blur(10px);
-}
-
-.platform-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.platform-brand-mark {
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.4rem;
-  background: linear-gradient(145deg, var(--p-accent), #2a6b56);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  font-size: 0.8rem;
-}
-
-.platform-brand-title {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.platform-brand-sub {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--p-muted);
-}
-
-.platform-brand-host {
-  color: var(--p-accent);
-}
-
-.platform-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.platform-nav-link {
-  padding: 0.4rem 0.7rem;
-  border-radius: 0.35rem;
-  color: var(--p-muted);
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: color 120ms ease, background 120ms ease;
-}
-
-.platform-nav-link:hover {
-  color: var(--p-text);
-  background: color-mix(in srgb, var(--p-surface) 80%, transparent);
-}
-
-.platform-nav-link.active {
-  color: var(--p-text);
-  background: var(--p-surface);
-  box-shadow: inset 0 -2px 0 var(--p-accent);
-}
-
-.platform-main {
-  padding: 1.25rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  width: 100%;
-}
+/**
+ * Platform Admin page chrome — mapped onto Ekklesia Church Admin tokens.
+ * Prefer _ekklesia/ui (PageHeader, Metric, Panel, Button, Table) for new work.
+ * These classes keep legacy clients visually aligned until fully migrated.
+ */
 
 .platform-h1 {
   margin: 0 0 0.35rem;
-  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  font-size: clamp(1.5rem, 2.5vw, 1.875rem);
   letter-spacing: -0.03em;
-  font-weight: 650;
+  font-weight: 600;
+  color: var(--foreground);
 }
 
 .platform-lead {
   margin: 0 0 1.5rem;
-  color: var(--p-muted);
-  font-size: 0.95rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
   max-width: 42rem;
+  line-height: 1.5;
 }
 
 .platform-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .platform-stat {
-  padding: 1rem;
-  border: 1px solid var(--p-border);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--p-surface) 85%, transparent);
+  padding: 1.125rem 1.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-card, 0.75rem);
+  background: var(--sage-soft);
+  box-shadow: var(--shadow-card, 0 1px 2px rgb(0 0 0 / 0.04));
+}
+
+.platform-stat:nth-child(6n + 2) {
+  background: var(--sky-soft);
+}
+
+.platform-stat:nth-child(6n + 3) {
+  background: var(--peach-soft);
+}
+
+.platform-stat:nth-child(6n + 4) {
+  background: var(--lavender-soft);
+}
+
+.platform-stat:nth-child(6n + 5) {
+  background: var(--brand-gold-tint);
+}
+
+.platform-stat:nth-child(6n) {
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .platform-stat-label {
   margin: 0;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--p-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--muted-foreground);
 }
 
 .platform-stat-value {
-  margin: 0.35rem 0 0;
-  font-size: 1.55rem;
-  font-weight: 650;
+  margin: 0.5rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
+  color: var(--foreground);
 }
 
 .platform-panel {
-  border: 1px solid var(--p-border);
-  border-radius: 0.55rem;
-  background: color-mix(in srgb, var(--p-surface) 90%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card, 0.75rem);
+  background: var(--surface);
+  box-shadow: var(--shadow-card, 0 1px 2px rgb(0 0 0 / 0.04));
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .platform-panel-head {
@@ -157,36 +88,37 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--p-border);
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .platform-panel-head h2 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
+  color: var(--foreground);
 }
 
 .platform-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
 }
 
 .platform-table th,
 .platform-table td {
   text-align: left;
-  padding: 0.65rem 1rem;
-  border-bottom: 1px solid var(--p-border);
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
   vertical-align: top;
 }
 
 .platform-table th {
-  color: var(--p-muted);
+  color: var(--muted-foreground);
   font-weight: 500;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .platform-table tr:last-child td {
@@ -195,40 +127,62 @@
 
 .platform-btn {
   appearance: none;
-  border: 1px solid var(--p-border);
-  background: var(--p-surface);
-  color: var(--p-text);
-  border-radius: 0.35rem;
-  padding: 0.45rem 0.8rem;
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  border-radius: var(--radius-control, 0.5rem);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
+  text-decoration: none;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
 }
 
 .platform-btn:hover {
-  border-color: var(--p-accent);
+  border-color: var(--brand-gold-soft);
+  color: var(--brand-gold-ink);
 }
 
 .platform-btn-primary {
-  background: linear-gradient(145deg, var(--p-accent), #2f7a5f);
+  background: var(--brand-gold);
   border-color: transparent;
+  color: var(--foreground);
   font-weight: 600;
 }
 
 .platform-btn-primary:hover {
-  filter: brightness(1.05);
+  filter: brightness(0.97);
+  color: var(--foreground);
+}
+
+.platform-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .platform-input,
 .platform-select,
 .platform-textarea {
   width: 100%;
-  background: var(--p-bg);
-  border: 1px solid var(--p-border);
-  color: var(--p-text);
-  border-radius: 0.35rem;
-  padding: 0.5rem 0.65rem;
-  font-size: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  border-radius: var(--radius-control, 0.5rem);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.platform-input:focus,
+.platform-select:focus,
+.platform-textarea:focus {
+  outline: none;
+  border-color: var(--brand-gold-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-gold) 22%, transparent);
 }
 
 .platform-textarea {
@@ -237,23 +191,27 @@
 }
 
 .platform-error {
-  color: var(--p-danger);
-  font-size: 0.85rem;
-  margin: 0.5rem 0 1rem;
+  color: var(--danger-ink);
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in srgb, var(--danger-ink) 18%, transparent);
+  border-radius: var(--radius-card, 0.75rem);
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
 }
 
 .platform-field-error {
   display: block;
   margin-top: 0.35rem;
-  color: #ffb4b4;
+  color: var(--danger-ink);
   font-size: 0.78rem;
 }
 
 .platform-input.is-invalid,
 .platform-select.is-invalid,
 .platform-textarea.is-invalid {
-  border-color: var(--p-danger);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--p-danger) 45%, transparent);
+  border-color: var(--danger-ink);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger-ink) 35%, transparent);
 }
 
 .platform-status {
@@ -262,8 +220,8 @@
   gap: 0.85rem;
   margin: 0 0 1rem;
   padding: 0.9rem 1rem;
-  border-radius: 0.65rem;
-  border: 2px solid transparent;
+  border-radius: var(--radius-card, 0.75rem);
+  border: 1px solid transparent;
 }
 
 .platform-status-icon {
@@ -273,28 +231,29 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 999px;
-  color: #0f1419;
   flex-shrink: 0;
 }
 
 .platform-status-success {
-  border-color: #4ecf9a;
-  background: color-mix(in srgb, #3d9a7a 28%, var(--p-surface));
-  color: #b8f0d4;
+  border-color: color-mix(in srgb, var(--success-ink) 20%, transparent);
+  background: var(--success-soft);
+  color: var(--success-ink);
 }
 
 .platform-status-success .platform-status-icon {
-  background: #4ecf9a;
+  background: var(--success-ink);
+  color: var(--surface);
 }
 
 .platform-status-danger {
-  border-color: #ff7a7a;
-  background: color-mix(in srgb, var(--p-danger) 28%, var(--p-surface));
-  color: #ffc4c4;
+  border-color: color-mix(in srgb, var(--danger-ink) 20%, transparent);
+  background: var(--danger-soft);
+  color: var(--danger-ink);
 }
 
 .platform-status-danger .platform-status-icon {
-  background: #ff7a7a;
+  background: var(--danger-ink);
+  color: var(--surface);
 }
 
 .platform-status strong {
@@ -310,41 +269,42 @@
 }
 
 .platform-muted {
-  color: var(--p-muted);
-  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
 }
 
 .platform-badge {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .platform-badge.critical,
 .platform-badge.high {
-  background: color-mix(in srgb, var(--p-danger) 25%, transparent);
-  color: #ffb4b4;
+  background: var(--danger-soft);
+  color: var(--danger-ink);
 }
 
 .platform-badge.medium {
-  background: color-mix(in srgb, var(--p-warn) 25%, transparent);
-  color: #ffd59a;
+  background: var(--warning-soft);
+  color: var(--warning-ink);
 }
 
 .platform-badge.low,
 .platform-badge.info {
-  background: color-mix(in srgb, var(--p-info) 25%, transparent);
-  color: #b7d4ff;
+  background: var(--info-soft);
+  color: var(--info-ink);
 }
 
 .platform-form-row {
   display: grid;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 @media (min-width: 720px) {
@@ -357,5 +317,5 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }

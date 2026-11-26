@@ -8,16 +8,22 @@ export type AuthScope = {
 
 /**
  * Service-layer authorization. Default deny.
- * Scope checks (unit/self/household) apply when scopesByPermission is present.
+ * Scope checks apply when scopesByPermission contains entries for the permission.
+ * Church scope always satisfies; unit/self/household require matching resource context.
  */
 export function can(
   ctx: Ctx,
   permission: PermissionCode,
-  resource?: { organisationalUnitId?: string; personId?: string; householdId?: string },
+  resource?: {
+    organisationalUnitId?: string;
+    personId?: string;
+    householdId?: string;
+  },
 ): boolean {
   if (!ctx.permissions.has(permission)) return false;
 
   const scopes = ctx.scopesByPermission?.get(permission);
+  // No scope metadata → treat as church-wide (legacy / platform dump / tests).
   if (!scopes || scopes.length === 0) return true;
 
   return scopes.some((scope) => {
@@ -27,12 +33,20 @@ export function can(
       case 'organisational_unit':
         return (
           !!resource?.organisationalUnitId &&
+          !!scope.organisationalUnitId &&
           resource.organisationalUnitId === scope.organisationalUnitId
         );
       case 'self':
-        return !!ctx.actor.personId && resource?.personId === ctx.actor.personId;
+        return (
+          !!ctx.actor.personId &&
+          !!resource?.personId &&
+          resource.personId === ctx.actor.personId
+        );
       case 'household':
-        return !!resource?.householdId;
+        return (
+          !!resource?.householdId &&
+          !!ctx.actorHouseholdIds?.has(resource.householdId)
+        );
       default:
         return false;
     }

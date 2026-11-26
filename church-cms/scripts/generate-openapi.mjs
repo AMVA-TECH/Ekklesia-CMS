@@ -243,7 +243,7 @@ const baseDoc = {
     { url: 'http://127.0.0.1:3000', description: 'Local Next.js (127.0.0.1)' },
     { url: 'http://localhost:3000', description: 'Local Next.js (localhost)' },
     {
-      url: 'http://platform.localhost:3000',
+      url: 'http://localhost:3000',
       description: 'Platform operator host (local)',
     },
   ],

@@ -18,15 +18,25 @@ export interface ContactRow {
   isPrimary: boolean;
 }
 
+export type PersonResponseOptions = {
+  /**
+   * When false, omits sensitive fields (date of birth) — requires
+   * `people:read_restricted` or self-read at the service layer.
+   */
+  includeRestricted?: boolean;
+};
+
 export function toPersonResponse(
   person: PersonRow,
   contacts: ContactRow[] = [],
+  options: PersonResponseOptions = {},
 ): PersonResponse {
+  const includeRestricted = options.includeRestricted === true;
   return {
     id: person.id,
     displayName: person.displayName,
     fullName: person.fullName,
-    dateOfBirth: person.dateOfBirth,
+    dateOfBirth: includeRestricted ? person.dateOfBirth : null,
     preferredLocale: person.preferredLocale,
     directoryOptIn: person.directoryOptIn,
     photoMediaId: person.photoMediaId ?? null,

@@ -5,10 +5,11 @@ import { readDevSession } from './dev-session';
 import type { SessionClaims } from './require-ctx';
 import { userHasAdminDashboardAccess } from './admin-access';
 import {
+  churchWideScopesForPermissions,
   findActiveOrganisationUser,
-  listEffectivePermissionCodes,
+  listEffectiveGrants,
+  serializeScopesByPermission,
 } from './permissions-for-user';
-import { PERMISSIONS } from '@/modules/access-control/permissions';
 import { findActivePlatformOperator } from './platform-operator';
 
 /**
@@ -51,6 +52,8 @@ export async function resolveSessionClaims(
 
       let personId: string | undefined;
       let permissions: string[] = [];
+      let scopesByPermission: SessionClaims['scopesByPermission'];
+      let actorHouseholdIds: string[] | undefined;
 
       if (activeChurchId) {
         const orgUser = await findActiveOrganisationUser(
@@ -73,16 +76,47 @@ export async function resolveSessionClaims(
         }
 
         if (orgUser) {
-          permissions = await listEffectivePermissionCodes(
+          const grants = await listEffectiveGrants(
             db,
             activeChurchId,
             userAccountId,
+            personId,
           );
+          permissions = grants.permissions;
+          scopesByPermission = serializeScopesByPermission(
+            grants.scopesByPermission,
+          );
+          actorHouseholdIds = grants.actorHouseholdIds;
         }
 
-        // ADR-0003: entered-tenant support mode grants full church permission set.
+        // Controlled support enter-tenant: require an active support session.
+        // Default accessLevel=read is diagnostic-only (no writes/finance/Restricted).
         if (isPlatformOperator) {
-          permissions = [...PERMISSIONS];
+          const { findActiveSupportSession } = await import(
+            '@/modules/platform-ops/support-repository'
+          );
+          const { churchPermissionsForSupportAccess } = await import(
+            '@/modules/platform-ops/support-access'
+          );
+          const support = await findActiveSupportSession(
+            db,
+            userAccountId,
+            activeChurchId,
+          );
+          if (support) {
+            const level =
+              support.accessLevel === 'interactive' ? 'interactive' : 'read';
+            const supportPerms = churchPermissionsForSupportAccess(level);
+            permissions = [...supportPerms];
+            scopesByPermission = serializeScopesByPermission(
+              churchWideScopesForPermissions(supportPerms),
+            );
+          } else if (!orgUser) {
+            // Stale activeChurchId without a live support session: no church perms.
+            permissions = [];
+            scopesByPermission = undefined;
+          }
+          // If orgUser exists without support session, keep their own grants only.
         }
       }
 
@@ -92,6 +126,8 @@ export async function resolveSessionClaims(
         personId,
         email: ba.user.email ?? undefined,
         permissions,
+        scopesByPermission,
+        actorHouseholdIds,
         isPlatformOperator: isPlatformOperator || undefined,
         platformPermissions: platformOp?.permissions,
       };

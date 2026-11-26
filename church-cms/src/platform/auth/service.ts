@@ -12,14 +12,15 @@ import {
 import { churches, churchSettings } from '@/modules/churches/db-schema';
 import { resolveChurchSettings } from '@/modules/churches/settings-schema';
 import { listActiveAssignmentsForUser } from '@/modules/access-control/repository';
-import { organisationUsers, userAccounts } from '@/modules/people/db-schema';
+import { organisationUsers, people, userAccounts } from '@/modules/people/db-schema';
 import { optionalTanzaniaPhoneE164Schema } from '@/platform/phone';
 import { getEnv } from '@/platform/config';
+import { parseAppLocale } from '@/i18n/config';
 import { getAuth } from './better-auth';
 import { userHasAdminDashboardAccess } from './admin-access';
 import {
   findActiveOrganisationUser,
-  listEffectivePermissionCodes,
+  listEffectiveGrants,
 } from './permissions-for-user';
 
 const pinSchema = z
@@ -130,6 +131,15 @@ export async function getAuthMe(ctx: Ctx) {
     )
     .limit(1);
 
+  const personId = ctx.actor.personId ?? orgUser?.personId ?? null;
+  const [personLocaleRow] = personId
+    ? await db
+        .select({ preferredLocale: people.preferredLocale })
+        .from(people)
+        .where(and(eq(people.id, personId), isNull(people.deletedAt)))
+        .limit(1)
+    : [];
+
   const assignments = await listActiveAssignmentsForUser(
     db,
     ctx,
@@ -147,10 +157,16 @@ export async function getAuthMe(ctx: Ctx) {
       ? 'session_or_dev_headers'
       : 'session';
 
+  // UI cookie sync must follow the person's preferredLocale — not Accept-Language
+  // (ctx.locale), which was overwriting EN↔SW switches back to browser default.
+  const locale = personLocaleRow
+    ? parseAppLocale(personLocaleRow.preferredLocale, ctx.locale)
+    : parseAppLocale(church?.defaultLocale, ctx.locale);
+
   return {
     actor: {
       userAccountId: ctx.actor.userAccountId,
-      personId: ctx.actor.personId ?? orgUser?.personId ?? null,
+      personId,
       email: account?.email ?? ctx.actor.email ?? null,
       phoneE164: account?.phoneE164 ?? null,
       status: account?.status ?? null,
@@ -196,7 +212,7 @@ export async function getAuthMe(ctx: Ctx) {
       organisationalUnitId: a.organisationalUnitId,
     })),
     permissions: [...ctx.permissions].sort(),
-    locale: ctx.locale,
+    locale,
     authMode,
     mfaRequired,
   };
@@ -323,19 +339,23 @@ export async function setActiveChurch(ctx: Ctx, request: Request, body: ActiveCh
     },
   });
 
-  const permissions = await listEffectivePermissionCodes(
+  const personId = orgUser.personId ?? ctx.actor.personId;
+  const grants = await listEffectiveGrants(
     db,
     body.churchId,
     ctx.actor.userAccountId,
+    personId,
   );
 
   const nextCtx: Ctx = {
     ...ctx,
     churchId: body.churchId,
-    permissions: new Set(permissions),
+    permissions: new Set(grants.permissions),
+    scopesByPermission: grants.scopesByPermission,
+    actorHouseholdIds: new Set(grants.actorHouseholdIds),
     actor: {
       ...ctx.actor,
-      personId: orgUser.personId ?? ctx.actor.personId,
+      personId,
     },
   };
 

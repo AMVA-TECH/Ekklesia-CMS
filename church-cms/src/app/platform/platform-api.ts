@@ -5,7 +5,7 @@ export const PLATFORM_DEV_HEADERS: Record<string, string> = {
   'x-dev-user-id': 'cccccccc-0001-0001-0001-000000000004',
   'x-dev-platform-operator': '1',
   'x-dev-platform-permissions':
-    'platform:read,platform:admin,platform:impersonate_tenant,platform:security_read',
+    'platform:read,platform:admin,platform:impersonate_tenant,platform:security_read,platform:churches_read,platform:churches_write,platform:applications_review,platform:applications_decide,platform:operators_manage,platform:accounts_read,platform:accounts_write,platform:service_accounts,platform:integrations_read,platform:integrations_write,platform:support_cases,platform:access_reviews,platform:break_glass,platform:monitoring_read,platform:audit_read,platform:findings_manage,platform:metrics_write,platform:config_read,platform:config_write,platform:analytics_read',
 };
 
 export type PlatformFieldError = {

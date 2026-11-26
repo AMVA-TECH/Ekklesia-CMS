@@ -31,6 +31,7 @@ export const createRoleAssignmentBodySchema = z
     roleId: z.guid(),
     scopeType: z.enum(ROLE_SCOPE_TYPES).default('church'),
     organisationalUnitId: z.guid().optional(),
+    sourceAppointmentId: z.guid().optional(),
     effectiveFrom: z.string().datetime({ offset: true }).optional(),
     effectiveTo: z.string().datetime({ offset: true }).optional(),
   })
@@ -62,3 +63,68 @@ export const inviteLeadershipBodySchema = z
   })
   .strict();
 export type InviteLeadershipBody = z.infer<typeof inviteLeadershipBodySchema>;
+
+export const createRoleBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(120),
+    code: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z][a-z0-9_]*$/, 'code must be snake_case'),
+    permissions: z.array(z.string().min(1)).max(200).default([]),
+  })
+  .strict();
+export type CreateRoleBody = z.infer<typeof createRoleBodySchema>;
+
+export const updateRoleBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(120).optional(),
+  })
+  .strict();
+export type UpdateRoleBody = z.infer<typeof updateRoleBodySchema>;
+
+export const updateRolePermissionsBodySchema = z
+  .object({
+    permissions: z.array(z.string().min(1)).max(200),
+    confirmHighRisk: z.boolean().optional(),
+  })
+  .strict();
+export type UpdateRolePermissionsBody = z.infer<
+  typeof updateRolePermissionsBodySchema
+>;
+
+export const duplicateRoleBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(120),
+    code: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z][a-z0-9_]*$/, 'code must be snake_case'),
+  })
+  .strict();
+export type DuplicateRoleBody = z.infer<typeof duplicateRoleBodySchema>;
+
+/** Apply platform template permission baselines to matching church roles. */
+export const applyRoleTemplatesBodySchema = z
+  .object({
+    /** Required explicit confirmation — never silent rematrix. */
+    confirm: z.literal(true),
+    /** Optional subset of template codes; default = all bootstrap templates. */
+    codes: z.array(z.string().min(1)).max(50).optional(),
+  })
+  .strict();
+export type ApplyRoleTemplatesBody = z.infer<typeof applyRoleTemplatesBodySchema>;
+
+/** Dry-run rematrix comparison (no mutation). */
+export const compareRoleTemplatesBodySchema = z
+  .object({
+    codes: z.array(z.string().min(1)).max(50).optional(),
+  })
+  .strict();
+export type CompareRoleTemplatesBody = z.infer<
+  typeof compareRoleTemplatesBodySchema
+>;

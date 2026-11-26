@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { platformApi } from '../platform-api';
+import { Icon } from '@/app/_ekklesia/icons';
+import {
+  Metric,
+  PageHeader,
+  Panel,
+  Skeleton,
+} from '@/app/_ekklesia/ui';
+import { humanizePlatformError, platformApi } from '../platform-api';
 
 type Health = {
   windowHours: number;
@@ -15,64 +22,105 @@ type Health = {
 export function FaultClient() {
   const [data, setData] = useState<Health | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     platformApi<Health>('/api/v1/platform/health')
       .then(setData)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Failed'),
-      );
+      .catch((err: unknown) => setError(humanizePlatformError(err)))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <>
-      <h1 className="platform-h1">Fault response</h1>
-      <p className="platform-lead">
-        Operational signals for the last {data?.windowHours ?? 24} hours — start
-        here when something breaks.
-      </p>
+    <div className="flex flex-col gap-6 lg:gap-8">
+      <PageHeader
+        title="Fault response"
+        lede={`Operational signals for the last ${data?.windowHours ?? 24} hours — start here when something breaks.`}
+      />
 
-      {error ? <p className="platform-error">{error}</p> : null}
-
-      {data ? (
-        <>
-          <div className="platform-grid">
-            <div className="platform-stat">
-              <p className="platform-stat-label">Failed message jobs</p>
-              <p className="platform-stat-value">{data.failedMessageJobs}</p>
-            </div>
-            <div className="platform-stat">
-              <p className="platform-stat-label">Auth failures</p>
-              <p className="platform-stat-value">{data.authFailures}</p>
-            </div>
-            <div className="platform-stat">
-              <p className="platform-stat-label">Open findings</p>
-              <p className="platform-stat-value">{data.openFindings}</p>
-            </div>
-            <div className="platform-stat">
-              <p className="platform-stat-label">Critical findings</p>
-              <p className="platform-stat-value">{data.criticalFindings}</p>
-            </div>
-          </div>
-
-          <section className="platform-panel">
-            <div className="platform-panel-head">
-              <h2>Runbooks</h2>
-            </div>
-            <ul style={{ margin: 0, padding: '1rem 1rem 1rem 2rem' }}>
-              {data.runbooks.map((rb) => (
-                <li key={rb} className="platform-muted" style={{ marginBottom: '0.35rem' }}>
-                  {rb}
-                </li>
-              ))}
-              <li className="platform-muted">
-                Contain → assess audit trail → fix → notify → post-incident note
-                (docs/04-security.md §14)
-              </li>
-            </ul>
-          </section>
-        </>
+      {error ? (
+        <div
+          role="alert"
+          className="rounded-card border border-[color:var(--danger-soft)] bg-[color:var(--danger-soft)] px-4 py-3 text-sm text-[color:var(--danger-ink)]"
+        >
+          {error}
+        </div>
       ) : null}
-    </>
+
+      <section aria-labelledby="fault-metrics">
+        <h2 id="fault-metrics" className="sr-only">
+          Fault signals
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {loading || !data ? (
+            <>
+              <Skeleton className="h-28 rounded-card" />
+              <Skeleton className="h-28 rounded-card" />
+              <Skeleton className="h-28 rounded-card" />
+              <Skeleton className="h-28 rounded-card" />
+            </>
+          ) : (
+            <>
+              <Metric
+                label="Failed message jobs"
+                value={data.failedMessageJobs}
+                icon="alert"
+                tone="peach"
+              />
+              <Metric
+                label="Auth failures"
+                value={data.authFailures}
+                icon="shield"
+                tone="lavender"
+              />
+              <Metric
+                label="Open findings"
+                value={data.openFindings}
+                icon="file"
+                tone="sky"
+                href="/platform/security"
+              />
+              <Metric
+                label="Critical findings"
+                value={data.criticalFindings}
+                icon="alert"
+                tone="neutral"
+                href="/platform/security"
+              />
+            </>
+          )}
+        </div>
+      </section>
+
+      <Panel title="Runbooks" subtitle="Contain → assess → fix → notify → note">
+        <ul className="space-y-3">
+          {(data?.runbooks ?? []).map((rb) => (
+            <li
+              key={rb}
+              className="flex items-start gap-3 rounded-xl border border-border bg-[color:var(--sage-soft)] px-4 py-3 text-sm text-foreground"
+            >
+              <Icon
+                name="book"
+                size={16}
+                className="mt-0.5 shrink-0 text-[color:var(--sage-ink)]"
+              />
+              <span>{rb}</span>
+            </li>
+          ))}
+          <li className="flex items-start gap-3 rounded-xl border border-border bg-[color:var(--brand-gold-tint)] px-4 py-3 text-sm text-foreground">
+            <Icon
+              name="shield"
+              size={16}
+              className="mt-0.5 shrink-0 text-[color:var(--brand-gold-ink)]"
+            />
+            <span>
+              Contain → assess audit trail → fix → notify → post-incident note
+              (docs/04-security.md §14)
+            </span>
+          </li>
+        </ul>
+      </Panel>
+    </div>
   );
 }

@@ -81,6 +81,15 @@ export function conflict(detail: string): AppError {
   });
 }
 
+export function rateLimited(detail = 'Too many requests. Try again later.'): AppError {
+  return new AppError({
+    code: 'rate_limited',
+    status: 429,
+    title: 'Too many requests',
+    detail,
+  });
+}
+
 export function validationFailed(errors: FieldError[], detail?: string): AppError {
   return new AppError({
     code: 'validation_failed',

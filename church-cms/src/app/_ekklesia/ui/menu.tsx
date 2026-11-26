@@ -247,7 +247,7 @@ export function MenuLabel({
   return (
     <div
       className={cn(
-        'px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground',
+        'px-2.5 py-1.5 text-[11px] font-medium tracking-normal text-muted-foreground',
         className,
       )}
       {...rest}

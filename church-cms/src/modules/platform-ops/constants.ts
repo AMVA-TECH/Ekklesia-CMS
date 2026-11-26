@@ -24,9 +24,10 @@ export const METRIC_KEYS = [
 
 export type MetricKey = (typeof METRIC_KEYS)[number];
 
-export const DEFAULT_PLATFORM_PERMISSIONS = [
-  'platform:read',
-  'platform:admin',
-  'platform:impersonate_tenant',
-  'platform:security_read',
-] as const;
+export {
+  DEFAULT_PLATFORM_PERMISSIONS,
+  PLATFORM_PERMISSIONS,
+  PLATFORM_OWNER_PERMISSIONS,
+  PLATFORM_ROLE_TEMPLATES,
+  type PlatformPermissionCode,
+} from './platform-permissions';

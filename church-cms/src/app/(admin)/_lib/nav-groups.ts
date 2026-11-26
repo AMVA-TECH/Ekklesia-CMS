@@ -273,6 +273,14 @@ export function buildAdminGroups(
       icon: 'settings',
     });
   }
+  if (anyOf('roles:read', 'roles:assign')) {
+    settingsItems.push({
+      label: labels.rolesAccess,
+      hint: labels.rolesAccessHint,
+      href: '/admin/roles',
+      icon: 'key',
+    });
+  }
   if (can(permissions, 'exports:run')) {
     settingsItems.push({ label: labels.exports, hint: labels.exportsHint, href: '/admin/exports', icon: 'download' });
   }

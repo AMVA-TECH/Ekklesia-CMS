@@ -4,6 +4,7 @@ export {
   forbidden,
   notFound,
   conflict,
+  rateLimited,
   validationFailed,
   internalError,
   type ErrorCode,

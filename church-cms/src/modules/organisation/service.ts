@@ -3,6 +3,12 @@ import { getDb } from '@/platform/db/client';
 import { writeAudit } from '@/platform/audit';
 import { conflict, notFound, validationFailed } from '@/platform/errors';
 import { getPersonInChurch } from '@/modules/people/repository';
+import {
+  listActiveAssignmentsForUnit,
+  listAssignmentsRelatedToAppointment,
+} from '@/modules/access-control/repository';
+import { organisationUsers } from '@/modules/people/db-schema';
+import { and, eq, isNull } from 'drizzle-orm';
 import { wouldCreateCycle } from './hierarchy';
 import {
   toAppointmentResponse,
@@ -29,6 +35,7 @@ import type {
   ListPositionsQuery,
   ListUnitsQuery,
   UpdatePositionBody,
+  UpdateProgrammeBody,
   UpdateUnitBody,
 } from './schemas';
 import * as repo from './repository';
@@ -78,7 +85,7 @@ export async function updateOrganisationalUnit(
   unitId: string,
   body: UpdateUnitBody,
 ) {
-  assertCanWriteUnits(ctx);
+  assertCanWriteUnits(ctx, unitId);
   const db = getDb();
   const existing = await repo.getUnitById(db, ctx, unitId);
   if (!existing) throw notFound();
@@ -100,8 +107,27 @@ export async function updateOrganisationalUnit(
     }
   }
 
+  const structuralRisk =
+    (body.status !== undefined && body.status !== existing.status) ||
+    (body.parentId !== undefined && body.parentId !== existing.parentId);
+
+  if (structuralRisk) {
+    const assignments = await listActiveAssignmentsForUnit(db, ctx, unitId);
+    if (assignments.length > 0 && body.confirmStructuralChange !== true) {
+      throw validationFailed([
+        {
+          field: 'confirmStructuralChange',
+          code: 'confirmation_required',
+          message: `${assignments.length} active unit-scoped role assignment(s) would be affected. Pass confirmStructuralChange:true after review.`,
+        },
+      ]);
+    }
+  }
+
+  const { confirmStructuralChange: _confirm, ...unitPatch } = body;
+
   try {
-    await repo.updateUnit(db, ctx, unitId, body);
+    await repo.updateUnit(db, ctx, unitId, unitPatch);
     await writeAudit(db, ctx, {
       action: 'organisation.unit.updated',
       entityType: 'organisational_unit',
@@ -289,7 +315,12 @@ export async function createAppointment(ctx: Ctx, body: CreateAppointmentBody) {
   }
 
   // Appointments never grant RBAC — role assignment remains a separate explicit step.
-  const id = await repo.insertAppointment(db, ctx, body);
+  const appointmentBody = {
+    ...body,
+    organisationalUnitId:
+      body.organisationalUnitId ?? position.organisationalUnitId ?? undefined,
+  };
+  const id = await repo.insertAppointment(db, ctx, appointmentBody);
   await writeAudit(db, ctx, {
     action: 'organisation.appointment.created',
     entityType: 'appointment',
@@ -339,7 +370,96 @@ export async function endAppointment(
   });
   const row = await repo.getAppointmentById(db, ctx, appointmentId);
   if (!row) throw notFound();
-  return toAppointmentResponse(row);
+
+  // Never auto-revoke roles — surface related assignments for explicit review.
+  let userAccountId: string | null = null;
+  const [orgUser] = await db
+    .select({ userAccountId: organisationUsers.userAccountId })
+    .from(organisationUsers)
+    .where(
+      and(
+        eq(organisationUsers.churchId, ctx.churchId),
+        eq(organisationUsers.personId, existing.personId),
+        eq(organisationUsers.status, 'active'),
+        isNull(organisationUsers.deletedAt),
+      ),
+    )
+    .limit(1);
+  userAccountId = orgUser?.userAccountId ?? null;
+
+  const relatedAssignments = await listAssignmentsRelatedToAppointment(
+    db,
+    ctx,
+    {
+      appointmentId,
+      userAccountId,
+      organisationalUnitId: existing.organisationalUnitId,
+    },
+  );
+
+  return {
+    ...toAppointmentResponse(row),
+    accessReview: {
+      autoRevoked: false,
+      message:
+        'Appointment ended. Review related role assignments — revoke, retain, or reassign explicitly.',
+      userAccountId,
+      relatedAssignments: relatedAssignments.map((a) => ({
+        id: a.assignmentId,
+        userAccountId: a.userAccountId,
+        roleCode: a.roleCode,
+        roleName: a.roleName,
+        scopeType: a.scopeType,
+        organisationalUnitId: a.organisationalUnitId,
+        sourceAppointmentId: a.sourceAppointmentId ?? null,
+      })),
+      reviewPath: userAccountId
+        ? `/admin/roles?tab=review&userAccountId=${userAccountId}`
+        : '/admin/roles?tab=review',
+    },
+  };
+}
+
+export async function listAppointmentHistory(
+  ctx: Ctx,
+  appointmentId: string,
+) {
+  assertCanReadAppointments(ctx);
+  const db = getDb();
+  const existing = await repo.getAppointmentById(db, ctx, appointmentId);
+  if (!existing) throw notFound();
+  const rows = await repo.listAppointmentHistory(db, appointmentId);
+  return {
+    data: rows.map((r) => ({
+      id: r.id,
+      changeType: r.changeType,
+      changedByUserId: r.changedByUserId,
+      changedAt: r.changedAt.toISOString(),
+      reason: r.reason,
+    })),
+  };
+}
+
+export async function updateProgramme(
+  ctx: Ctx,
+  programmeId: string,
+  body: UpdateProgrammeBody,
+) {
+  assertCanWriteProgrammes(ctx);
+  const db = getDb();
+  const existing = await repo.getProgrammeById(db, ctx, programmeId);
+  if (!existing) throw notFound();
+  assertCanWriteUnits(ctx, existing.ministryUnitId);
+  await repo.updateProgramme(db, ctx, programmeId, body);
+  await writeAudit(db, ctx, {
+    action: 'organisation.programme.updated',
+    entityType: 'programme',
+    entityId: programmeId,
+    metadata: { fields: Object.keys(body) },
+  });
+  const row = await repo.getProgrammeById(db, ctx, programmeId);
+  if (!row) throw notFound();
+  return toProgrammeResponse(row);
 }
 
 function isUniqueViolation(error: unknown): boolean {

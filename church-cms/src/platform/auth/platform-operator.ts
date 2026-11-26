@@ -2,14 +2,9 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 import type { Db } from '@/platform/db/client';
 import { platformOperators } from '@/modules/platform-ops/db-schema';
-import type { PermissionCode } from '@/modules/access-control/permissions';
+import { DEFAULT_PLATFORM_PERMISSIONS } from '@/modules/platform-ops/platform-permissions';
 
-const DEFAULT_PLATFORM_PERMS: PermissionCode[] = [
-  'platform:read',
-  'platform:admin',
-  'platform:impersonate_tenant',
-  'platform:security_read',
-];
+const DEFAULT_PLATFORM_PERMS = [...DEFAULT_PLATFORM_PERMISSIONS];
 
 export type PlatformOperatorRow = {
   id: string;
@@ -43,9 +38,22 @@ export async function findActivePlatformOperator(
   const row = rows[0];
   if (!row) return null;
 
-  const permissions = Array.isArray(row.permissions)
+  const base = Array.isArray(row.permissions)
     ? row.permissions.filter((p): p is string => typeof p === 'string')
     : [...DEFAULT_PLATFORM_PERMS];
+
+  // Phase 6: merge time-limited break-glass grants into effective permissions.
+  let breakGlass: string[] = [];
+  try {
+    const { listActiveBreakGlassPermissions } = await import(
+      '@/modules/platform-ops/support-repository'
+    );
+    breakGlass = await listActiveBreakGlassPermissions(db, userAccountId);
+  } catch {
+    breakGlass = [];
+  }
+
+  const permissions = [...new Set([...base, ...breakGlass])];
 
   return {
     id: row.id,

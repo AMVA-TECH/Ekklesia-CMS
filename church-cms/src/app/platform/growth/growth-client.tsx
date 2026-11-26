@@ -2,7 +2,22 @@
 
 import { useCallback, useState } from 'react';
 import { useLoadEffect } from '@/app/_ekklesia/session';
-import { platformApi } from '../platform-api';
+import {
+  Button,
+  EmptyState,
+  Metric,
+  PageHeader,
+  Panel,
+  Skeleton,
+  Table,
+  TableWrap,
+  TBody,
+  TD,
+  TH,
+  THead,
+  TR,
+} from '@/app/_ekklesia/ui';
+import { humanizePlatformError, platformApi } from '../platform-api';
 
 type Growth = {
   days: number;
@@ -20,20 +35,22 @@ export function GrowthClient() {
   const [data, setData] = useState<Growth | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const res = await platformApi<Growth>('/api/v1/platform/growth?days=30');
-    setData(res);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await platformApi<Growth>('/api/v1/platform/growth?days=30');
+      setData(res);
+    } catch (err: unknown) {
+      setError(humanizePlatformError(err));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadInitial = useCallback(
-    () =>
-      load().catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Failed'),
-      ),
-    [load],
-  );
-  useLoadEffect(loadInitial);
+  useLoadEffect(load);
 
   async function snapshot() {
     setBusy(true);
@@ -42,88 +59,129 @@ export function GrowthClient() {
       await platformApi('/api/v1/platform/metrics/snapshot', { method: 'POST' });
       await load();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed');
+      setError(humanizePlatformError(err));
     } finally {
       setBusy(false);
     }
   }
 
+  const series = data?.series.churches_total ?? [];
+
   return (
-    <>
-      <h1 className="platform-h1">Platform growth</h1>
-      <p className="platform-lead">
-        Live totals and daily metric snapshots for platform adoption.
-      </p>
+    <div className="flex flex-col gap-6 lg:gap-8">
+      <PageHeader
+        title="Platform growth"
+        lede="Live totals and daily metric snapshots for platform adoption."
+        actions={
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={busy}
+            onClick={() => void snapshot()}
+          >
+            Write today&apos;s snapshot
+          </Button>
+        }
+      />
 
-      <div className="platform-actions">
-        <button
-          type="button"
-          className="platform-btn platform-btn-primary"
-          disabled={busy}
-          onClick={() => void snapshot()}
+      {error ? (
+        <div
+          role="alert"
+          className="rounded-card border border-[color:var(--danger-soft)] bg-[color:var(--danger-soft)] px-4 py-3 text-sm text-[color:var(--danger-ink)]"
         >
-          Write today&apos;s snapshot
-        </button>
-      </div>
-
-      {error ? <p className="platform-error">{error}</p> : null}
-
-      {data ? (
-        <>
-          <div className="platform-grid">
-            <div className="platform-stat">
-              <p className="platform-stat-label">Churches</p>
-              <p className="platform-stat-value">{data.live.churchesTotal}</p>
-            </div>
-            <div className="platform-stat">
-              <p className="platform-stat-label">People</p>
-              <p className="platform-stat-value">{data.live.peopleTotal}</p>
-            </div>
-            <div className="platform-stat">
-              <p className="platform-stat-label">Active memberships</p>
-              <p className="platform-stat-value">{data.live.membershipsActive}</p>
-            </div>
-            <div className="platform-stat">
-              <p className="platform-stat-label">Check-ins (7d)</p>
-              <p className="platform-stat-value">{data.live.attendanceCheckins7d}</p>
-            </div>
-            <div className="platform-stat">
-              <p className="platform-stat-label">Messages (7d)</p>
-              <p className="platform-stat-value">{data.live.messagesSent7d}</p>
-            </div>
-          </div>
-
-          <section className="platform-panel">
-            <div className="platform-panel-head">
-              <h2>Snapshot series (churches_total)</h2>
-            </div>
-            <table className="platform-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(data.series.churches_total ?? []).length === 0 ? (
-                  <tr>
-                    <td colSpan={2} className="platform-muted">
-                      No snapshots yet. Write today&apos;s snapshot.
-                    </td>
-                  </tr>
-                ) : (
-                  (data.series.churches_total ?? []).map((row) => (
-                    <tr key={row.date}>
-                      <td>{row.date}</td>
-                      <td>{row.value}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </section>
-        </>
+          {error}
+        </div>
       ) : null}
-    </>
+
+      <section aria-labelledby="growth-metrics">
+        <h2 id="growth-metrics" className="sr-only">
+          Live totals
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {loading || !data ? (
+            <>
+              <Skeleton className="h-28 rounded-card" />
+              <Skeleton className="h-28 rounded-card" />
+              <Skeleton className="h-28 rounded-card" />
+              <Skeleton className="h-28 rounded-card" />
+              <Skeleton className="h-28 rounded-card" />
+            </>
+          ) : (
+            <>
+              <Metric
+                label="Churches"
+                value={data.live.churchesTotal}
+                icon="church"
+                tone="sky"
+              />
+              <Metric
+                label="People"
+                value={data.live.peopleTotal}
+                icon="users"
+                tone="lavender"
+              />
+              <Metric
+                label="Active memberships"
+                value={data.live.membershipsActive}
+                icon="users"
+                tone="sage"
+              />
+              <Metric
+                label="Check-ins (7d)"
+                value={data.live.attendanceCheckins7d}
+                icon="chart"
+                tone="peach"
+              />
+              <Metric
+                label="Messages (7d)"
+                value={data.live.messagesSent7d}
+                icon="chat"
+                tone="gold"
+              />
+            </>
+          )}
+        </div>
+      </section>
+
+      <Panel
+        title="Snapshot series"
+        subtitle="Daily churches_total"
+        flush
+      >
+        {loading ? (
+          <div className="space-y-3 p-5">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+          </div>
+        ) : series.length === 0 ? (
+          <EmptyState
+            icon="chart"
+            tone="sky"
+            title="No snapshots yet"
+            description="Write today’s snapshot to start the series."
+          />
+        ) : (
+          <TableWrap>
+            <Table>
+              <THead>
+                <TR>
+                  <TH>Date</TH>
+                  <TH>Value</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {series.map((row) => (
+                  <TR key={row.date}>
+                    <TD>{row.date}</TD>
+                    <TD className="tabular-nums">{row.value}</TD>
+                  </TR>
+                ))}
+              </TBody>
+            </Table>
+          </TableWrap>
+        )}
+      </Panel>
+    </div>
   );
 }

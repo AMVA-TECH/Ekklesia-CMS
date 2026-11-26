@@ -170,12 +170,15 @@ export async function listEvents(ctx: Ctx, query: ListEventsQuery) {
 }
 
 export async function getEvent(ctx: Ctx, eventId: string) {
-  assertCanReadEvents(ctx);
+  const db = getDb();
+  const existing = await repo.getEventById(db, ctx, eventId);
+  if (!existing) throw notFound();
+  assertCanReadEvents(ctx, existing.organisationalUnitId ?? undefined);
   return eventResponseWithType(ctx, eventId);
 }
 
 export async function createEvent(ctx: Ctx, body: CreateEventBody) {
-  assertCanWriteEvents(ctx);
+  assertCanWriteEvents(ctx, body.organisationalUnitId);
   const db = getDb();
   await ensureDefaultEventTypes(ctx);
 
@@ -211,10 +214,13 @@ export async function createEvent(ctx: Ctx, body: CreateEventBody) {
 }
 
 export async function updateEvent(ctx: Ctx, eventId: string, body: UpdateEventBody) {
-  assertCanWriteEvents(ctx);
   const db = getDb();
   const existing = await repo.getEventById(db, ctx, eventId);
   if (!existing) throw notFound();
+  assertCanWriteEvents(
+    ctx,
+    body.organisationalUnitId ?? existing.organisationalUnitId ?? undefined,
+  );
 
   if (body.eventTypeId) {
     const eventType = await repo.getEventTypeById(db, ctx, body.eventTypeId);
