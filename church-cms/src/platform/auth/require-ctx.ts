@@ -1,6 +1,8 @@
 import { unauthorized, forbidden } from '@/platform/errors';
 import type { Ctx, Actor, PlatformCtx } from './ctx';
 import type { PermissionCode } from '@/modules/access-control/permissions';
+import type { AuthScope } from '@/modules/access-control/can';
+import { deserializeScopesByPermission } from './permissions-for-user';
 
 /**
  * Minimal session claims resolved by the auth layer (ADR-0002 / ADR-0003).
@@ -13,6 +15,9 @@ export interface SessionClaims {
   /** Required for church APIs; optional for platform-only sessions. */
   activeChurchId: string | null;
   permissions: ReadonlyArray<PermissionCode | string>;
+  /** Serialized scopes keyed by permission code. */
+  scopesByPermission?: Record<string, AuthScope[]>;
+  actorHouseholdIds?: ReadonlyArray<string>;
   locale?: 'sw' | 'en';
   isPlatformOperator?: boolean;
   platformPermissions?: ReadonlyArray<PermissionCode | string>;
@@ -58,6 +63,12 @@ export function requireCtx(input: RequireCtxInput): Ctx {
     requestId: input.requestId,
     locale: resolveLocale(input.session, input.acceptLanguage),
     permissions: new Set(input.session.permissions),
+    scopesByPermission: deserializeScopesByPermission(
+      input.session.scopesByPermission,
+    ),
+    actorHouseholdIds: input.session.actorHouseholdIds
+      ? new Set(input.session.actorHouseholdIds)
+      : undefined,
     isPlatformOperator: input.session.isPlatformOperator === true,
   };
 }

@@ -1,20 +1,20 @@
 import type { PlatformCtx } from '@/platform/auth';
-import { getAuth, provisionCredentialAccount } from '@/platform/auth';
+import { hasPlatformPermission, provisionCredentialAccount } from '@/platform/auth';
 import { getDb } from '@/platform/db/client';
 import { newId } from '@/platform/db/ids';
 import { writePlatformAudit } from '@/platform/audit';
 import { sanitizeAuditMetadata } from '@/platform/audit/sanitize';
-import {
-  conflict,
-  forbidden,
-  notFound,
-  unauthorized,
-  validationFailed,
-} from '@/platform/errors';
-import { PERMISSIONS } from '@/modules/access-control/permissions';
+import { conflict, notFound } from '@/platform/errors';
 import {
   assertPlatformAdmin,
+  assertPlatformAuditRead,
+  assertPlatformChurchesRead,
+  assertPlatformChurchesWrite,
+  assertPlatformFindingsManage,
   assertPlatformImpersonate,
+  assertPlatformMetricsWrite,
+  assertPlatformAccountsRead,
+  assertPlatformOperatorsManage,
   assertPlatformRead,
   assertPlatformSecurityRead,
 } from './policies';
@@ -30,6 +30,7 @@ import type {
   ListFindingsQuery,
   ListPlatformAuditQuery,
   PatchFindingBody,
+  PurgeAuditLogsBody,
 } from './schemas';
 
 function daysAgoIsoDate(days: number): string {
@@ -74,6 +75,85 @@ export async function getOverview(ctx: PlatformCtx) {
       Math.min(authFailures7d, 30),
   );
 
+  const { hasPlatformPermission } = await import('@/platform/auth');
+  const showAnalytics =
+    hasPlatformPermission(ctx, 'platform:analytics_read') ||
+    hasPlatformPermission(ctx, 'platform:admin');
+  const showConfig =
+    hasPlatformPermission(ctx, 'platform:config_read') ||
+    hasPlatformPermission(ctx, 'platform:config_write') ||
+    hasPlatformPermission(ctx, 'platform:admin');
+  const showApplications =
+    hasPlatformPermission(ctx, 'platform:applications_review') ||
+    hasPlatformPermission(ctx, 'platform:applications_decide') ||
+    hasPlatformPermission(ctx, 'platform:admin');
+
+  let analyticsWidgets: {
+    lifecycle: Record<string, number>;
+    applicationsOpen: number;
+    activeSupportSessions: number;
+  } | null = null;
+  let configStatus: {
+    globalConfigured: boolean;
+    defaultsConfigured: boolean;
+    tenantOverrideCount: number;
+  } | null = null;
+  let pendingApplications: {
+    count: number;
+    items: Array<{
+      id: string;
+      officialName: string;
+      status: string;
+      representativeName: string;
+      email: string;
+      emailVerifiedAt: string | null;
+      createdAt: string;
+    }>;
+  } | null = null;
+
+  if (showAnalytics) {
+    const analyticsRepo = await import('./analytics-repository');
+    const [lifecycle, applications, activeSupportSessions] = await Promise.all([
+      analyticsRepo.countChurchesByLifecycle(db),
+      analyticsRepo.countRegistrationApplicationsByStatus(db),
+      analyticsRepo.countActiveSupportSessions(db),
+    ]);
+    const applicationsOpen =
+      (applications.submitted ?? 0) +
+      (applications.email_verified ?? 0) +
+      (applications.under_review ?? 0);
+    analyticsWidgets = { lifecycle, applicationsOpen, activeSupportSessions };
+  }
+
+  if (showConfig) {
+    const configRepo = await import('./config-repository');
+    configStatus = await configRepo.configLayerStatus(db);
+  }
+
+  if (showApplications) {
+    const regRepo = await import('./registration-repository');
+    const [count, rows] = await Promise.all([
+      regRepo.countApplicationsByStatuses(db, [
+        'submitted',
+        'email_verified',
+        'under_review',
+      ]),
+      regRepo.listApplicationsNeedingReview(db, 8),
+    ]);
+    pendingApplications = {
+      count,
+      items: rows.map((row) => ({
+        id: row.id,
+        officialName: row.officialName,
+        status: row.status,
+        representativeName: row.representativeName,
+        email: row.email,
+        emailVerifiedAt: row.emailVerifiedAt?.toISOString() ?? null,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
+  }
+
   await writePlatformAudit(db, ctx, {
     action: 'platform.overview.read',
     entityType: 'platform',
@@ -105,13 +185,21 @@ export async function getOverview(ctx: PlatformCtx) {
       failedMessageJobs7d: failedJobs7d,
       authFailures7d,
     },
+    pendingApplications,
+    widgets: {
+      analytics: analyticsWidgets,
+      config: configStatus,
+    },
   };
 }
 
-export async function listPlatformChurches(ctx: PlatformCtx) {
-  assertPlatformRead(ctx);
+export async function listPlatformChurches(
+  ctx: PlatformCtx,
+  query: import('./schemas').ListChurchesQuery = { limit: 100 },
+) {
+  assertPlatformChurchesRead(ctx);
   const db = getDb();
-  const rows = await repo.listChurches(db);
+  const rows = await repo.listChurches(db, query);
   return {
     items: rows.map((r) => ({
       id: r.id,
@@ -119,6 +207,7 @@ export async function listPlatformChurches(ctx: PlatformCtx) {
       slug: r.slug,
       timezone: r.timezone,
       defaultLocale: r.defaultLocale,
+      lifecycleStatus: r.lifecycleStatus,
       createdAt: r.createdAt.toISOString(),
     })),
   };
@@ -132,7 +221,7 @@ export async function createPlatformChurch(
   ctx: PlatformCtx,
   body: CreateChurchBody,
 ) {
-  assertPlatformAdmin(ctx);
+  assertPlatformChurchesWrite(ctx);
   const db = getDb();
   const actorUserId = ctx.actor.userAccountId;
 
@@ -228,7 +317,7 @@ export async function createPlatformChurch(
 }
 
 export async function getPlatformChurch(ctx: PlatformCtx, churchId: string) {
-  assertPlatformRead(ctx);
+  assertPlatformChurchesRead(ctx);
   const db = getDb();
   const church = await repo.getChurchById(db, churchId);
   if (!church) throw notFound();
@@ -247,6 +336,42 @@ export async function getPlatformChurch(ctx: PlatformCtx, churchId: string) {
     churchId,
   });
 
+  const recentAudit = await repo.listPlatformAudit(db, {
+    churchId,
+    limit: 15,
+  });
+  const { emailByUserAccountId, labelOrDash } = await import('./display-labels');
+  const actorEmails = await emailByUserAccountId(
+    db,
+    recentAudit.map((r) => r.actorUserId),
+  );
+
+  let accounts: Array<{
+    userAccountId: string;
+    displayName: string | null;
+    email: string | null;
+    phoneE164: string | null;
+    accountStatus: string;
+    orgLinkStatus: string;
+  }> = [];
+  if (
+    hasPlatformPermission(ctx, 'platform:accounts_read') ||
+    hasPlatformPermission(ctx, 'platform:admin')
+  ) {
+    const accountsRepo = await import('./accounts-repository');
+    const rows = await accountsRepo.listTenantAccounts(db, churchId, {
+      limit: 50,
+    });
+    accounts = rows.map((a) => ({
+      userAccountId: a.userAccountId,
+      displayName: a.displayName,
+      email: a.email,
+      phoneE164: a.phoneE164,
+      accountStatus: a.accountStatus,
+      orgLinkStatus: a.orgStatus,
+    }));
+  }
+
   return {
     church: {
       id: church.id,
@@ -254,9 +379,11 @@ export async function getPlatformChurch(ctx: PlatformCtx, churchId: string) {
       slug: church.slug,
       timezone: church.timezone,
       defaultLocale: church.defaultLocale,
+      lifecycleStatus: church.lifecycleStatus,
       createdAt: church.createdAt.toISOString(),
     },
     counts,
+    accounts,
     openFindings: findings.map((f) => ({
       id: f.id,
       severity: f.severity,
@@ -264,30 +391,230 @@ export async function getPlatformChurch(ctx: PlatformCtx, churchId: string) {
       status: f.status,
       lastSeenAt: f.lastSeenAt.toISOString(),
     })),
+    recentAudit: recentAudit.map((row) => ({
+      id: row.id,
+      action: row.action,
+      outcome: row.outcome,
+      actorEmail: labelOrDash(actorEmails, row.actorUserId),
+      reason: row.reason,
+      createdAt: row.createdAt.toISOString(),
+    })),
   };
+}
+
+function auditHref(input: {
+  scope: 'platform' | 'tenant';
+  entityType: string;
+  entityId: string | null;
+  churchId: string | null;
+}): string | null {
+  if (input.entityType === 'church' && input.entityId) {
+    return `/platform/churches/${input.entityId}`;
+  }
+  if (
+    (input.entityType === 'operator' ||
+      input.entityType === 'platform_operator') &&
+    input.entityId
+  ) {
+    return `/platform/access/operators/${input.entityId}`;
+  }
+  if (input.churchId) {
+    return `/platform/churches/${input.churchId}`;
+  }
+  return null;
 }
 
 export async function listPlatformAuditEvents(
   ctx: PlatformCtx,
   query: ListPlatformAuditQuery,
 ) {
-  assertPlatformSecurityRead(ctx);
+  assertPlatformAuditRead(ctx);
   const db = getDb();
-  const items = await repo.listPlatformAudit(db, query);
+  const scope = query.scope ?? 'platform';
+  const items =
+    scope === 'tenant'
+      ? await repo.listTenantAudit(db, query)
+      : await repo.listPlatformAudit(db, query);
+  const entityTypes = await repo.listDistinctAuditEntityTypes(db, scope);
+  const { churchNameById, emailByUserAccountId, labelOrDash } = await import(
+    './display-labels'
+  );
+  const churchNames = await churchNameById(
+    db,
+    items.map((r) => r.churchId),
+  );
+  const actorEmails = await emailByUserAccountId(
+    db,
+    items.map((r) => r.actorUserId),
+  );
+
+  const churchRows = await repo.listChurches(db, { limit: 100 });
+  const churches = churchRows.map((c) => ({ id: c.id, name: c.name }));
+
   return {
-    items: items.map((row) => ({
+    scope,
+    entityTypes,
+    churches,
+    items: items.map((row) => {
+      const outcome =
+        'outcome' in row && typeof row.outcome === 'string'
+          ? row.outcome
+          : 'success';
+      const requestId =
+        'requestId' in row && typeof row.requestId === 'string'
+          ? row.requestId
+          : null;
+      const reason =
+        'reason' in row && typeof row.reason === 'string' ? row.reason : null;
+      return {
+        id: row.id,
+        scope,
+        action: row.action,
+        outcome,
+        actorUserId: row.actorUserId,
+        actorEmail: labelOrDash(actorEmails, row.actorUserId),
+        churchId: row.churchId,
+        churchName: labelOrDash(churchNames, row.churchId),
+        entityType: row.entityType,
+        entityId: row.entityId,
+        requestId,
+        reason,
+        href: `/platform/audit/${row.id}?scope=${scope}`,
+        relatedHref: auditHref({
+          scope,
+          entityType: row.entityType,
+          entityId: row.entityId,
+          churchId: row.churchId,
+        }),
+        createdAt: row.createdAt.toISOString(),
+      };
+    }),
+  };
+}
+
+export async function getPlatformAuditEvent(
+  ctx: PlatformCtx,
+  id: string,
+  scope: 'platform' | 'tenant' = 'platform',
+) {
+  assertPlatformAuditRead(ctx);
+  const db = getDb();
+  const row =
+    scope === 'tenant'
+      ? await repo.getTenantAuditById(db, id)
+      : await repo.getPlatformAuditById(db, id);
+  if (!row) throw notFound();
+
+  const { churchNameById, emailByUserAccountId, labelOrDash } = await import(
+    './display-labels'
+  );
+  const [churchNames, actorEmails] = await Promise.all([
+    churchNameById(db, [row.churchId]),
+    emailByUserAccountId(db, [row.actorUserId]),
+  ]);
+
+  const related =
+    scope === 'platform' &&
+    'requestId' in row &&
+    typeof row.requestId === 'string' &&
+    row.requestId
+      ? await repo.listPlatformAuditByRequestId(db, row.requestId)
+      : [];
+
+  const outcome =
+    'outcome' in row && typeof row.outcome === 'string' ? row.outcome : 'success';
+  const requestId =
+    'requestId' in row && typeof row.requestId === 'string'
+      ? row.requestId
+      : null;
+  const reason =
+    'reason' in row && typeof row.reason === 'string' ? row.reason : null;
+
+  return {
+    scope,
+    event: {
       id: row.id,
-      actorUserId: row.actorUserId,
       action: row.action,
-      outcome: row.outcome,
+      outcome,
+      actorUserId: row.actorUserId,
+      actorEmail: labelOrDash(actorEmails, row.actorUserId),
       churchId: row.churchId,
+      churchName: labelOrDash(churchNames, row.churchId),
       entityType: row.entityType,
       entityId: row.entityId,
-      requestId: row.requestId,
-      reason: row.reason,
-      metadata: sanitizeAuditMetadata(row.metadata ?? {}),
+      requestId,
+      reason,
+      metadata: sanitizeAuditMetadata(
+        (row.metadata as Record<string, unknown> | null) ?? {},
+      ),
+      relatedHref: auditHref({
+        scope,
+        entityType: row.entityType,
+        entityId: row.entityId,
+        churchId: row.churchId,
+      }),
       createdAt: row.createdAt.toISOString(),
-    })),
+    },
+    related: related
+      .filter((r) => r.id !== id)
+      .map((r) => ({
+        id: r.id,
+        action: r.action,
+        outcome: r.outcome,
+        entityType: r.entityType,
+        href: `/platform/audit/${r.id}?scope=platform`,
+        createdAt: r.createdAt.toISOString(),
+      })),
+  };
+}
+
+/**
+ * Permanently delete audit rows. platform:admin + PIN + typed DELETE.
+ * Writes one fresh platform attestation after the wipe (so the purge itself is recorded).
+ */
+export async function purgeAuditLogs(ctx: PlatformCtx, body: PurgeAuditLogsBody) {
+  assertPlatformAdmin(ctx);
+  const { confirmOperatorPin } = await import('./reauth-service');
+  await confirmOperatorPin(ctx, { pin: body.pin });
+
+  const db = getDb();
+  const before = body.before ? new Date(body.before) : undefined;
+  const wipePlatform =
+    body.scope === 'platform' || body.scope === 'all';
+  const wipeTenant = body.scope === 'tenant' || body.scope === 'all';
+
+  const [platformCount, tenantCount] = await Promise.all([
+    wipePlatform ? repo.countPlatformAudit(db, before) : Promise.resolve(0),
+    wipeTenant ? repo.countTenantAudit(db, before) : Promise.resolve(0),
+  ]);
+
+  const deletedPlatform = wipePlatform
+    ? await repo.deletePlatformAudit(db, before)
+    : 0;
+  const deletedTenant = wipeTenant
+    ? await repo.deleteTenantAudit(db, before)
+    : 0;
+
+  await writePlatformAudit(db, ctx, {
+    action: 'platform.audit.purged',
+    entityType: 'audit',
+    reason: body.reason,
+    metadata: sanitizeAuditMetadata({
+      scope: body.scope,
+      before: body.before ?? null,
+      deletedPlatform,
+      deletedTenant,
+      countedPlatform: platformCount,
+      countedTenant: tenantCount,
+    }),
+  });
+
+  return {
+    scope: body.scope,
+    before: body.before ?? null,
+    deletedPlatform,
+    deletedTenant,
+    deletedTotal: deletedPlatform + deletedTenant,
   };
 }
 
@@ -320,7 +647,7 @@ export async function patchSecurityFinding(
   findingId: string,
   body: PatchFindingBody,
 ) {
-  assertPlatformSecurityRead(ctx);
+  assertPlatformFindingsManage(ctx);
   const db = getDb();
   const existing = await repo.getFindingById(db, findingId);
   if (!existing) throw notFound();
@@ -344,7 +671,7 @@ export async function patchSecurityFinding(
 }
 
 export async function runDetectors(ctx: PlatformCtx) {
-  assertPlatformAdmin(ctx);
+  assertPlatformFindingsManage(ctx);
   const db = getDb();
   const result = await runSecurityDetectors(db);
   await writePlatformAudit(db, ctx, {
@@ -415,7 +742,7 @@ export async function getHealth(ctx: PlatformCtx) {
 }
 
 export async function listOperators(ctx: PlatformCtx) {
-  assertPlatformAdmin(ctx);
+  assertPlatformOperatorsManage(ctx);
   const db = getDb();
   const rows = await repo.listOperators(db);
   return {
@@ -431,15 +758,21 @@ export async function listOperators(ctx: PlatformCtx) {
 }
 
 export async function addOperator(ctx: PlatformCtx, body: AddOperatorBody) {
-  assertPlatformAdmin(ctx);
+  assertPlatformOperatorsManage(ctx);
   const db = getDb();
+  const email = body.email.trim().toLowerCase();
+  const account = await repo.findUserAccountByEmail(db, email);
+  if (!account) {
+    throw notFound('No user account found for that email.');
+  }
+
   const existing = await repo.listOperators(db);
-  if (existing.some((o) => o.userAccountId === body.userAccountId && o.status === 'active')) {
+  if (existing.some((o) => o.userAccountId === account.id && o.status === 'active')) {
     throw conflict('User is already a platform operator');
   }
 
   const id = await repo.insertOperator(db, {
-    userAccountId: body.userAccountId,
+    userAccountId: account.id,
     permissions: body.permissions
       ? [...body.permissions]
       : [...DEFAULT_PLATFORM_PERMISSIONS],
@@ -450,27 +783,42 @@ export async function addOperator(ctx: PlatformCtx, body: AddOperatorBody) {
     action: 'platform.operator.add',
     entityType: 'platform_operator',
     entityId: id,
-    metadata: { userAccountId: body.userAccountId },
+    metadata: sanitizeAuditMetadata({ email }),
   });
 
-  return { id, userAccountId: body.userAccountId };
+  return { id, email };
 }
 
 export async function getAccessSummary(ctx: PlatformCtx) {
-  assertPlatformAdmin(ctx);
+  try {
+    assertPlatformOperatorsManage(ctx);
+  } catch {
+    assertPlatformAccountsRead(ctx);
+  }
   const db = getDb();
   const summary = await repo.accessSummary(db);
+  const { churchNameById, emailByUserAccountId, labelOrDash } = await import(
+    './display-labels'
+  );
+  const churchNames = await churchNameById(db, [
+    ...summary.roleCounts.map((r) => r.churchId),
+    ...summary.recentPrivilege.map((r) => r.churchId),
+  ]);
+  const actorEmails = await emailByUserAccountId(
+    db,
+    summary.recentPrivilege.map((r) => r.actorUserId),
+  );
   return {
     roleCounts: summary.roleCounts.map((r) => ({
-      churchId: r.churchId,
+      churchName: labelOrDash(churchNames, r.churchId),
       roleCode: r.roleCode,
       count: Number(r.n),
     })),
     recentPrivilege: summary.recentPrivilege.map((r) => ({
       id: r.id,
       action: r.action,
-      actorUserId: r.actorUserId,
-      churchId: r.churchId,
+      actorEmail: labelOrDash(actorEmails, r.actorUserId),
+      churchName: labelOrDash(churchNames, r.churchId),
       createdAt: r.createdAt.toISOString(),
       metadata: sanitizeAuditMetadata(r.metadata ?? {}),
     })),
@@ -478,7 +826,7 @@ export async function getAccessSummary(ctx: PlatformCtx) {
 }
 
 /**
- * Audited support entry into a church tenant.
+ * Audited support entry into a church tenant (Phase 6: creates controlled session).
  * Sets Better Auth activeChurchId when a cookie session exists;
  * for x-dev sessions, returns the churchId for the client to send as x-dev-church-id.
  */
@@ -488,75 +836,12 @@ export async function enterTenant(
   body: EnterTenantBody,
   request: Request,
 ) {
-  assertPlatformImpersonate(ctx);
-  const db = getDb();
-  const church = await repo.getChurchById(db, churchId);
-  if (!church) throw notFound();
-
-  let setCookieHeaders: string[] = [];
-  const authMode = request.headers.get('x-dev-platform-operator') === '1' ? 'dev' : 'better-auth';
-
-  if (authMode === 'better-auth') {
-    try {
-      const auth = getAuth();
-      const ba = await auth.api.getSession({ headers: request.headers });
-      if (!ba?.session?.token) {
-        throw unauthorized();
-      }
-      const updateResponse = await auth.api.updateSession({
-        body: { activeChurchId: churchId },
-        headers: request.headers,
-        asResponse: true,
-      });
-      if (!updateResponse.ok) {
-        const text = await updateResponse.text();
-        throw validationFailed(
-          [
-            {
-              field: 'churchId',
-              code: 'session_update_failed',
-              message: text.slice(0, 200),
-            },
-          ],
-          'Failed to pin active church on session',
-        );
-      }
-      setCookieHeaders =
-        typeof updateResponse.headers.getSetCookie === 'function'
-          ? updateResponse.headers.getSetCookie()
-          : [];
-    } catch (err) {
-      if (err instanceof Error && 'status' in err) throw err;
-      throw forbidden('Unable to enter tenant session');
-    }
-  }
-
-  await writePlatformAudit(db, ctx, {
-    action: 'platform.tenant.enter',
-    entityType: 'church',
-    entityId: churchId,
-    churchId,
-    reason: body.reason,
-    metadata: { churchName: church.name, authMode },
-  });
-
-  return {
-    churchId,
-    churchName: church.name,
-    reason: body.reason,
-    /** When using church APIs after enter, platform operators receive full permission set. */
-    supportPermissionsHint: [...PERMISSIONS],
-    setCookieHeaders,
-    /** Dev clients should send this as x-dev-church-id after enter. */
-    devHint:
-      authMode === 'dev'
-        ? { 'x-dev-church-id': churchId, 'x-dev-platform-operator': '1' }
-        : undefined,
-  };
+  const { enterTenantWithSupport } = await import('./support-service');
+  return enterTenantWithSupport(ctx, churchId, body, request);
 }
 
 export async function snapshotMetrics(ctx: PlatformCtx) {
-  assertPlatformAdmin(ctx);
+  assertPlatformMetricsWrite(ctx);
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10);
   const values: Record<string, number> = {

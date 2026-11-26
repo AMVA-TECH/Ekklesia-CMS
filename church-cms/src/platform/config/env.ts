@@ -3,16 +3,23 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_URL: z.string().min(1).optional(),
+  /**
+   * Tenant RLS transaction driver:
+   * - `auto` (default): local pg + Neon WebSocket Pool when WebSocket exists
+   * - `on`: always use transactional client (Neon WS on hosted)
+   * - `off`: skip set_config txs; rely on app church_id filters only
+   */
+  DATABASE_TX_MODE: z.enum(['auto', 'on', 'off']).default('auto'),
   APP_URL: z.string().url().optional(),
 
   /**
-   * Root domain for host routing (no protocol), e.g. `example.com` or `localhost:3000`.
-   * Platform console is served on `{PLATFORM_SUBDOMAIN}.{ROOT}` via `src/proxy.ts`.
+   * Optional root domain (no protocol). Reserved for future host routing;
+   * platform console is path-based at `/platform` on the main app host.
    */
   NEXT_PUBLIC_ROOT_DOMAIN: z.string().min(1).optional(),
-  /** Subdomain label for operator console (default `platform`). */
+  /** Legacy subdomain label (default `platform`); redirects to `/platform`. */
   NEXT_PUBLIC_PLATFORM_SUBDOMAIN: z.string().min(1).optional(),
-  /** Optional full host override, e.g. `ops.example.com` (no protocol). */
+  /** Legacy full host override; redirects to main-app `/platform`. */
   NEXT_PUBLIC_PLATFORM_HOST: z.string().min(1).optional(),
 
   /** Better Auth (ADR-0002). Required for real login; generate with `openssl rand -base64 32`. */
@@ -46,6 +53,8 @@ const envSchema = z.object({
   SMSGATE_TIMEOUT: z.coerce.number().int().positive().default(15),
   /** Comma-separated numbers or `*` (allow all). Required when NOTIFY_PROVIDER=smsgate. */
   SMS_TEST_RECIPIENTS: z.string().min(1).optional(),
+  /** Comma-separated emails or `*` (allow all) for platform messaging test emails. */
+  EMAIL_TEST_RECIPIENTS: z.string().min(1).optional(),
 
   /** Briq Karibu — https://docs.briq.tz */
   BRIQ_API_KEY: z.string().min(1).optional(),

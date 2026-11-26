@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 /**
- * Mirrors subdomain detection rules in src/proxy.ts (kept small & pure for unit tests).
+ * Legacy subdomain hosts still redirect to same-origin `/platform`
+ * (see src/proxy.ts). Detection rules kept here for unit coverage.
  */
-function isPlatformHostname(
+function isLegacyPlatformHostname(
   hostname: string,
   opts: {
     rootDomain: string;
@@ -17,7 +18,14 @@ function isPlatformHostname(
   const sub = (opts.subdomain ?? 'platform').toLowerCase();
 
   if (host === `${sub}.localhost`) return true;
-  if (host === `${sub}.${rootHost}`) return true;
+  if (
+    rootHost &&
+    rootHost !== 'localhost' &&
+    rootHost !== '127.0.0.1' &&
+    host === `${sub}.${rootHost}`
+  ) {
+    return true;
+  }
 
   const explicit = opts.explicitHost?.split(':')[0]?.toLowerCase();
   if (explicit && host === explicit) return true;
@@ -25,35 +33,39 @@ function isPlatformHostname(
   return false;
 }
 
-describe('platform host detection', () => {
-  it('matches platform.localhost', () => {
+describe('legacy platform host detection', () => {
+  it('matches platform.localhost for redirect', () => {
     assert.equal(
-      isPlatformHostname('platform.localhost', { rootDomain: 'localhost:3000' }),
+      isLegacyPlatformHostname('platform.localhost', {
+        rootDomain: 'localhost:3000',
+      }),
       true,
     );
   });
 
-  it('matches platform.example.com', () => {
+  it('matches platform.example.com for redirect', () => {
     assert.equal(
-      isPlatformHostname('platform.example.com', { rootDomain: 'example.com' }),
+      isLegacyPlatformHostname('platform.example.com', {
+        rootDomain: 'example.com',
+      }),
       true,
     );
   });
 
-  it('rejects main app host', () => {
+  it('does not treat main app host as platform host', () => {
     assert.equal(
-      isPlatformHostname('example.com', { rootDomain: 'example.com' }),
+      isLegacyPlatformHostname('example.com', { rootDomain: 'example.com' }),
       false,
     );
     assert.equal(
-      isPlatformHostname('localhost', { rootDomain: 'localhost:3000' }),
+      isLegacyPlatformHostname('localhost', { rootDomain: 'localhost:3000' }),
       false,
     );
   });
 
   it('honours explicit PLATFORM_HOST', () => {
     assert.equal(
-      isPlatformHostname('ops.custom.test', {
+      isLegacyPlatformHostname('ops.custom.test', {
         rootDomain: 'example.com',
         explicitHost: 'ops.custom.test',
       }),

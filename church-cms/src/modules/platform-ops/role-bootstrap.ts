@@ -1,6 +1,7 @@
 import type { PermissionCode } from '@/modules/access-control/permissions';
+import type { RoleScopeType } from '@/modules/access-control/constants';
 
-/** Permission codes granted to the first church_administrator role. */
+/** Church Administrator — ops without finance approve/post/reverse (SoD). */
 export const CHURCH_ADMINISTRATOR_PERMISSIONS = [
   'people:read',
   'people:create',
@@ -29,30 +30,12 @@ export const CHURCH_ADMINISTRATOR_PERMISSIONS = [
   'attendance:check_in_self',
   'attendance:correct_request',
   'attendance:correct_resolve',
-  'funds:read',
-  'funds:write',
-  'accounts:read',
-  'accounts:write',
-  'periods:write',
-  'offerings:write',
-  'pledges:read',
-  'pledges:write',
-  'pledges:follow_up',
-  'journals:read',
-  'journals:draft',
-  'journals:post',
-  'journals:reverse',
   'templates:write',
   'announcements:write',
   'announcements:publish',
   'preferences:self',
   'messages:send',
   'messages:bulk_send',
-  'disbursements:request',
-  'disbursements:approve',
-  'finance_reports:read',
-  'budgets:read',
-  'budgets:write',
   'projects:read',
   'projects:write',
   'projects:assign',
@@ -93,6 +76,7 @@ export const SENIOR_PASTOR_PERMISSIONS = [
   'people:read',
   'people:create',
   'people:update',
+  'people:read_restricted',
   'households:read',
   'households:write',
   'memberships:read',
@@ -127,6 +111,7 @@ export const PASTORAL_LEADERSHIP_PERMISSIONS = [
   'people:read',
   'people:create',
   'people:update',
+  'people:read_restricted',
   'households:read',
   'households:write',
   'memberships:read',
@@ -146,6 +131,10 @@ export const PASTORAL_LEADERSHIP_PERMISSIONS = [
   'roles:read',
 ] as const satisfies readonly PermissionCode[];
 
+/**
+ * Finance Officer — recording path. Requests disbursements; does not approve.
+ * May draft and post journals; reverse reserved for steward.
+ */
 export const FINANCE_OFFICER_PERMISSIONS = [
   'funds:read',
   'funds:write',
@@ -159,9 +148,7 @@ export const FINANCE_OFFICER_PERMISSIONS = [
   'journals:read',
   'journals:draft',
   'journals:post',
-  'journals:reverse',
   'disbursements:request',
-  'disbursements:approve',
   'finance_reports:read',
   'budgets:read',
   'budgets:write',
@@ -170,38 +157,227 @@ export const FINANCE_OFFICER_PERMISSIONS = [
   'audit:read',
 ] as const satisfies readonly PermissionCode[];
 
-export const DEFAULT_CHURCH_ROLES = [
+export const CHIEF_FINANCIAL_STEWARD_PERMISSIONS = [
+  'church:read',
+  'funds:read',
+  'funds:write',
+  'accounts:read',
+  'accounts:write',
+  'journals:read',
+  'journals:reverse',
+  'disbursements:approve',
+  'finance_reports:read',
+  'budgets:read',
+  'audit:read',
+] as const satisfies readonly PermissionCode[];
+
+export const MINISTRY_LEADER_PERMISSIONS = [
+  'church:read',
+  'people:read',
+  'people:create',
+  'people:update',
+  'units:read',
+  'participations:read',
+  'participations:approve',
+  'events:read',
+  'events:write',
+  'attendance:read',
+  'attendance:record',
+  'attendance:stats_leadership',
+  'projects:read',
+  'projects:write',
+  'announcements:write',
+  'announcements:publish',
+  'directory:read',
+  'preferences:self',
+] as const satisfies readonly PermissionCode[];
+
+export const DEPARTMENT_HEAD_PERMISSIONS = [
+  'church:read',
+  'people:read',
+  'units:read',
+  'events:read',
+  'events:write',
+  'attendance:read',
+  'attendance:record',
+  'directory:read',
+  'preferences:self',
+] as const satisfies readonly PermissionCode[];
+
+export const REGISTRAR_PERMISSIONS = [
+  'church:read',
+  'people:read',
+  'people:create',
+  'people:update',
+  'households:read',
+  'households:write',
+  'memberships:read',
+  'memberships:create',
+  'memberships:approve',
+  'memberships:update_status',
+  'directory:read',
+  'imports:run',
+  'preferences:self',
+] as const satisfies readonly PermissionCode[];
+
+export const EVENT_RECORDER_PERMISSIONS = [
+  'church:read',
+  'events:read',
+  'attendance:read',
+  'attendance:record',
+  'preferences:self',
+] as const satisfies readonly PermissionCode[];
+
+export const ANNOUNCER_PERMISSIONS = [
+  'church:read',
+  'announcements:write',
+  'announcements:publish',
+  'messages:send',
+  'messages:bulk_send',
+  'templates:write',
+  'preferences:self',
+] as const satisfies readonly PermissionCode[];
+
+export const AUDITOR_PERMISSIONS = [
+  'church:read',
+  'people:read',
+  'people:read_restricted',
+  'finance_reports:read',
+  'journals:read',
+  'funds:read',
+  'accounts:read',
+  'audit:read',
+  'roles:read',
+  'preferences:self',
+] as const satisfies readonly PermissionCode[];
+
+export type RoleTemplateDef = {
+  code: string;
+  name: string;
+  description: string;
+  permissions: readonly PermissionCode[];
+  allowedScopes: readonly RoleScopeType[];
+  /** When true, created automatically on new church bootstrap. */
+  bootstrap: boolean;
+};
+
+/** Full platform template library (opt-in + bootstrap). */
+export const ROLE_TEMPLATES: readonly RoleTemplateDef[] = [
   {
-    code: 'church_administrator' as const,
+    code: 'church_administrator',
     name: 'Church Administrator',
+    description: 'Church-wide operations and access management without finance approve/post.',
     permissions: CHURCH_ADMINISTRATOR_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: true,
   },
   {
-    code: 'senior_pastor' as const,
+    code: 'senior_pastor',
     name: 'Senior Pastor',
+    description: 'Church-wide oversight template (pilot label; not a hard-coded auth title).',
     permissions: SENIOR_PASTOR_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: true,
   },
   {
-    code: 'pastoral_leadership' as const,
+    code: 'pastoral_leadership',
     name: 'Pastoral Leadership',
+    description: 'Pastoral operations without roles:assign.',
     permissions: PASTORAL_LEADERSHIP_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: true,
   },
   {
-    code: 'member' as const,
+    code: 'member',
     name: 'Member',
+    description: 'Member portal self/household capabilities.',
     permissions: MEMBER_ROLE_PERMISSIONS,
+    allowedScopes: ['self', 'household'],
+    bootstrap: true,
   },
   {
-    code: 'finance_officer' as const,
+    code: 'finance_officer',
     name: 'Finance Officer',
+    description: 'Financial recording; may request but not approve disbursements.',
     permissions: FINANCE_OFFICER_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: true,
+  },
+  {
+    code: 'chief_financial_steward',
+    name: 'Chief Financial Steward',
+    description: 'Finance oversight and disbursement approval.',
+    permissions: CHIEF_FINANCIAL_STEWARD_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: false,
+  },
+  {
+    code: 'ministry_leader',
+    name: 'Ministry Leader',
+    description: 'Manage an assigned ministry (organisational unit scope).',
+    permissions: MINISTRY_LEADER_PERMISSIONS,
+    allowedScopes: ['organisational_unit'],
+    bootstrap: false,
+  },
+  {
+    code: 'department_head',
+    name: 'Department Head',
+    description: 'Manage an assigned department (organisational unit scope).',
+    permissions: DEPARTMENT_HEAD_PERMISSIONS,
+    allowedScopes: ['organisational_unit'],
+    bootstrap: false,
+  },
+  {
+    code: 'registrar',
+    name: 'Membership Officer',
+    description: 'Membership and people desk operations.',
+    permissions: REGISTRAR_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: false,
+  },
+  {
+    code: 'event_recorder',
+    name: 'Events Coordinator',
+    description: 'Event attendance recording at unit scope.',
+    permissions: EVENT_RECORDER_PERMISSIONS,
+    allowedScopes: ['organisational_unit'],
+    bootstrap: false,
+  },
+  {
+    code: 'announcer',
+    name: 'Communications Officer',
+    description: 'Announcements and messaging.',
+    permissions: ANNOUNCER_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: false,
+  },
+  {
+    code: 'auditor',
+    name: 'Auditor / Reviewer',
+    description: 'Read-only review of authorized records.',
+    permissions: AUDITOR_PERMISSIONS,
+    allowedScopes: ['church'],
+    bootstrap: false,
   },
 ] as const;
 
-/** Roles an admin may invite via Phase C (not plain members). */
+/** Roles seeded automatically for every new church. */
+export const DEFAULT_CHURCH_ROLES = ROLE_TEMPLATES.filter((t) => t.bootstrap).map(
+  (t) => ({
+    code: t.code,
+    name: t.name,
+    permissions: t.permissions,
+  }),
+);
+
+/** Roles an admin may invite via leadership invite flow. */
 export const INVITABLE_LEADERSHIP_ROLE_CODES = [
   'senior_pastor',
   'pastoral_leadership',
   'church_administrator',
   'finance_officer',
 ] as const;
+
+export function getRoleTemplate(code: string): RoleTemplateDef | undefined {
+  return ROLE_TEMPLATES.find((t) => t.code === code);
+}
